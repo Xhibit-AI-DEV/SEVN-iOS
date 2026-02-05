@@ -1,0 +1,73 @@
+SENDGRID DYNAMIC VARIABLES FOR EMAIL TEMPLATE
+==============================================
+
+CUSTOMER NAME:
+{{customer_name}}
+
+---
+
+ITEM 1:
+Image: {{item1_image}}
+Link URL: {{item1_url}}
+Product Name: {{item1_name}}
+Price: {{item1_price}}
+
+---
+
+ITEM 2:
+Image: {{item2_image}}
+Link URL: {{item2_url}}
+Product Name: {{item2_name}}
+Price: {{item2_price}}
+
+---
+
+ITEM 3:
+Image: {{item3_image}}
+Link URL: {{item3_url}}
+Product Name: {{item3_name}}
+Price: {{item3_price}}
+
+---
+
+ITEM 4:
+Image: {{item4_image}}
+Link URL: {{item4_url}}
+Product Name: {{item4_name}}
+Price: {{item4_price}}
+
+---
+
+ITEM 5:
+Image: {{item5_image}}
+Link URL: {{item5_url}}
+Product Name: {{item5_name}}
+Price: {{item5_price}}
+
+---
+
+ITEM 6:
+Image: {{item6_image}}
+Link URL: {{item6_url}}
+Product Name: {{item6_name}}
+Price: {{item6_price}}
+
+---
+
+ITEM 7:
+Image: {{item7_image}}
+Link URL: {{item7_url}}
+Product Name: {{item7_name}}
+Price: {{item7_price}}
+
+---
+
+QUICK REFERENCE - ALL VARIABLES:
+{{customer_name}}
+{{item1_image}} {{item1_url}} {{item1_name}} {{item1_price}}
+{{item2_image}} {{item2_url}} {{item2_name}} {{item2_price}}
+{{item3_image}} {{item3_url}} {{item3_name}} {{item3_price}}
+{{item4_image}} {{item4_url}} {{item4_name}} {{item4_price}}
+{{item5_image}} {{item5_url}} {{item5_name}} {{item5_price}}
+{{item6_image}} {{item6_url}} {{item6_name}} {{item6_price}}
+{{item7_image}} {{item7_url}} {{item7_name}} {{item7_price}}

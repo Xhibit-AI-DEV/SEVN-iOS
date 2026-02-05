@@ -1,0 +1,124 @@
+import { useNavigate } from 'react-router';
+import { useState, useEffect } from 'react';
+import { Plus } from 'lucide-react';
+
+interface BottomNavigationProps {
+  activeTab?: 'discover' | 'profile';
+}
+
+export function BottomNavigation({ activeTab = 'discover' }: BottomNavigationProps) {
+  const navigate = useNavigate();
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const pageHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const halfwayPoint = pageHeight / 2;
+      
+      // Only hide after scrolling past halfway
+      if (currentScrollY > halfwayPoint) {
+        if (currentScrollY > lastScrollY) {
+          // Scrolling down - hide navigation
+          setIsVisible(false);
+        } else {
+          // Scrolling up - show navigation
+          setIsVisible(true);
+        }
+      } else {
+        // Always show before halfway
+        setIsVisible(true);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
+
+  return (
+    <div 
+      className={`pb-[18px] transition-transform duration-500 ease-out ${
+        isVisible ? 'translate-y-0' : 'translate-y-full'
+      }`}
+    >
+      <div className="flex items-end justify-center max-w-[393px] mx-auto px-8" style={{ gap: '40px' }}>
+        {/* Home/Discover */}
+        <button
+          className="flex flex-col items-center justify-center"
+          onClick={() => navigate('/')}
+        >
+          <div 
+            className={`w-[44px] h-[44px] rounded-full flex items-center justify-center transition-all ${
+              activeTab === 'discover' ? 'scale-110' : ''
+            }`}
+            style={{ backgroundColor: 'rgba(255, 254, 253, 0.85)' }}
+          >
+            <svg 
+              width="20" 
+              height="20" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              className="w-[20px] h-[20px]"
+              style={{ opacity: activeTab === 'discover' ? 1 : 0.6 }}
+            >
+              <rect 
+                x="4" 
+                y="4" 
+                width="16" 
+                height="16" 
+                stroke="#1E1709" 
+                strokeWidth="1" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        </button>
+
+        {/* Create - Center button - floats 6px higher */}
+        <button
+          className="flex flex-col items-center justify-center"
+          style={{ marginBottom: '6px' }}
+          onClick={() => navigate('/create-edit')}
+        >
+          <div className="w-[60px] h-[60px] rounded-full flex items-center justify-center relative" style={{ backgroundColor: 'rgba(255, 254, 253, 0.85)', boxShadow: '0 3px 12px rgba(0, 0, 0, 0.12)', zIndex: 10 }}>
+            <Plus className="w-[26px] h-[26px] text-[#1e1709]" strokeWidth={1} />
+          </div>
+        </button>
+
+        {/* Profile */}
+        <button
+          className="flex flex-col items-center justify-center"
+          onClick={() => navigate('/profile')}
+        >
+          <div 
+            className={`w-[44px] h-[44px] rounded-full flex items-center justify-center transition-all ${
+              activeTab === 'profile' ? 'scale-110' : ''
+            }`}
+            style={{ backgroundColor: 'rgba(255, 254, 253, 0.85)' }}
+          >
+            <svg 
+              width="20" 
+              height="20" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              className="w-[20px] h-[20px]"
+              style={{ opacity: activeTab === 'profile' ? 1 : 0.6 }}
+            >
+              <path 
+                d="M12 4L20 20H4L12 4Z" 
+                stroke="#1E1709" 
+                strokeWidth="1" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        </button>
+      </div>
+    </div>
+  );
+}

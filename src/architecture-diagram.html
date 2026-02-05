@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SEVN Stylist Admin - Technical Architecture</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0a;
+      color: #fff;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    
+    h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    
+    .subtitle {
+      color: #888;
+      margin-bottom: 30px;
+      text-align: center;
+      font-size: 14px;
+    }
+    
+    .download-btn {
+      margin-bottom: 30px;
+      padding: 12px 24px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .download-btn:hover {
+      background: #2563eb;
+    }
+    
+    #diagram-container {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 40px;
+      max-width: 1400px;
+      width: 100%;
+    }
+    
+    svg {
+      width: 100%;
+      height: auto;
+    }
+    
+    .box {
+      stroke-width: 2;
+      rx: 8;
+    }
+    
+    .frontend { fill: #1e3a8a; stroke: #3b82f6; }
+    .backend { fill: #134e4a; stroke: #14b8a6; }
+    .database { fill: #831843; stroke: #ec4899; }
+    .external { fill: #422006; stroke: #f59e0b; }
+    .storage { fill: #4c1d95; stroke: #a855f7; }
+    
+    .arrow {
+      stroke-width: 2;
+      fill: none;
+      marker-end: url(#arrowhead);
+    }
+    
+    .arrow-primary { stroke: #3b82f6; }
+    .arrow-success { stroke: #10b981; }
+    .arrow-warning { stroke: #f59e0b; }
+    .arrow-purple { stroke: #a855f7; }
+    
+    .label {
+      fill: #fff;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    .sublabel {
+      fill: #aaa;
+      font-size: 12px;
+    }
+    
+    .flow-label {
+      fill: #3b82f6;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    
+    .section-title {
+      fill: #888;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .legend {
+      margin-top: 30px;
+      padding: 20px;
+      background: #1a1a1a;
+      border-radius: 8px;
+      border: 1px solid #333;
+    }
+    
+    .legend h3 {
+      font-size: 14px;
+      margin-bottom: 15px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .legend-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    
+    .legend-color {
+      width: 40px;
+      height: 40px;
+      border-radius: 6px;
+      flex-shrink: 0;
+      border: 2px solid;
+    }
+    
+    .legend-color.frontend { background: #1e3a8a; border-color: #3b82f6; }
+    .legend-color.backend { background: #134e4a; border-color: #14b8a6; }
+    .legend-color.database { background: #831843; border-color: #ec4899; }
+    .legend-color.external { background: #422006; border-color: #f59e0b; }
+    .legend-color.storage { background: #4c1d95; border-color: #a855f7; }
+    
+    .legend-text h4 {
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+    
+    .legend-text p {
+      font-size: 11px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <h1>SEVN Stylist Admin</h1>
+  <p class="subtitle">Technical Architecture Diagram</p>
+  
+  <button class="download-btn" onclick="downloadDiagram()">
+    📥 Download as PNG
+  </button>
+  
+  <div id="diagram-container">
+    <svg viewBox="0 0 1200 900" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- Arrow marker -->
+        <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+          <polygon points="0 0, 10 3, 0 6" fill="#3b82f6" />
+        </marker>
+        <marker id="arrowhead-success" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+          <polygon points="0 0, 10 3, 0 6" fill="#10b981" />
+        </marker>
+        <marker id="arrowhead-warning" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+          <polygon points="0 0, 10 3, 0 6" fill="#f59e0b" />
+        </marker>
+        <marker id="arrowhead-purple" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+          <polygon points="0 0, 10 3, 0 6" fill="#a855f7" />
+        </marker>
+      </defs>
+      
+      <!-- Title -->
+      <text x="600" y="30" class="section-title" text-anchor="middle">Data Flow: Customer Selection to Email Delivery</text>
+      
+      <!-- FRONTEND -->
+      <rect x="50" y="70" width="280" height="180" class="box frontend"/>
+      <text x="190" y="100" class="label" text-anchor="middle">Frontend (React)</text>
+      <text x="190" y="120" class="sublabel" text-anchor="middle">/App.tsx</text>
+      
+      <text x="70" y="145" class="sublabel">• StylistWorkspace</text>
+      <text x="70" y="165" class="sublabel">• SelectionsPanel</text>
+      <text x="70" y="185" class="sublabel">• GPTSearchPanel (AI + Voice)</text>
+      <text x="70" y="205" class="sublabel">• Manual URL input</text>
+      <text x="70" y="225" class="sublabel">• Image preview & management</text>
+      
+      <!-- BACKEND -->
+      <rect x="460" y="70" width="280" height="180" class="box backend"/>
+      <text x="600" y="100" class="label" text-anchor="middle">Backend Server</text>
+      <text x="600" y="120" class="sublabel" text-anchor="middle">Supabase Edge Functions + Hono</text>
+      
+      <text x="480" y="145" class="sublabel">/make-server-b14d984c/</text>
+      <text x="480" y="165" class="sublabel">• /selections/save</text>
+      <text x="480" y="185" class="sublabel">• /selections/get/:id</text>
+      <text x="480" y="205" class="sublabel">• /sendgrid/send-draft</text>
+      <text x="480" y="225" class="sublabel">• /stylists/:id</text>
+      
+      <!-- DATABASE -->
+      <rect x="870" y="70" width="280" height="180" class="box database"/>
+      <text x="1010" y="100" class="label" text-anchor="middle">Database</text>
+      <text x="1010" y="120" class="sublabel" text-anchor="middle">Supabase KV Store</text>
+      
+      <text x="890" y="145" class="sublabel">Key: client_{customerId}</text>
+      <text x="890" y="170" class="sublabel">Stores:</text>
+      <text x="890" y="190" class="sublabel">• Customer info (email, name, image)</text>
+      <text x="890" y="210" class="sublabel">• Stylist info (name, image)</text>
+      <text x="890" y="230" class="sublabel">• 7 selected items with URLs</text>
+      
+      <!-- EXTERNAL SERVICES -->
+      <rect x="50" y="330" width="280" height="160" class="box external"/>
+      <text x="190" y="360" class="label" text-anchor="middle">Contentful CMS</text>
+      <text x="190" y="380" class="sublabel" text-anchor="middle">Space: 1inmo0bc6xc9</text>
+      
+      <text x="70" y="405" class="sublabel">Content Types:</text>
+      <text x="70" y="425" class="sublabel">• "client" - Customer data</text>
+      <text x="70" y="445" class="sublabel">• "stylist" - Stylist profiles</text>
+      <text x="70" y="465" class="sublabel">• Assets - Images</text>
+      
+      <rect x="460" y="330" width="280" height="160" class="box external"/>
+      <text x="600" y="360" class="label" text-anchor="middle">Google Shopping API</text>
+      <text x="600" y="380" class="sublabel" text-anchor="middle">via Serper API</text>
+      
+      <text x="480" y="405" class="sublabel">Features:</text>
+      <text x="480" y="425" class="sublabel">• AI-powered product search</text>
+      <text x="480" y="445" class="sublabel">• Product metadata (title, price)</text>
+      <text x="480" y="465" class="sublabel">• Product images</text>
+      
+      <rect x="870" y="330" width="280" height="160" class="box external"/>
+      <text x="1010" y="360" class="label" text-anchor="middle">SendGrid</text>
+      <text x="1010" y="380" class="sublabel" text-anchor="middle">Email Delivery Service</text>
+      
+      <text x="890" y="405" class="sublabel">Template: d-167e6b7...</text>
+      <text x="890" y="425" class="sublabel">From: dov@sevn.app</text>
+      <text x="890" y="445" class="sublabel">• 7 product slots</text>
+      <text x="890" y="465" class="sublabel">• Stylist info & notes</text>
+      
+      <!-- STORAGE -->
+      <rect x="460" y="570" width="280" height="140" class="box storage"/>
+      <text x="600" y="600" class="label" text-anchor="middle">Supabase Storage</text>
+      <text x="600" y="620" class="sublabel" text-anchor="middle">Public Bucket</text>
+      
+      <text x="480" y="645" class="sublabel">Bucket: make-b14d984c-product-images</text>
+      <text x="480" y="670" class="sublabel">• Downloads Google Shopping images</text>
+      <text x="480" y="690" class="sublabel">• Converts to JPG for email compatibility</text>
+      <text x="480" y="710" class="sublabel">• Returns permanent public URLs</text>
+      
+      <!-- ARROWS - Frontend to Backend -->
+      <path d="M 330 130 L 460 130" class="arrow arrow-primary" marker-end="url(#arrowhead)"/>
+      <text x="395" y="120" class="flow-label" text-anchor="middle">1. POST /selections/save</text>
+      
+      <path d="M 330 160 L 460 160" class="arrow arrow-success" marker-end="url(#arrowhead-success)"/>
+      <text x="395" y="178" class="flow-label" text-anchor="middle">2. GET /selections/get/:id</text>
+      
+      <path d="M 330 190 L 460 190" class="arrow arrow-warning" marker-end="url(#arrowhead-warning)"/>
+      <text x="395" y="208" class="flow-label" text-anchor="middle">3. POST /sendgrid/send-draft</text>
+      
+      <!-- Backend to Database -->
+      <path d="M 740 130 L 870 130" class="arrow arrow-primary" marker-end="url(#arrowhead)"/>
+      <text x="805" y="120" class="flow-label" text-anchor="middle">Save data</text>
+      
+      <path d="M 870 160 L 740 160" class="arrow arrow-success" marker-end="url(#arrowhead-success)"/>
+      <text x="805" y="178" class="flow-label" text-anchor="middle">Load data</text>
+      
+      <!-- Backend to Contentful -->
+      <path d="M 460 280 L 290 330" class="arrow arrow-primary" marker-end="url(#arrowhead)"/>
+      <text x="360" y="295" class="flow-label">Fetch customer/stylist</text>
+      
+      <!-- Backend to Google Shopping -->
+      <path d="M 600 250 L 600 330" class="arrow arrow-primary" marker-end="url(#arrowhead)"/>
+      <text x="620" y="290" class="flow-label">AI product search</text>
+      
+      <!-- Backend to SendGrid -->
+      <path d="M 740 220 L 950 330" class="arrow arrow-warning" marker-end="url(#arrowhead-warning)"/>
+      <text x="860" y="265" class="flow-label">Send email</text>
+      
+      <!-- Backend to Storage -->
+      <path d="M 600 250 L 600 570" class="arrow arrow-purple" marker-end="url(#arrowhead-purple)"/>
+      <text x="620" y="410" class="flow-label">Download & host images</text>
+      
+      <!-- Storage to Database (image URLs) -->
+      <path d="M 740 640 L 1010 250" class="arrow arrow-purple" marker-end="url(#arrowhead-purple)" stroke-dasharray="5,5"/>
+      <text x="880" y="440" class="flow-label">Public image URLs</text>
+      
+      <!-- Flow Numbers -->
+      <circle cx="190" cy="275" r="15" fill="#3b82f6"/>
+      <text x="190" y="280" class="label" text-anchor="middle" font-size="14">1</text>
+      
+      <circle cx="600" cy="275" r="15" fill="#10b981"/>
+      <text x="600" y="280" class="label" text-anchor="middle" font-size="14">2</text>
+      
+      <circle cx="1010" cy="275" r="15" fill="#f59e0b"/>
+      <text x="1010" y="280" class="label" text-anchor="middle" font-size="14">3</text>
+      
+      <!-- Legend Section -->
+      <text x="50" y="780" class="section-title">KEY FEATURES</text>
+      
+      <text x="50" y="810" class="sublabel">✅ Save-First-Then-Send Flow</text>
+      <text x="50" y="830" class="sublabel">✅ All Images Hosted in Public Storage (No Expiring URLs)</text>
+      <text x="50" y="850" class="sublabel">✅ AI-Powered Product Search (OpenAI + Serper)</text>
+      <text x="50" y="870" class="sublabel">✅ Voice Input for Product URLs</text>
+      
+      <text x="600" y="810" class="sublabel">✅ No Hardcoded Data - All from Contentful/Database</text>
+      <text x="600" y="830" class="sublabel">✅ Email-Compatible JPG Images</text>
+      <text x="600" y="850" class="sublabel">✅ Permanent Public URLs for SendGrid</text>
+      <text x="600" y="870" class="sublabel">✅ Backend Validates All Data Before Sending</text>
+    </svg>
+  </div>
+  
+  <div class="legend">
+    <h3>Component Legend</h3>
+    <div class="legend-grid">
+      <div class="legend-item">
+        <div class="legend-color frontend"></div>
+        <div class="legend-text">
+          <h4>Frontend (React)</h4>
+          <p>User interface for stylists to manage customer selections</p>
+        </div>
+      </div>
+      
+      <div class="legend-item">
+        <div class="legend-color backend"></div>
+        <div class="legend-text">
+          <h4>Backend Server</h4>
+          <p>Supabase Edge Functions with Hono web framework</p>
+        </div>
+      </div>
+      
+      <div class="legend-item">
+        <div class="legend-color database"></div>
+        <div class="legend-text">
+          <h4>Database</h4>
+          <p>Supabase KV Store for customer selections & metadata</p>
+        </div>
+      </div>
+      
+      <div class="legend-item">
+        <div class="legend-color external"></div>
+        <div class="legend-text">
+          <h4>External Services</h4>
+          <p>Contentful CMS, Google Shopping, SendGrid Email</p>
+        </div>
+      </div>
+      
+      <div class="legend-item">
+        <div class="legend-color storage"></div>
+        <div class="legend-text">
+          <h4>Supabase Storage</h4>
+          <p>Public bucket for permanent product image hosting</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    function downloadDiagram() {
+      const container = document.getElementById('diagram-container');
+      const svg = container.querySelector('svg');
+      
+      // Create a canvas
+      const canvas = document.createElement('canvas');
+      const scale = 2; // For higher resolution
+      canvas.width = 1200 * scale;
+      canvas.height = 900 * scale;
+      const ctx = canvas.getContext('2d');
+      
+      // Set background
+      ctx.fillStyle = '#111';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Convert SVG to image
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+      
+      const img = new Image();
+      img.onload = function() {
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        // Download
+        canvas.toBlob(function(blob) {
+          const link = document.createElement('a');
+          link.download = 'sevn-stylist-admin-architecture.png';
+          link.href = URL.createObjectURL(blob);
+          link.click();
+          URL.revokeObjectURL(url);
+        });
+      };
+      img.src = url;
+    }
+  </script>
+</body>
+</html>

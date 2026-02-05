@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEVN SELECTS - Complete Design Flows Documentation</title>
+    <style>
+        @page {
+            margin: 2cm;
+            size: A4;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            color: #1e1709;
+            background: #fff;
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #1e1709;
+            border-bottom: 3px solid #1e1709;
+            padding-bottom: 15px;
+        }
+        
+        h2 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-top: 40px;
+            margin-bottom: 15px;
+            color: #1e1709;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-top: 30px;
+            margin-bottom: 12px;
+            color: #2a2010;
+        }
+        
+        h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #2a2010;
+        }
+        
+        h5 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            color: #2a2010;
+        }
+        
+        p {
+            margin-bottom: 12px;
+            text-align: justify;
+        }
+        
+        ul, ol {
+            margin-left: 25px;
+            margin-bottom: 15px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .metadata {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+        }
+        
+        .highlight-box {
+            background: #f8f8f8;
+            border-left: 4px solid #1e1709;
+            padding: 15px 20px;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+        
+        .flow-diagram {
+            background: #fffefd;
+            border: 2px solid #1e1709;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            page-break-inside: avoid;
+        }
+        
+        .color-swatch {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .feature-item {
+            background: #f8f8f8;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 8px;
+        }
+        
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-future {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-size: 13px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background: #1e1709;
+            color: #fffefd;
+            font-weight: 600;
+        }
+        
+        .page-break {
+            page-break-after: always;
+        }
+        
+        hr {
+            border: none;
+            border-top: 1px solid #ddd;
+            margin: 30px 0;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+            }
+            
+            h2 {
+                page-break-after: avoid;
+            }
+            
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<h1>SEVN SELECTS - Complete Design Flows Documentation</h1>
+
+<div class="metadata">
+    <p><strong>Last Updated:</strong> January 28, 2026</p>
+    <p><strong>Platform:</strong> Customer-facing interface at sevn.app/lissy + Admin interface</p>
+</div>
+
+<hr>
+
+<div class="section">
+    <h2>🎯 Overview</h2>
+    <p>This document maps all user flows, pages, and interactions for the SEVN SELECTS styling platform. The system has two main interfaces:</p>
+    <ol>
+        <li><strong>Customer Interface</strong> (sevn.app/lissy) - Customer sign-in, intake form, and waitlist</li>
+        <li><strong>Admin Interface</strong> - Stylist workspace for creating edits and managing customers</li>
+    </ol>
+</div>
+
+<hr>
+
+<div class="section">
+    <h2>📱 CUSTOMER INTERFACE FLOWS</h2>
+    
+    <div class="highlight-box">
+        <h3>Design Principles</h3>
+        <ul>
+            <li><strong>Mobile-first:</strong> All pages optimized for mobile viewport</li>
+            <li><strong>No horizontal scroll:</strong> Strict vertical scrolling only, locked to viewport width</li>
+            <li><strong>Brand colors:</strong> <span class="color-swatch" style="background: #fffefd;"></span><code>#fffefd</code> (cream background), <span class="color-swatch" style="background: #1e1709;"></span><code>#1e1709</code> (dark text/borders)</li>
+            <li><strong>Typography:</strong> Helvetica Neue family with uppercase styling</li>
+        </ul>
+    </div>
+</div>
+
+<div class="section">
+    <h3>Flow 1: Authentication</h3>
+    
+    <h4>1.1 Landing Page (<code>/lissy</code>)</h4>
+    <p><strong>Component:</strong> <code>LissyLanding.tsx</code></p>
+    
+    <p><strong>Layout:</strong></p>
+    <ul>
+        <li>Hero section with Lissy branding</li>
+        <li>"SIGN IN" button (primary CTA)</li>
+        <li>"SIGN UP" link (secondary)</li>
+    </ul>
+    
+    <p><strong>Actions:</strong></p>
+    <ul>
+        <li>Click "SIGN IN" → Navigate to <code>/lissy/signin</code></li>
+        <li>Click "SIGN UP" → Navigate to <code>/lissy/signin</code> (same page, toggle mode)</li>
+    </ul>
+    
+    <h4>1.2 Sign In / Sign Up Page (<code>/lissy/signin</code>)</h4>
+    <p><strong>Component:</strong> <code>SignIn.tsx</code></p>
+    
+    <p><strong>Features:</strong></p>
+    <ul>
+        <li>Toggle between Sign In and Sign Up modes</li>
+        <li>Email + Password inputs</li>
+        <li>Error handling for:
+            <ul>
+                <li>Invalid credentials</li>
+                <li>Duplicate email addresses (sign up)</li>
+                <li>Missing fields</li>
+            </ul>
+        </li>
+    </ul>
+    
+    <p><strong>Sign In Flow:</strong></p>
+    <ol>
+        <li>User enters email and password</li>
+        <li>Click "SIGN IN"</li>
+        <li>System authenticates via Supabase</li>
+        <li><strong>Success:</strong> Redirect to <code>/lissy</code> (home page)</li>
+        <li><strong>Error:</strong> Display error message</li>
+    </ol>
+    
+    <p><strong>Sign Up Flow:</strong></p>
+    <ol>
+        <li>User enters name, email, password</li>
+        <li>Click "SIGN UP"</li>
+        <li>System creates account in Supabase</li>
+        <li>Email auto-confirmed (no email server configured)</li>
+        <li><strong>Success:</strong> Redirect to <code>/lissy</code> (home page)</li>
+        <li><strong>Duplicate email:</strong> Display "Email already registered" error</li>
+        <li><strong>Error:</strong> Display error message</li>
+    </ol>
+    
+    <div class="highlight-box">
+        <p><strong>Important Notes:</strong></p>
+        <ul>
+            <li>NO "Welcome back!" toast notification</li>
+            <li>Both sign-in and sign-up redirect to home page (NOT intake form)</li>
+            <li>User must manually navigate to intake form from home</li>
+        </ul>
+    </div>
+</div>
+
+<div class="page-break"></div>
+
+<div class="section">
+    <h3>Flow 2: Customer Intake Journey</h3>
+    
+    <h4>2.1 Home Page After Sign In (<code>/lissy</code>)</h4>
+    <p><strong>Component:</strong> <code>HomePage.tsx</code></p>
+    
+    <p><strong>Layout:</strong></p>
+    <ul>
+        <li>Welcome message</li>
+        <li>Navigation to intake form</li>
+        <li>Access to profile and other features</li>
+    </ul>
+    
+    <p><strong>Action:</strong></p>
+    <ul>
+        <li>User clicks "START INTAKE" → Navigate to intake form</li>
+    </ul>
+    
+    <h4>2.2 Intake Form (<code>/lissy/intake</code>)</h4>
+    <p><strong>Component:</strong> <code>IntakeForm.tsx</code></p>
+    
+    <p><strong>Multi-step form with the following sections:</strong></p>
+    
+    <h5>Step 1: Personal Info</h5>
+    <ul>
+        <li>Name</li>
+        <li>Email (pre-filled if signed in)</li>
+        <li>Phone (optional)</li>
+    </ul>
+    
+    <h5>Step 2: Style Preferences</h5>
+    <ul>
+        <li>Preferred style aesthetic (dropdown)</li>
+        <li>Favorite brands</li>
+        <li>Budget range</li>
+        <li>Sizes (tops, bottoms, shoes)</li>
+    </ul>
+    
+    <h5>Step 3: Occasion & Goals</h5>
+    <ul>
+        <li>What occasions are you styling for?</li>
+        <li>Style goals (checkboxes)</li>
+        <li>Color preferences</li>
+    </ul>
+    
+    <h5>Step 4: Body & Fit</h5>
+    <ul>
+        <li>Body type</li>
+        <li>Fit preferences</li>
+        <li>Areas to highlight/avoid</li>
+    </ul>
+    
+    <h5>Step 5: Image Uploads</h5>
+    <ul>
+        <li>Upload 3-5 photos:
+            <ul>
+                <li>Full body shots</li>
+                <li>Current wardrobe</li>
+                <li>Inspiration images</li>
+            </ul>
+        </li>
+        <li>Image preview with delete option</li>
+        <li>Drag & drop or click to upload</li>
+    </ul>
+    
+    <h5>Step 6: Additional Notes</h5>
+    <ul>
+        <li>Free text area for special requests</li>
+        <li>Allergies/sensitivities (fabric)</li>
+        <li>Timeline expectations</li>
+    </ul>
+    
+    <p><strong>Form Behavior:</strong></p>
+    <ul>
+        <li>Progress indicator showing current step</li>
+        <li>"BACK" and "CONTINUE" navigation</li>
+        <li>Validation on each step</li>
+        <li>All data saved to Supabase on submit</li>
+    </ul>
+    
+    <p><strong>Submission Flow:</strong></p>
+    <ol>
+        <li>User completes all steps</li>
+        <li>Click "SUBMIT INTAKE"</li>
+        <li>Data saved with status: <code>"invited"</code> linked to stylist</li>
+        <li><s>Toast notification: "Intake submitted!"</s> <strong>REMOVED</strong></li>
+        <li>Auto-navigate to waitlist page</li>
+    </ol>
+</div>
+
+<div class="page-break"></div>
+
+<div class="section">
+    <h4>2.3 Waitlist Page (<code>/lissy/waitlist</code>)</h4>
+    <p><strong>Component:</strong> <code>WaitlistPage.tsx</code></p>
+    
+    <p><strong>Two States:</strong></p>
+    
+    <h5>Before Joining Waitlist:</h5>
+    <ul>
+        <li>Lookbook card with triple border effect</li>
+        <li>Image carousel/layered images</li>
+        <li>"CURATED EDIT → STYLE NOTES" heading</li>
+        <li>Description: "7 Item capsule Edit + Styling notes curated by lissy roddy."</li>
+        <li>Price: "£100 · Limited availability"</li>
+        <li><strong>"JOIN WAITLIST"</strong> button</li>
+    </ul>
+    
+    <h5>After Joining Waitlist (or completing intake):</h5>
+    <ul>
+        <li>Reference photo card (396px height)</li>
+        <li>Triple border effect (signature style)</li>
+        <li>Subtle divider (1px, 12% opacity)</li>
+        <li>Text: <strong>"YOU'RE ON THE LIST"</strong> (23px, Helvetica Neue Regular)</li>
+        <li><strong>"INVITE"</strong> button (black background, white text)</li>
+    </ul>
+    
+    <p><strong>Button Actions:</strong></p>
+    <ul>
+        <li>"JOIN WAITLIST" → Show confirmation state</li>
+        <li>"INVITE" → Navigate back to home (<code>/lissy</code>)</li>
+    </ul>
+    
+    <div class="highlight-box">
+        <p><strong>Future Enhancement:</strong></p>
+        <ul>
+            <li>Check icon state for users who have been styled already</li>
+        </ul>
+    </div>
+</div>
+
+<div class="section">
+    <h3>Flow 3: Customer Profile & Settings</h3>
+    
+    <h4>3.1 Profile Page (<code>/lissy/profile</code>)</h4>
+    <p><strong>Component:</strong> <code>ProfilePage.tsx</code></p>
+    
+    <p><strong>Features:</strong></p>
+    <ul>
+        <li>View/edit personal information</li>
+        <li>View intake form responses</li>
+        <li>Sign out button</li>
+    </ul>
+</div>
+
+<hr>
+
+<div class="page-break"></div>
+
+<div class="section">
+    <h2>🖥️ ADMIN INTERFACE FLOWS</h2>
+    
+    <h3>Flow 4: Stylist Dashboard</h3>
+    
+    <h4>4.1 Admin Dashboard (<code>/admin</code>)</h4>
+    <p><strong>Component:</strong> <code>AdminDashboard.tsx</code></p>
+    
+    <p><strong>Layout:</strong></p>
+    <ul>
+        <li>Customer list with filters</li>
+        <li>Status indicators:
+            <ul>
+                <li>"invited" (new customers)</li>
+                <li>"in_progress" (being styled)</li>
+                <li>"completed" (edit sent)</li>
+            </ul>
+        </li>
+        <li>Search functionality</li>
+        <li>Quick actions</li>
+    </ul>
+    
+    <p><strong>Actions:</strong></p>
+    <ul>
+        <li>Click customer → Open workspace</li>
+        <li>Filter by status</li>
+        <li>Search by name/email</li>
+    </ul>
+</div>
+
+<div class="section">
+    <h3>Flow 5: Stylist Workspace</h3>
+    
+    <h4>5.1 Stylist Workspace (<code>/stylist/:customerId</code>)</h4>
+    <p><strong>Component:</strong> <code>StylistWorkspace.tsx</code></p>
+    
+    <p><strong>Three-Panel Layout:</strong></p>
+    
+    <h5>Left Panel: Customer Intake</h5>
+    <p><strong>Component:</strong> <code>CustomerIntakePanel.tsx</code></p>
+    <ul>
+        <li>Customer details</li>
+        <li>Intake form responses</li>
+        <li>Uploaded images</li>
+        <li>Style preferences</li>
+        <li>Notes</li>
+    </ul>
+    
+    <h5>Center Panel: Product Selections</h5>
+    <p><strong>Component:</strong> <code>SelectionsPanel.tsx</code></p>
+    <ul>
+        <li>7 product slots</li>
+        <li>Add product via:
+            <ul>
+                <li>Manual entry (URL, name, price, image)</li>
+                <li>Search integration (coming soon)</li>
+            </ul>
+        </li>
+        <li>Remove product</li>
+        <li>Reorder products</li>
+        <li>Style notes for each item</li>
+    </ul>
+    
+    <h5>Right Panel: GPT Search</h5>
+    <p><strong>Component:</strong> <code>GPTSearchPanel.tsx</code></p>
+    <ul>
+        <li>AI-powered product search</li>
+        <li>Custom GPT instructions</li>
+        <li>Learns Lissy's styling patterns</li>
+        <li>Search filters</li>
+    </ul>
+    
+    <div class="highlight-box">
+        <p><strong>Key Features:</strong></p>
+        <ul>
+            <li><strong>Save-first-then-send workflow</strong></li>
+            <li>Auto-save drafts</li>
+            <li>Send edit via SendGrid</li>
+            <li>Email template with all 7 selects</li>
+        </ul>
+    </div>
+</div>
+
+<div class="page-break"></div>
+
+<div class="section">
+    <h3>Flow 6: Creating an Edit</h3>
+    
+    <p><strong>Step-by-step process:</strong></p>
+    
+    <ol>
+        <li><strong>Select Customer</strong> from dashboard</li>
+        <li><strong>Review Intake</strong> in left panel
+            <ul>
+                <li>Read style preferences</li>
+                <li>View uploaded images</li>
+                <li>Note special requests</li>
+            </ul>
+        </li>
+        <li><strong>Search for Products</strong> using GPT panel
+            <ul>
+                <li>Use AI to find relevant items</li>
+                <li>Consider customer's budget/style</li>
+            </ul>
+        </li>
+        <li><strong>Add 7 Products</strong>
+            <ul>
+                <li>Fill all 7 selection slots</li>
+                <li>Add styling notes for each</li>
+            </ul>
+        </li>
+        <li><strong>Save Draft</strong>
+            <ul>
+                <li>Auto-saves progress</li>
+                <li>Can resume later</li>
+            </ul>
+        </li>
+        <li><strong>Preview Email</strong>
+            <ul>
+                <li>Check product grid</li>
+                <li>Verify links and images</li>
+            </ul>
+        </li>
+        <li><strong>Send to Customer</strong>
+            <ul>
+                <li>SendGrid email delivery</li>
+                <li>Customer receives edit</li>
+                <li>Status updates to "completed"</li>
+            </ul>
+        </li>
+    </ol>
+</div>
+
+<hr>
+
+<div class="section">
+    <h2>🗂️ Data Structure</h2>
+    
+    <h3>Customer Record (Supabase)</h3>
+    <pre>{
+  "id": "uuid",
+  "name": "Customer Name",
+  "email": "customer@email.com",
+  "phone": "optional",
+  "stylist_id": "stylist_uuid",
+  "status": "invited | in_progress | completed",
+  "intake_data": {
+    "style_preferences": {},
+    "sizes": {},
+    "budget": {},
+    "goals": [],
+    "body_type": {},
+    "images": []
+  },
+  "created_at": "timestamp",
+  "updated_at": "timestamp"
+}</pre>
+    
+    <h3>Selection/Edit Record</h3>
+    <pre>{
+  "id": "uuid",
+  "customer_id": "uuid",
+  "stylist_id": "uuid",
+  "selections": [
+    {
+      "slot": 1,
+      "product_name": "Item Name",
+      "product_url": "https://...",
+      "price": "£100",
+      "image_url": "https://...",
+      "styling_note": "Pair with..."
+    }
+    // ... 7 total
+  ],
+  "status": "draft | sent",
+  "sent_at": "timestamp",
+  "created_at": "timestamp"
+}</pre>
+</div>
+
+<div class="page-break"></div>
+
+<div class="section">
+    <h2>🎨 Design System</h2>
+    
+    <h3>Colors</h3>
+    <ul>
+        <li><span class="color-swatch" style="background: #fffefd;"></span><strong>Cream:</strong> <code>#fffefd</code> (primary background)</li>
+        <li><span class="color-swatch" style="background: #1e1709;"></span><strong>Dark:</strong> <code>#1e1709</code> (text, borders, buttons)</li>
+        <li><span class="color-swatch" style="background: #2a2010;"></span><strong>Hover:</strong> <code>#2a2010</code> (button hover state)</li>
+    </ul>
+    
+    <h3>Typography</h3>
+    <ul>
+        <li><strong>Primary:</strong> Helvetica Neue family</li>
+        <li><strong>Weights:</strong> Light (300), Regular (400), Bold (700)</li>
+        <li><strong>Style:</strong> Uppercase with letter-spacing (1-2px)</li>
+        <li><strong>Sizes:</strong>
+            <ul>
+                <li>Headings: 20-24px</li>
+                <li>Body: 12-16px</li>
+                <li>Labels: 14px</li>
+            </ul>
+        </li>
+    </ul>
+    
+    <h3>Components</h3>
+    <ul>
+        <li><strong>Buttons:</strong> 52px height, 8px border-radius, uppercase text</li>
+        <li><strong>Cards:</strong> Triple border effect (signature style)</li>
+        <li><strong>Inputs:</strong> Minimal styling, 1px borders</li>
+        <li><strong>Images:</strong> Rounded corners, object-cover fit</li>
+    </ul>
+    
+    <h3>Layout Rules</h3>
+    <ul>
+        <li><strong>Max width:</strong> 393px (mobile-optimized)</li>
+        <li><strong>Padding:</strong> 4px (1rem) on mobile</li>
+        <li><strong>Spacing:</strong> Consistent 6-24px gaps</li>
+        <li><strong>No horizontal scroll:</strong> Strict overflow-x-hidden</li>
+    </ul>
+</div>
+
+<hr>
+
+<div class="section">
+    <h2>🔄 Key User Journeys</h2>
+    
+    <h3>New Customer Journey</h3>
+    <ol>
+        <li>Land on <code>/lissy</code> → Sign up</li>
+        <li>Redirect to home → Click "Start Intake"</li>
+        <li>Complete intake form (6 steps)</li>
+        <li>Submit → Auto-navigate to waitlist</li>
+        <li>See "YOU'RE ON THE LIST" confirmation</li>
+        <li>Click "INVITE" → Return home</li>
+        <li>Wait for stylist to create edit</li>
+        <li>Receive email with 7 selects</li>
+    </ol>
+    
+    <h3>Stylist Journey</h3>
+    <ol>
+        <li>Log into admin dashboard</li>
+        <li>See new customer with "invited" status</li>
+        <li>Click customer → Open workspace</li>
+        <li>Review intake in left panel</li>
+        <li>Use GPT search to find products</li>
+        <li>Add 7 products with styling notes</li>
+        <li>Save draft (auto-saves)</li>
+        <li>Preview email</li>
+        <li>Send to customer</li>
+        <li>Status updates to "completed"</li>
+    </ol>
+</div>
+
+<div class="page-break"></div>
+
+<div class="section">
+    <h2>🚀 Technical Architecture</h2>
+    
+    <h3>Frontend</h3>
+    <ul>
+        <li><strong>Framework:</strong> React with TypeScript</li>
+        <li><strong>Routing:</strong> React Router</li>
+        <li><strong>Styling:</strong> Tailwind CSS v4</li>
+        <li><strong>State:</strong> React hooks (useState, useEffect)</li>
+        <li><strong>Forms:</strong> Controlled components with validation</li>
+    </ul>
+    
+    <h3>Backend</h3>
+    <ul>
+        <li><strong>Database:</strong> Supabase (PostgreSQL)</li>
+        <li><strong>Authentication:</strong> Supabase Auth</li>
+        <li><strong>Storage:</strong> Supabase Storage (for images)</li>
+        <li><strong>Email:</strong> SendGrid API</li>
+        <li><strong>Server:</strong> Hono web server on Supabase Edge Functions</li>
+    </ul>
+    
+    <h3>Integrations</h3>
+    <ul>
+        <li><strong>AI Search:</strong> OpenAI GPT (custom instructions)</li>
+        <li><strong>Image Upload:</strong> Supabase Storage with signed URLs</li>
+        <li><strong>Email Templates:</strong> SendGrid dynamic templates</li>
+    </ul>
+</div>
+
+<hr>
+
+<div class="section">
+    <h2>📋 Component Inventory</h2>
+    
+    <h3>Customer Components</h3>
+    <ul>
+        <li><code>LissyLanding.tsx</code> - Landing page</li>
+        <li><code>SignIn.tsx</code> - Authentication (sign in/up)</li>
+        <li><code>IntakeForm.tsx</code> - Multi-step intake form</li>
+        <li><code>WaitlistPage.tsx</code> - Waitlist confirmation</li>
+        <li><code>HomePage.tsx</code> - Customer home</li>
+        <li><code>ProfilePage.tsx</code> - Customer profile</li>
+        <li><code>BottomNavigation.tsx</code> - Mobile nav bar</li>
+    </ul>
+    
+    <h3>Admin Components</h3>
+    <ul>
+        <li><code>AdminDashboard.tsx</code> - Main dashboard</li>
+        <li><code>StylistWorkspace.tsx</code> - Three-panel workspace</li>
+        <li><code>CustomerIntakePanel.tsx</code> - Left panel</li>
+        <li><code>SelectionsPanel.tsx</code> - Center panel (7 products)</li>
+        <li><code>GPTSearchPanel.tsx</code> - Right panel (AI search)</li>
+        <li><code>CustomerList.tsx</code> - Filterable customer list</li>
+        <li><code>CreateEditPage.tsx</code> - Edit creation flow</li>
+    </ul>
+    
+    <h3>Shared Components</h3>
+    <ul>
+        <li><code>ProtectedRoute.tsx</code> - Auth guard</li>
+        <li><code>EditCard.tsx</code> - Product card display</li>
+        <li><code>EditDetailPage.tsx</code> - Full edit view</li>
+    </ul>
+</div>
+
+<div class="page-break"></div>
+
+<div class="section">
+    <h2>✅ Completed Features</h2>
+    
+    <div class="feature-list">
+        <div class="feature-item"><span class="status-badge status-completed">✓</span> Customer authentication (sign in/up)</div>
+        <div class="feature-item"><span class="status-badge status-completed">✓</span> Error handling for duplicate emails</div>
+        <div class="feature-item"><span class="status-badge status-completed">✓</span> Redirect to home after auth (not intake)</div>
+        <div class="feature-item"><span class="status-badge status-completed">✓</span> Multi-step intake form with validation</div>
+        <div class="feature-item"><span class="status-badge status-completed">✓</span> Image upload to Supabase Storage</div>
+        <div class="feature-item"><span class="status-badge status-completed">✓</span> Waitlist page with two states</div>
+        <div class="feature-item"><span class="status-badge status-completed">✓</span> "INVITE" button (not "EXPLORE EDITS")</div>
+        <div class="feature-item"><span class="status-badge status-completed">✓</span> Removed "Intake submitted!" toast</div>
+        <div class="feature-item"><span class="status-badge status-completed">✓</span> Adjusted "YOU'RE ON THE LIST" text</div>
+        <div class="feature-item"><span class="status-badge status-completed">✓</span> Save customer data to Supabase</div>
+        <div class="feature-item"><span class="status-badge status-completed">✓</span> Stylist workspace with three panels</div>
+        <div class="feature-item"><span class="status-badge status-completed">✓</span> GPT search integration</div>
+        <div class="feature-item"><span class="status-badge status-completed">✓</span> SendGrid email delivery</div>
+        <div class="feature-item"><span class="status-badge status-completed">✓</span> Save-first-then-send workflow</div>
+    </div>
+</div>
+
+<hr>
+
+<div class="section">
+    <h2>🔮 Future Enhancements</h2>
+    
+    <ul>
+        <li>Check icon state for styled customers</li>
+        <li>Customer view of their received edit</li>
+        <li>Re-styling requests</li>
+        <li>Rating/feedback system</li>
+        <li>Push notifications</li>
+        <li>Social login (Google, Facebook)</li>
+        <li>Stylist analytics dashboard</li>
+        <li>Customer style evolution tracking</li>
+    </ul>
+</div>
+
+<hr>
+
+<div class="section">
+    <h2>🎯 Current Status</h2>
+    
+    <div class="highlight-box">
+        <h3>Ready for Testing:</h3>
+        <ul>
+            <li>Complete styling flow for Lissy Roddy</li>
+            <li>Customer can sign up → fill intake → join waitlist</li>
+            <li>Stylist can review intake → create edit → send email</li>
+        </ul>
+        
+        <h3>Next Steps:</h3>
+        <ul>
+            <li>Test complete flow end-to-end</li>
+            <li>Verify email delivery</li>
+            <li>Check mobile responsiveness</li>
+            <li>Add check icon for completed customers</li>
+        </ul>
+    </div>
+</div>
+
+<hr>
+
+<div class="section">
+    <h2>📸 Visual Flow Diagram</h2>
+    
+    <div class="flow-diagram">CUSTOMER FLOW:
+sevn.app/lissy (Landing)
+    ↓
+Sign In/Sign Up
+    ↓
+Home Page
+    ↓
+Intake Form (6 steps)
+    ↓
+Waitlist Page ("YOU'RE ON THE LIST")
+    ↓
+[Wait for stylist]
+    ↓
+Email with 7 selects
+
+STYLIST FLOW:
+Admin Dashboard
+    ↓
+Select Customer
+    ↓
+Stylist Workspace (3 panels)
+    ↓
+Review Intake + Search Products + Add 7 Selects
+    ↓
+Save Draft
+    ↓
+Send Email
+    ↓
+Customer receives edit</div>
+</div>
+
+<hr>
+
+<div style="text-align: center; margin-top: 50px; color: #666;">
+    <p><strong>End of Documentation</strong></p>
+    <p>SEVN SELECTS © 2026</p>
+</div>
+
+<div class="no-print" style="position: fixed; bottom: 20px; right: 20px; background: #1e1709; color: #fffefd; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+    <p style="margin: 0; font-weight: 600; font-size: 14px;">📄 To save as PDF:</p>
+    <p style="margin: 5px 0 0 0; font-size: 13px;">Press Ctrl+P (or Cmd+P) → Save as PDF</p>
+</div>
+
+</body>
+</html>

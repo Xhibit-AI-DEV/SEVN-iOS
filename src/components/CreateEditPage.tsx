@@ -3,7 +3,9 @@ import { useNavigate, useParams } from 'react-router';
 import svgPaths from "../imports/svg-ib8s7izy1q";
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { toast } from 'sonner@2.0.3';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Camera, Image as ImageIcon } from 'lucide-react';
+import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
 
 export function CreateEditPage() {
   const navigate = useNavigate();
@@ -87,6 +89,42 @@ export function CreateEditPage() {
       } else if (file.type.startsWith('video/')) {
         setMediaType('video');
       }
+    }
+  };
+
+  // Native media picker
+  const handleNativeMediaPick = async () => {
+    // Check if running on native platform
+    if (!Capacitor.isNativePlatform()) {
+      // Fallback to web file input
+      fileInputRef.current?.click();
+      return;
+    }
+
+    try {
+      // Show action sheet to choose source
+      const image = await CapacitorCamera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Prompt, // Shows "Camera" or "Photo Library"
+      });
+
+      if (image.webPath) {
+        // Convert to blob for upload
+        const response = await fetch(image.webPath);
+        const blob = await response.blob();
+        const file = new File([blob], `edit-${Date.now()}.${image.format}`, {
+          type: `image/${image.format}`
+        });
+
+        setMainMedia(image.webPath);
+        setMediaFile(file);
+        setMediaType('image');
+      }
+    } catch (error) {
+      console.error('Error picking media:', error);
+      // User cancelled or error occurred
     }
   };
 
@@ -292,7 +330,7 @@ export function CreateEditPage() {
           {/* Upload Area - Only show in create mode */}
           {!isEditMode && !mainMedia && (
             <button
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => handleNativeMediaPick()}
               className="w-full h-[471px] rounded-[8px] border-2 border-dashed border-[#1e1709] mb-6 flex flex-col items-center justify-center gap-4 bg-[rgba(255,254,253,0.5)]"
             >
               <svg className="w-[48px] h-[48px]" fill="none" viewBox="0 0 24 24">

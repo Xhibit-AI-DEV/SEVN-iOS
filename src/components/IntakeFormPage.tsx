@@ -4,6 +4,8 @@ import { toast } from 'sonner@2.0.3';
 import { Loader2 } from 'lucide-react';
 import { projectId } from '../utils/supabase/info';
 import svgPaths from "../imports/svg-ixy1f48tju";
+import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
 
 const intakeQuestions = [
   {
@@ -165,6 +167,42 @@ export function IntakeFormPage() {
     }
   };
 
+  // Native main image picker
+  const handleNativeMainImagePick = async () => {
+    // Check if running on native platform
+    if (!Capacitor.isNativePlatform()) {
+      // Fallback to web file input - trigger the hidden input
+      document.getElementById('main-image-input')?.click();
+      return;
+    }
+
+    try {
+      const image = await CapacitorCamera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Prompt, // Shows "Camera" or "Photo Library"
+      });
+
+      if (image.webPath) {
+        // Convert to blob for upload
+        const response = await fetch(image.webPath);
+        const blob = await response.blob();
+        const file = new File([blob], `intake-main-${Date.now()}.${image.format}`, {
+          type: `image/${image.format}`
+        });
+
+        setMainImage(file);
+        setUploadedImageUrl(image.webPath);
+        sessionStorage.setItem('pendingIntakeImageUrl', image.webPath);
+        toast.success('Main image added!');
+      }
+    } catch (error) {
+      console.error('Error picking main image:', error);
+      // User cancelled or error occurred
+    }
+  };
+
   const handleReferenceImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (referenceImages.length + files.length > 4) {
@@ -173,6 +211,42 @@ export function IntakeFormPage() {
     }
     setReferenceImages([...referenceImages, ...files]);
     toast.success(`${files.length} reference image(s) added!`);
+  };
+
+  // Native reference images picker
+  const handleNativeReferenceImagesPick = async () => {
+    // Check if running on native platform
+    if (!Capacitor.isNativePlatform()) {
+      // Fallback to web file input
+      document.getElementById('reference-images-input')?.click();
+      return;
+    }
+
+    try {
+      const image = await CapacitorCamera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Prompt,
+      });
+
+      if (image.webPath && referenceImages.length < 4) {
+        // Convert to blob
+        const response = await fetch(image.webPath);
+        const blob = await response.blob();
+        const file = new File([blob], `intake-ref-${Date.now()}.${image.format}`, {
+          type: `image/${image.format}`
+        });
+
+        setReferenceImages([...referenceImages, file]);
+        toast.success('Reference image added!');
+      } else if (referenceImages.length >= 4) {
+        toast.error('Maximum 4 reference images allowed');
+      }
+    } catch (error) {
+      console.error('Error picking reference image:', error);
+      // User cancelled or error occurred
+    }
   };
 
   const handleNext = () => {
@@ -416,6 +490,7 @@ export function IntakeFormPage() {
                 accept="image/*"
                 onChange={handleMainImageSelect}
                 className="hidden"
+                id="main-image-input"
               />
               <div className="w-full h-full flex flex-col items-center justify-center">
                 <svg className="w-12 h-12 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -424,6 +499,17 @@ export function IntakeFormPage() {
                 <p className="text-gray-600 text-sm">Tap to upload main photo</p>
               </div>
             </label>
+            <button
+              onClick={handleNativeMainImagePick}
+              className="w-full h-[52px] bg-[#1E1709] rounded-[12px] font-['Helvetica_Neue:Medium',sans-serif] text-[16px] tracking-[2px] text-white uppercase cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#2A2315] transition-all flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l4.586-4.586a2 2 0 012.828 0L16 14m-2-2l4.586-4.586a2 2 0 012.828 0L16 12" />
+              </svg>
+              <span className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] text-[#1E1709]">
+                Use Camera
+              </span>
+            </button>
           </div>
         )}
 
@@ -484,6 +570,7 @@ export function IntakeFormPage() {
                     multiple
                     onChange={handleReferenceImageSelect}
                     className="hidden"
+                    id="reference-images-input"
                   />
                 </label>
 
@@ -509,6 +596,17 @@ export function IntakeFormPage() {
                     ))}
                   </div>
                 )}
+                <button
+                  onClick={handleNativeReferenceImagesPick}
+                  className="w-full h-[52px] bg-[#1E1709] rounded-[12px] font-['Helvetica_Neue:Medium',sans-serif] text-[16px] tracking-[2px] text-white uppercase cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#2A2315] transition-all flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l4.586-4.586a2 2 0 012.828 0L16 14m-2-2l4.586-4.586a2 2 0 012.828 0L16 12" />
+                  </svg>
+                  <span className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] text-[#1E1709]">
+                    Use Camera
+                  </span>
+                </button>
               </div>
             )}
 

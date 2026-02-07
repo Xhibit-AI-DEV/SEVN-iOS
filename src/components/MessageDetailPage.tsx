@@ -315,19 +315,19 @@ export function MessageDetailPage() {
     if (!order) return null;
 
     const statusConfig = {
-      waitlist: { label: 'WAITLIST', bg: 'bg-yellow-500/10', text: 'text-yellow-700', border: 'border-yellow-500' },
-      invited: { label: 'INVITED', bg: 'bg-blue-500/10', text: 'text-blue-700', border: 'border-blue-500' },
-      paid: { label: 'PAID', bg: 'bg-green-500/10', text: 'text-green-700', border: 'border-green-500' },
-      styling: { label: 'STYLING', bg: 'bg-purple-500/10', text: 'text-purple-700', border: 'border-purple-500' },
-      completed: { label: 'COMPLETED', bg: 'bg-gray-500/10', text: 'text-gray-700', border: 'border-gray-500' },
-      cancelled: { label: 'CANCELLED', bg: 'bg-red-500/10', text: 'text-red-700', border: 'border-red-500' },
+      waitlist: { label: 'WAITLISTED', bg: 'bg-white', text: 'text-black', border: 'border-black' },
+      invited: { label: 'INVITED', bg: 'bg-white', text: 'text-black', border: 'border-black' },
+      paid: { label: 'PAID', bg: 'bg-white', text: 'text-black', border: 'border-black' },
+      styling: { label: 'STYLING', bg: 'bg-white', text: 'text-black', border: 'border-black' },
+      completed: { label: 'COMPLETED', bg: 'bg-white', text: 'text-black', border: 'border-black' },
+      cancelled: { label: 'CANCELLED', bg: 'bg-white', text: 'text-black', border: 'border-black' },
     };
 
     const config = statusConfig[order.status];
 
     return (
-      <div className={`px-4 py-2 ${config.bg} ${config.text} border ${config.border} rounded-[4px] font-['Helvetica_Neue:Medium',sans-serif] text-[11px] tracking-[1px] uppercase inline-block`}>
-        STATUS: {config.label}
+      <div className={`px-5 py-2.5 ${config.bg} ${config.text} border ${config.border} rounded-[4px] font-['Helvetica_Neue:Regular',sans-serif] text-[13px] tracking-[1px] uppercase inline-block`}>
+        {config.label}
       </div>
     );
   };
@@ -366,31 +366,29 @@ export function MessageDetailPage() {
       <div className="w-full max-w-[393px] mx-auto px-6 pb-12">
         {/* Header */}
         <div className="sticky top-0 bg-white z-10 h-[48px] border-b border-gray-100 -mx-6 px-6 mb-6">
-          <div className="h-full flex items-center justify-between">
+          <div className="h-full flex items-center justify-center relative">
             <button
               onClick={() => navigate('/messages')}
-              className="flex items-center gap-1 text-black hover:opacity-70 transition-opacity"
+              className="absolute left-0 flex items-center gap-1 text-black hover:opacity-70 transition-opacity"
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
             
-            <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[20px] tracking-[3px] text-black uppercase absolute left-1/2 transform -translate-x-1/2">
-              SEVN SELECTS
+            <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[20px] tracking-[3px] text-black uppercase">
+              STYLE REQUEST
             </p>
-            
-            <div className="w-6" />
           </div>
         </div>
 
-        {/* Customer Photo */}
-        <div className="flex justify-center mb-6">
+        {/* Customer Photo with Card Stack Effect */}
+        <div className="flex justify-center mb-4">
           <div className="relative">
-            {/* Triple border effect */}
-            <div className="absolute inset-0 border-[3px] border-[#1E1709] rounded-[8px]" style={{ transform: 'translate(-6px, -6px)' }} />
-            <div className="absolute inset-0 border-[3px] border-[#1E1709] rounded-[8px]" style={{ transform: 'translate(-3px, -3px)' }} />
-            <div className="w-[286px] h-[368px] rounded-[8px] overflow-hidden border-[3px] border-[#1E1709] relative z-10">
+            {/* Card stack layers - 1px lines, 4px apart */}
+            <div className="absolute inset-0 border-[1px] border-[#1E1709] rounded-[8px] bg-white" style={{ transform: 'translate(8px, 8px)' }} />
+            <div className="absolute inset-0 border-[1px] border-[#1E1709] rounded-[8px] bg-white" style={{ transform: 'translate(4px, 4px)' }} />
+            <div className="w-[286px] h-[368px] rounded-[8px] overflow-hidden border-[1px] border-[#1E1709] relative z-10 bg-white">
               {order.main_image_url ? (
                 <img 
                   src={order.main_image_url} 
@@ -406,33 +404,46 @@ export function MessageDetailPage() {
           </div>
         </div>
 
-        {/* Date of Request */}
-        <div className="text-center mb-4">
-          <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[12px] text-[#1E1709]/50">
-            Submitted {new Date(order.created_at).toLocaleDateString('en-US', { 
-              month: 'long', 
+        {/* Combined Status and Date Box */}
+        <div className="flex justify-center mb-12">
+          <div className="font-['Helvetica_Neue:Medium',sans-serif] text-[13px] tracking-[0.5px] uppercase text-black">
+            {order.status === 'waitlist' && `WAITLISTED · ${new Date(order.created_at).toLocaleDateString('en-US', { 
+              month: 'numeric', 
               day: 'numeric', 
-              year: 'numeric' 
-            })}
-          </p>
+              year: '2-digit' 
+            }).replace(/\//g, '/')}`}
+            {order.status === 'invited' && `INVITED · ${order.invited_at ? new Date(order.invited_at).toLocaleDateString('en-US', { 
+              month: 'numeric', 
+              day: 'numeric', 
+              year: '2-digit' 
+            }).replace(/\//g, '/') : ''}`}
+            {order.status === 'paid' && `PAID · ${order.paid_at ? new Date(order.paid_at).toLocaleDateString('en-US', { 
+              month: 'numeric', 
+              day: 'numeric', 
+              year: '2-digit' 
+            }).replace(/\//g, '/') : ''}`}
+            {order.status === 'styling' && `STYLING · ${order.styling_started_at ? new Date(order.styling_started_at).toLocaleDateString('en-US', { 
+              month: 'numeric', 
+              day: 'numeric', 
+              year: '2-digit' 
+            }).replace(/\//g, '/') : ''}`}
+            {order.status === 'completed' && `COMPLETED · ${order.completed_at ? new Date(order.completed_at).toLocaleDateString('en-US', { 
+              month: 'numeric', 
+              day: 'numeric', 
+              year: '2-digit' 
+            }).replace(/\//g, '/') : ''}`}
+            {order.status === 'cancelled' && 'CANCELLED'}
+          </div>
         </div>
 
-        {/* Status Badge */}
-        <div className="flex justify-center mb-6">
-          {getStatusBadge()}
-        </div>
-
-        {/* Divider Line */}
-        <div className="w-full max-w-[349px] h-[1px] bg-[#1E1709] mx-auto mb-6" />
-
-        {/* Style Intake Section */}
+        {/* Style Intake Section with Border */}
         {order.intake_answers && (
-          <div className="mb-8 mt-12">
+          <div className="mb-8">
             <p className="font-['Helvetica_Neue:Bold',sans-serif] text-[12px] tracking-[1.5px] uppercase text-[#1E1709] mb-4">
               STYLE INTAKE
             </p>
             
-            <div className="space-y-6">
+            <div className="border-[1px] border-[#1E1709] rounded-[8px] p-6 space-y-6">
               {questions.map((question, index) => {
                 const answerKey = `q${index + 1}`;
                 const answer = order.intake_answers?.[answerKey];
@@ -441,10 +452,10 @@ export function MessageDetailPage() {
                 
                 return (
                   <div key={index}>
-                    <p className="font-['Helvetica_Neue:Medium',sans-serif] text-[13px] text-[#1E1709] mb-2">
+                    <p className="font-['Helvetica_Neue:Medium',sans-serif] text-[14px] text-[#1E1709] mb-2">
                       {question}
                     </p>
-                    <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[13px] text-[#1E1709]/70 leading-[20px]">
+                    <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] text-[#1E1709]/70 leading-[20px]">
                       {answer}
                     </p>
                   </div>
@@ -458,12 +469,12 @@ export function MessageDetailPage() {
         {order.reference_images && order.reference_images.length > 0 && (
           <div className="mb-8">
             <p className="font-['Helvetica_Neue:Bold',sans-serif] text-[12px] tracking-[1.5px] uppercase text-[#1E1709] mb-4">
-              UPLOADED IMAGES
+              REFERENCES
             </p>
             
-            <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-wrap gap-2">
               {order.reference_images.map((imageUrl, index) => (
-                <div key={index} className="aspect-square rounded-[8px] overflow-hidden border-[2px] border-[#1E1709]">
+                <div key={index} className="w-[80px] h-[80px] rounded-[6px] overflow-hidden border-[1px] border-[#1E1709]">
                   <img 
                     src={imageUrl} 
                     alt={`Reference ${index + 1}`}
@@ -501,28 +512,6 @@ export function MessageDetailPage() {
         {/* Action Button */}
         <div className="mt-8">
           {getActionButton()}
-        </div>
-
-        {/* Timestamps */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-[8px] space-y-2">
-          <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[10px] text-[#1E1709]/50">
-            <span className="font-['Helvetica_Neue:Medium',sans-serif]">Submitted:</span> {new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
-          </p>
-          {order.invited_at && (
-            <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[10px] text-[#1E1709]/50">
-              <span className="font-['Helvetica_Neue:Medium',sans-serif]">Invited:</span> {new Date(order.invited_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
-            </p>
-          )}
-          {order.paid_at && (
-            <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[10px] text-[#1E1709]/50">
-              <span className="font-['Helvetica_Neue:Medium',sans-serif]">Paid:</span> {new Date(order.paid_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
-            </p>
-          )}
-          {order.completed_at && (
-            <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[10px] text-[#1E1709]/50">
-              <span className="font-['Helvetica_Neue:Medium',sans-serif]">Completed:</span> {new Date(order.completed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
-            </p>
-          )}
         </div>
       </div>
     </div>

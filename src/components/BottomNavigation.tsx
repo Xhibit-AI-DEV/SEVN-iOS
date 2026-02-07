@@ -4,9 +4,10 @@ import { Plus } from 'lucide-react';
 
 interface BottomNavigationProps {
   activeTab?: 'discover' | 'profile';
+  className?: string;
 }
 
-export function BottomNavigation({ activeTab = 'discover' }: BottomNavigationProps) {
+export function BottomNavigation({ activeTab = 'discover', className = '' }: BottomNavigationProps) {
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -40,11 +41,14 @@ export function BottomNavigation({ activeTab = 'discover' }: BottomNavigationPro
 
   return (
     <div 
-      className={`pb-[18px] transition-transform duration-500 ease-out ${
-        isVisible ? 'translate-y-0' : 'translate-y-full'
-      }`}
+      className={`
+        fixed bottom-0 left-0 right-0 h-[80px] bg-white 
+        flex items-end justify-center
+        border-t border-[#1e1709]
+        ${className}
+      `}
     >
-      <div className="flex items-end justify-center max-w-[393px] mx-auto px-8" style={{ gap: '40px' }}>
+      <div className="flex items-end justify-center mx-auto px-8" style={{ gap: '40px' }}>
         {/* Home/Discover */}
         <button
           className="flex flex-col items-center justify-center"

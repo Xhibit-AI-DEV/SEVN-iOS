@@ -77,6 +77,17 @@ export function CreateEditPage() {
     }
   }, [isEditMode, editId]);
 
+  // Auto-open native media picker in create mode
+  useEffect(() => {
+    if (!isEditMode) {
+      // Small delay to ensure component is fully mounted
+      const timer = setTimeout(() => {
+        handleNativeMediaPick();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isEditMode]);
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -124,7 +135,10 @@ export function CreateEditPage() {
       }
     } catch (error) {
       console.error('Error picking media:', error);
-      // User cancelled or error occurred
+      // User cancelled - navigate back if in create mode and no media yet
+      if (!isEditMode && !mainMedia) {
+        navigate(-1);
+      }
     }
   };
 

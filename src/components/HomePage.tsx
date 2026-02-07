@@ -25,7 +25,7 @@ export function HomePage() {
     <div className="relative w-full min-h-screen overflow-x-hidden bg-[#fffefd]">
       {/* Header - VII SEVN on left, hamburger on right */}
       <div className="bg-white h-[48px] w-full relative">
-        <div className="h-full flex items-center justify-between px-4 max-w-[393px] mx-auto">
+        <div className="h-full flex items-center justify-between px-4 mx-auto">
           <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-black">
             VII SEVN
           </p>
@@ -36,7 +36,7 @@ export function HomePage() {
       </div>
 
       {/* Scrollable content */}
-      <div className="w-full max-w-[393px] mx-auto overflow-y-auto pb-24 pt-4">
+      <div className="w-full mx-auto overflow-y-auto pb-24 pt-4">
         {/* FEATURED STYLISTS Section */}
         <div className="px-4 mb-4">
           <h2 className="font-['Helvetica_Neue:Light',sans-serif] text-[16px] tracking-[3px] text-[#1e1709] uppercase mb-4 leading-[22px]">

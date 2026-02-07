@@ -1,5 +1,5 @@
 {
   "appId": "com.sevn.stylistadmin",
   "appName": "SEVN Stylist",
-  "webDir": "build"
+  "webDir": "dist"
 }

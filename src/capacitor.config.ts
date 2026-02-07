@@ -3,47 +3,22 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.sevn.stylistadmin',
   appName: 'SEVN Stylist',
-  webDir: 'build',
+  webDir: 'dist',
   bundledWebRuntime: false,
   
   server: {
     hostname: 'sevn.app',
     androidScheme: 'https',
     iosScheme: 'https',
-    // For development with live reload, uncomment and set your local IP:
-    // url: 'http://YOUR_LOCAL_IP:5173',
-    // cleartext: true
+    // Load customer.html directly instead of index.html
+    url: undefined,
+    cleartext: false,
   },
-
-  plugins: {
-    SplashScreen: {
-      launchShowDuration: 2000,
-      backgroundColor: '#FFFFFF',
-      showSpinner: false,
-      androidSpinnerStyle: 'small',
-      iosSpinnerStyle: 'small'
-    },
-    
-    StatusBar: {
-      style: 'dark',
-      backgroundColor: '#FFFFFF'
-    },
-
-    Keyboard: {
-      resize: 'body',
-      style: 'dark',
-      resizeOnFullScreen: true
-    },
-
-    Camera: {
-      // Camera permissions for intake form image uploads
-      permissions: ['camera', 'photos']
-    }
-  },
-
+  
+  // Configure the iOS app to load customer.html as the starting page
   ios: {
     contentInset: 'automatic',
-    scheme: 'SEVN Stylist'
+    scheme: 'SEVN Stylist',
   },
 
   android: {

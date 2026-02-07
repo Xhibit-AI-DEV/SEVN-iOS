@@ -26,6 +26,7 @@ export function CreateEditPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingMetadata, setIsFetchingMetadata] = useState(false);
   const [isLoadingEdit, setIsLoadingEdit] = useState(isEditMode);
+  const [isInitialPickerOpen, setIsInitialPickerOpen] = useState(!isEditMode);
 
   // Load existing edit data if in edit mode
   useEffect(() => {
@@ -79,14 +80,14 @@ export function CreateEditPage() {
 
   // Auto-open native media picker in create mode
   useEffect(() => {
-    if (!isEditMode) {
+    if (!isEditMode && isInitialPickerOpen) {
       // Small delay to ensure component is fully mounted
       const timer = setTimeout(() => {
         handleNativeMediaPick();
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [isEditMode]);
+  }, [isEditMode, isInitialPickerOpen]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -108,6 +109,7 @@ export function CreateEditPage() {
     // Check if running on native platform
     if (!Capacitor.isNativePlatform()) {
       // Fallback to web file input
+      setIsInitialPickerOpen(false);
       fileInputRef.current?.click();
       return;
     }
@@ -132,6 +134,7 @@ export function CreateEditPage() {
         setMainMedia(image.webPath);
         setMediaFile(file);
         setMediaType('image');
+        setIsInitialPickerOpen(false);
       }
     } catch (error) {
       console.error('Error picking media:', error);
@@ -139,6 +142,7 @@ export function CreateEditPage() {
       if (!isEditMode && !mainMedia) {
         navigate(-1);
       }
+      setIsInitialPickerOpen(false);
     }
   };
 
@@ -338,8 +342,8 @@ export function CreateEditPage() {
       )}
 
       {/* Main Content */}
-      {!isLoadingEdit && (
-        <div className="w-full max-w-[393px] mx-auto px-4 pb-24">
+      {!isLoadingEdit && !isInitialPickerOpen && (
+        <div className="w-full px-4 pb-24">
           
           {/* Upload Area - Only show in create mode */}
           {!isEditMode && !mainMedia && (

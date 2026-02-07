@@ -10,9 +10,24 @@
   
   <!-- COMPREHENSIVE SF-Pro Font Blocker - Layer 1: Preload Blocking -->
   <script>
-    // LAYER 1: Block font fetches before they start
+    // Comprehensive font loading blocker
     (function() {
       'use strict';
+      
+      // Auto-redirect to customer.html if running in Capacitor (mobile app)
+      // Check immediately and also after a short delay to ensure Capacitor loads
+      function checkAndRedirect() {
+        if (typeof window.Capacitor !== 'undefined') {
+          window.location.href = '/customer.html';
+          return true;
+        }
+        return false;
+      }
+      
+      if (!checkAndRedirect()) {
+        // If not found immediately, check after a short delay
+        setTimeout(checkAndRedirect, 50);
+      }
       
       // Global error suppression - MOST AGGRESSIVE
       window.addEventListener('error', function(e) {

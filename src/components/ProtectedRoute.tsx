@@ -21,13 +21,16 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     
     if (!authToken) {
       // No token, redirect to sign in
+      console.log('🔐 ProtectedRoute: No auth token found');
       setIsVerifying(false);
       navigate('/signin');
       return;
     }
 
     try {
-      console.log('🔐 ProtectedRoute: Verifying auth...');
+      console.log('🔐 ProtectedRoute: Verifying auth with token...');
+      console.log('🔐 Token preview:', authToken.substring(0, 20) + '...');
+      
       // Verify token with backend
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/auth/me`,
@@ -42,7 +45,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('🔐 ProtectedRoute: Auth verified:', data);
+        console.log('✅ ProtectedRoute: Auth verified:', data);
         
         // Update localStorage with latest user info
         localStorage.setItem('user_email', data.email);
@@ -54,10 +57,15 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
         setIsAuthenticated(true);
         setIsVerifying(false);
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('❌ ProtectedRoute: Auth verification failed:', errorData);
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('❌ ProtectedRoute: Auth verification failed:', {
+          status: response.status,
+          code: errorData.code || response.status,
+          message: errorData.error || errorData.message || 'Authentication failed'
+        });
         
-        // Token invalid or expired
+        // Token invalid or expired - clear everything
+        console.log('🧹 Clearing auth data and redirecting to sign in...');
         localStorage.removeItem('auth_token');
         localStorage.removeItem('access_token');
         localStorage.removeItem('user_email');
@@ -68,8 +76,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
         navigate('/signin');
       }
     } catch (error) {
-      console.error('❌ ProtectedRoute: Error verifying auth:', error);
-      console.error('❌ ProtectedRoute: This could be a network error or CORS issue');
+      console.error('❌ ProtectedRoute: Network error verifying auth:', error);
       
       // Don't redirect immediately on network error - allow user to try again
       // Instead, check if we have recent auth data

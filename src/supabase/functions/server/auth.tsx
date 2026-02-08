@@ -146,6 +146,7 @@ app.post('/signup', async (c) => {
       user_id: data.user.id,
       email: data.user.email,
       name: name || '',
+      role: userRole, // Add role to signup response
       access_token: signInData.session.access_token,
     });
 

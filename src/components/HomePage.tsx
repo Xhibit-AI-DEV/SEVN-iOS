@@ -1,7 +1,15 @@
 import { Menu } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { BottomNav } from './BottomNav';
+import { IonicBottomNav } from './IonicBottomNav';
+
+// Import stylist images - must import as variables, NOT strings
+import imgLissyRoddy from "figma:asset/21ead93bac0da68ed5f33efdfb07c0bf632228cc.png";
+import imgValDrozg1 from "figma:asset/4b4531903296dd337e2503bb17f59748fdc6c9ee.png";
+import imgValDrozg2 from "figma:asset/20128333cc3dc0dc5a9ed76f88c9c981a3185bd7.png";
+import imgValDrozg3 from "figma:asset/e0a9d1b58aed482da9011bb5f685dc39e3501d17.png";
+import imgChrisWhyle from "figma:asset/083df4dc1c94d586d53c3644182d81e287c70454.png";
+import imgCuratedEdit from "figma:asset/d6d0374d1209d254e69a363bf2bd48de2a8fd831.png";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -40,7 +48,7 @@ export default function HomePage() {
                   alt="Lissy Roddy" 
                   loading="lazy" 
                   className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
-                  src="figma:asset/21ead93bac0da68ed5f33efdfb07c0bf632228cc.png" 
+                  src={imgLissyRoddy} 
                 />
                 <div className="absolute inset-0 rounded-[147px]" style={{ border: '1px solid #EAEAEA' }} />
               </div>
@@ -62,19 +70,19 @@ export default function HomePage() {
                   alt="Val Drozg" 
                   loading="lazy" 
                   className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
-                  src="figma:asset/4b4531903296dd337e2503bb17f59748fdc6c9ee.png" 
+                  src={imgValDrozg1} 
                 />
                 <ImageWithFallback 
                   alt="Val Drozg" 
                   loading="lazy" 
                   className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
-                  src="figma:asset/20128333cc3dc0dc5a9ed76f88c9c981a3185bd7.png" 
+                  src={imgValDrozg2} 
                 />
                 <ImageWithFallback 
                   alt="Val Drozg" 
                   loading="lazy" 
                   className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
-                  src="figma:asset/e0a9d1b58aed482da9011bb5f685dc39e3501d17.png" 
+                  src={imgValDrozg3} 
                 />
                 <div className="absolute inset-0 rounded-[147px]" style={{ border: '1px solid #EAEAEA' }} />
               </div>
@@ -100,7 +108,7 @@ export default function HomePage() {
                   alt="Chris Whyle" 
                   loading="lazy" 
                   className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
-                  src="figma:asset/083df4dc1c94d586d53c3644182d81e287c70454.png" 
+                  src={imgChrisWhyle} 
                 />
                 <div className="absolute inset-0 rounded-[147px]" style={{ border: '1px solid #EAEAEA' }} />
               </div>
@@ -138,7 +146,7 @@ export default function HomePage() {
                     alt="Chris Edit" 
                     loading="lazy" 
                     className="absolute inset-0 w-full h-full object-cover rounded-[8px]"
-                    src="figma:asset/d6d0374d1209d254e69a363bf2bd48de2a8fd831.png"
+                    src={imgCuratedEdit}
                   />
                 </div>
                 
@@ -187,7 +195,7 @@ export default function HomePage() {
       </div>
       
       {/* Bottom navigation - positioned at bottom with safe area */}
-      <BottomNav />
+      <IonicBottomNav />
     </div>
   );
 }

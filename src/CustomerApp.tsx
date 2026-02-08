@@ -114,13 +114,9 @@ function AppContent() {
     
     console.log('🔐 Auth check:', { hasToken: !!authToken, role });
     
-    if (authToken) {
-      setIsAuthenticated(true);
-      setUserRole(role || 'customer');
-    } else {
-      setIsAuthenticated(false);
-      setUserRole(null);
-    }
+    // Set auth state immediately - don't wait
+    setIsAuthenticated(!!authToken);
+    setUserRole(role || 'customer');
   }, []);
 
   // Debug: Log current path
@@ -258,8 +254,8 @@ function AppContent() {
         <Route path="/simple-debug" element={<SimpleDebug />} />
         
         {/* SHARED ROUTES - Accessible by all authenticated users */}
-        <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-        <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/home" element={<HomePage />} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="/change-password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
         <Route path="/change-email" element={<ProtectedRoute><ChangeEmailPage /></ProtectedRoute>} />

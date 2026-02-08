@@ -17,7 +17,7 @@ export function BottomNav() {
         <button
           onClick={() => navigate('/home')}
           className={`flex flex-col items-center gap-1 transition-opacity ${
-            location.pathname === '/home' ? 'opacity-100' : 'opacity-40'
+            location.pathname === '/home' || location.pathname === '/' ? 'opacity-100' : 'opacity-40'
           }`}
         >
           <Home className="w-6 h-6" strokeWidth={1.5} />
@@ -28,7 +28,7 @@ export function BottomNav() {
 
         {/* Create (Plus) */}
         <button
-          onClick={() => navigate('/profile')}
+          onClick={() => navigate('/create-edit')}
           className="flex flex-col items-center gap-1 transition-opacity opacity-40 hover:opacity-100"
         >
           <Plus className="w-6 h-6" strokeWidth={1.5} />

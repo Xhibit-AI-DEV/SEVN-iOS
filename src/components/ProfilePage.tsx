@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { Link, Menu, Loader2, Heart, Camera, Plus, Share2, UserPlus, UserCheck } from 'lucide-react';
+import { Heart, Link, Loader2, Menu, Plus } from 'lucide-react';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import 'swiper/css';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { toast } from 'sonner@2.0.3';
 import { EditProfileModal } from './EditProfileModal';
 import { MoreMenuModal } from './MoreMenuModal';
 import { DeleteAccountModal } from './DeleteAccountModal';
-import { BottomNavigation } from './BottomNavigation';
+import { IonicBottomNav } from './IonicBottomNav';
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 
@@ -34,6 +36,7 @@ export function ProfilePage() {
   const [activeTab, setActiveTab] = useState<'edits' | 'likes'>('edits');
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const swiperRef = useRef<any>(null);
 
   useEffect(() => {
     let isCancelled = false;
@@ -655,7 +658,6 @@ export function ProfilePage() {
       className="w-full h-screen bg-[#fffefd] flex flex-col overflow-hidden"
       style={{
         paddingTop: 'env(safe-area-inset-top)',
-        paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
       {/* Header */}
@@ -712,16 +714,6 @@ export function ProfilePage() {
               onChange={handleAvatarUpload}
               className="hidden"
             />
-            {/* Camera icon overlay */}
-            {Capacitor.isPluginAvailable('Camera') && (
-              <button
-                onClick={handleAvatarUploadFromCamera}
-                disabled={isUploadingAvatar}
-                className="absolute top-0 left-0 w-[26px] h-[26px] bg-[#1e1709] border-2 border-[#fffefd] rounded-full flex items-center justify-center hover:bg-[#3e3709] transition-colors disabled:opacity-50"
-              >
-                <Camera className="w-[14px] h-[14px] text-[#fffefd]" strokeWidth={2.5} />
-              </button>
-            )}
           </div>
           
           {/* Stats */}
@@ -810,11 +802,8 @@ export function ProfilePage() {
         <div className="flex gap-6 mb-4 border-b border-[#e0e0e0]">
           <button
             onClick={() => {
-              const container = document.getElementById('swipe-container');
-              if (container) {
-                container.scrollTo({ left: 0, behavior: 'smooth' });
-                setActiveTab('edits');
-              }
+              setActiveTab('edits');
+              swiperRef.current?.swiper?.slideTo(0);
             }}
             className={`font-['Helvetica_Neue:Medium',sans-serif] text-[13px] tracking-[2px] text-[#1e1709] uppercase pb-3 border-b-2 transition-colors ${
               activeTab === 'edits' ? 'border-[#1e1709]' : 'border-transparent'
@@ -824,12 +813,8 @@ export function ProfilePage() {
           </button>
           <button
             onClick={() => {
-              const container = document.getElementById('swipe-container');
-              if (container) {
-                const width = container.offsetWidth;
-                container.scrollTo({ left: width, behavior: 'smooth' });
-                setActiveTab('likes');
-              }
+              setActiveTab('likes');
+              swiperRef.current?.swiper?.slideTo(1);
             }}
             className={`font-['Helvetica_Neue:Medium',sans-serif] text-[13px] tracking-[2px] text-[#1e1709] uppercase pb-3 border-b-2 transition-colors ${
               activeTab === 'likes' ? 'border-[#1e1709]' : 'border-transparent'
@@ -839,106 +824,24 @@ export function ProfilePage() {
           </button>
         </div>
 
-        {/* Swipeable Container */}
-        <div 
-          id="swipe-container"
-          className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4"
-          style={{ scrollSnapType: 'x mandatory' }}
-          onScroll={(e) => {
-            const container = e.currentTarget;
-            const scrollLeft = container.scrollLeft;
-            const width = container.offsetWidth;
-            // Update active tab based on scroll position (3 sections)
-            if (scrollLeft < width * 0.5) {
-              setActiveTab('edits');
-            } else {
-              setActiveTab('likes');
-            }
+        {/* Ionic Swipeable Container */}
+        <Swiper 
+          initialSlide={0}
+          speed={400}
+          spaceBetween={0}
+          onSlideChange={(swiper) => {
+            const index = swiper.activeIndex;
+            setActiveTab(index === 0 ? 'edits' : 'likes');
           }}
+          ref={swiperRef}
         >
           {/* EDITS Section */}
-          <div className="w-full shrink-0 snap-start px-4">
-            <div className="mb-6">
-              {edits.length > 0 ? (
-                <div className="flex gap-[8px] overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-                  {edits.map(edit => renderEditCard(edit, false))}
-                </div>
-              ) : (
-                <div className="relative w-[300px] h-[450px]">
-                  {/* Stacked cards effect - showing 3 layers with 4px spacing */}
-                  <div className="absolute left-0 top-0 w-full h-full">
-                    {/* Back card - 8px offset */}
-                    <div 
-                      className="absolute w-full h-full rounded-[8px] border border-[#1e1709] bg-[#f5f5f5]"
-                      style={{ 
-                        left: '8px',
-                        top: '8px',
-                        right: '0px',
-                        bottom: '0px'
-                      }}
-                    />
-                    {/* Middle card - 4px offset */}
-                    <div 
-                      className="absolute w-full h-full rounded-[8px] border border-[#1e1709] bg-[#f5f5f5]"
-                      style={{ 
-                        left: '4px',
-                        top: '4px',
-                        right: '4px',
-                        bottom: '4px'
-                      }}
-                    />
-                    {/* Front card */}
-                    <div 
-                      className="absolute w-full h-full rounded-[8px] border border-[#1e1709] bg-[#f5f5f5]"
-                      style={{ 
-                        left: '0px',
-                        top: '0px',
-                        right: '8px',
-                        bottom: '8px'
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* LIKES Section */}
-          <div className="w-full shrink-0 snap-start px-4">
-            <div className="mb-6">
-              {/* Products Column */}
+          <SwiperSlide>
+            <div className="w-full">
               <div className="mb-6">
-                <h3 className="font-['Helvetica_Neue:Regular',sans-serif] text-[12px] tracking-[1px] text-[#1e1709] uppercase mb-3 leading-[20px]">
-                  Products
-                </h3>
-                {likedProducts.length > 0 ? (
-                  <div className="flex gap-[12px] overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-                    {likedProducts.map(like => renderProductCard(like))}
-                  </div>
-                ) : (
-                  <div className="flex gap-[12px] overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-                    {/* Empty state - outline boxes */}
-                    {[1, 2, 3].map((i) => (
-                      <div 
-                        key={i}
-                        className="relative shrink-0 w-[112px] border border-[#1e1709] bg-[#f5f5f5]"
-                      >
-                        <div className="w-full h-[150px]" />
-                        <div className="p-2 h-[44px]" />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Edits Column */}
-              <div>
-                <h3 className="font-['Helvetica_Neue:Regular',sans-serif] text-[12px] tracking-[1px] text-[#1e1709] uppercase mb-3 leading-[20px]">
-                  Edits
-                </h3>
-                {likedEdits.length > 0 ? (
+                {edits.length > 0 ? (
                   <div className="flex gap-[8px] overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-                    {likedEdits.map(edit => renderEditCard(edit, true))}
+                    {edits.map(edit => renderEditCard(edit, false))}
                   </div>
                 ) : (
                   <div className="relative w-[300px] h-[450px]">
@@ -979,15 +882,93 @@ export function ProfilePage() {
                 )}
               </div>
             </div>
-          </div>
-        </div>
+          </SwiperSlide>
+
+          {/* LIKES Section */}
+          <SwiperSlide>
+            <div className="w-full">
+              <div className="mb-6">
+                {/* Products Column */}
+                <div className="mb-6">
+                  <h3 className="font-['Helvetica_Neue:Regular',sans-serif] text-[12px] tracking-[1px] text-[#1e1709] uppercase mb-3 leading-[20px] px-4">
+                    Products
+                  </h3>
+                  {likedProducts.length > 0 ? (
+                    <div className="flex gap-[12px] overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                      {likedProducts.map(like => renderProductCard(like))}
+                    </div>
+                  ) : (
+                    <div className="flex gap-[12px] overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                      {/* Empty state - outline boxes */}
+                      {[1, 2, 3].map((i) => (
+                        <div 
+                          key={i}
+                          className="relative shrink-0 w-[112px] border border-[#1e1709] bg-[#f5f5f5]"
+                        >
+                          <div className="w-full h-[150px]" />
+                          <div className="p-2 h-[44px]" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Edits Column */}
+                <div>
+                  <h3 className="font-['Helvetica_Neue:Regular',sans-serif] text-[12px] tracking-[1px] text-[#1e1709] uppercase mb-3 leading-[20px] px-4">
+                    Edits
+                  </h3>
+                  {likedEdits.length > 0 ? (
+                    <div className="flex gap-[8px] overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                      {likedEdits.map(edit => renderEditCard(edit, true))}
+                    </div>
+                  ) : (
+                    <div className="relative w-[300px] h-[450px] mx-4">
+                      {/* Stacked cards effect - showing 3 layers with 4px spacing */}
+                      <div className="absolute left-0 top-0 w-full h-full">
+                        {/* Back card - 8px offset */}
+                        <div 
+                          className="absolute w-full h-full rounded-[8px] border border-[#1e1709] bg-[#f5f5f5]"
+                          style={{ 
+                            left: '8px',
+                            top: '8px',
+                            right: '0px',
+                            bottom: '0px'
+                          }}
+                        />
+                        {/* Middle card - 4px offset */}
+                        <div 
+                          className="absolute w-full h-full rounded-[8px] border border-[#1e1709] bg-[#f5f5f5]"
+                          style={{ 
+                            left: '4px',
+                            top: '4px',
+                            right: '4px',
+                            bottom: '4px'
+                          }}
+                        />
+                        {/* Front card */}
+                        <div 
+                          className="absolute w-full h-full rounded-[8px] border border-[#1e1709] bg-[#f5f5f5]"
+                          style={{ 
+                            left: '0px',
+                            top: '0px',
+                            right: '8px',
+                            bottom: '8px'
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </SwiperSlide>
+        </Swiper>
         </div>
       </div>
       
       {/* Bottom navigation */}
-      <div className="fixed bottom-0 left-0 right-0">
-        <BottomNavigation activeTab="profile" />
-      </div>
+      <IonicBottomNav />
 
       {/* Edit Profile Modal */}
       {showEditModal && userId && (

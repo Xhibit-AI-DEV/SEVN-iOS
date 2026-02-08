@@ -1,20 +1,10 @@
 import { BottomNavigation } from './BottomNavigation';
 import { useNavigate } from 'react-router';
 import { Menu } from 'lucide-react';
-import svgPaths from "../imports/svg-d2gyhsl728";
 import imgScreenshot20231117At12528 from "figma:asset/4b4531903296dd337e2503bb17f59748fdc6c9ee.png";
-import imgScreenshot20231117At12529 from "figma:asset/fecf94a9418e54b88d39fd7f742c93a62efe3681.png";
-import imgScreenshot20231117At12524 from "figma:asset/557e4ca658e2ff37cf2dda18e4534c106ec861c0.png";
-import imgScreenshot20231117At12525 from "figma:asset/e4b87ad125820c87df00cd6e705bde4e8af3e67e.png";
 import imgScreenshot20231117At12530 from "figma:asset/20128333cc3dc0dc5a9ed76f88c9c981a3185bd7.png";
 import imgScreenshot20231117At12531 from "figma:asset/e0a9d1b58aed482da9011bb5f685dc39e3501d17.png";
 import imgLissyRoddy from "figma:asset/21ead93bac0da68ed5f33efdfb07c0bf632228cc.png";
-import img021 from "figma:asset/e848b14a74d352089a614d152282f09191ed8fc0.png";
-import img22 from "figma:asset/9f1f3c2c66a18611ca3dc256be40c92f256300b5.png";
-import img23 from "figma:asset/2100215bdb3f74706b3cf7fa51529271f7ee431e.png";
-import img24 from "figma:asset/ffd0a0d7d582101431a5f08c43e5cca5e4dedd59.png";
-import img from "figma:asset/7ba87817f8223271b091058d7d6c574cf1ba0452.png";
-import imgShareIcon from "figma:asset/acdcb062503544d45e9ec42f141e5eaf2bc04359.png";
 import imgChrisWhyle from "figma:asset/083df4dc1c94d586d53c3644182d81e287c70454.png";
 import imgChrisEdit from "figma:asset/d6d0374d1209d254e69a363bf2bd48de2a8fd831.png";
 
@@ -53,7 +43,7 @@ export function HomePage() {
             >
               {/* Circular image */}
               <div className="absolute inset-[5.05%_4.71%_4.69%_4.71%] pointer-events-none rounded-[147px]">
-                <img alt="" className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" src={imgLissyRoddy} />
+                <img alt="" loading="lazy" className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" src={imgLissyRoddy} />
                 <div className="absolute inset-0 rounded-[147px]" style={{ border: '1px solid #EAEAEA' }} />
               </div>
               
@@ -70,9 +60,9 @@ export function HomePage() {
             <div className="relative shrink-0 size-[225px] border border-black/50 rounded-[1px]" style={{ borderWidth: '1px' }}>
               {/* Layered circular images */}
               <div className="absolute inset-[5.05%_4.71%_4.69%_4.71%] pointer-events-none rounded-[147px]">
-                <img alt="" className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" src={imgScreenshot20231117At12528} />
-                <img alt="" className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" src={imgScreenshot20231117At12530} />
-                <img alt="" className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" src={imgScreenshot20231117At12531} />
+                <img alt="" loading="lazy" className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" src={imgScreenshot20231117At12528} />
+                <img alt="" loading="lazy" className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" src={imgScreenshot20231117At12530} />
+                <img alt="" loading="lazy" className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" src={imgScreenshot20231117At12531} />
                 <div className="absolute inset-0 rounded-[147px]" style={{ border: '1px solid #EAEAEA' }} />
               </div>
               
@@ -93,7 +83,7 @@ export function HomePage() {
             >
               {/* Layered circular images */}
               <div className="absolute inset-[5.05%_4.71%_4.69%_4.71%] pointer-events-none rounded-[147px]">
-                <img alt="" className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" src={imgChrisWhyle} />
+                <img alt="" loading="lazy" className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" src={imgChrisWhyle} />
                 <div className="absolute inset-0 rounded-[147px]" style={{ border: '1px solid #EAEAEA' }} />
               </div>
               
@@ -128,6 +118,7 @@ export function HomePage() {
                 <div className="absolute inset-0 rounded-[8px]">
                   <img 
                     alt=""
+                    loading="lazy"
                     className="absolute inset-0 w-full h-full object-cover rounded-[8px]"
                     src={imgChrisEdit}
                   />

@@ -10,6 +10,18 @@ import { MessagesPage } from './components/MessagesPage';
 import { StylistsPage } from './components/StylistsPage';
 import { projectId, publicAnonKey } from './utils/supabase/info';
 
+// Simple loading screen to prevent overwhelming iOS with all images at once
+function LoadingScreen() {
+  return (
+    <div className="w-full min-h-screen flex flex-col items-center justify-center bg-white">
+      <div className="text-center">
+        <h1 className="text-[24px] font-['Helvetica_Neue:Regular',sans-serif] tracking-[3px] mb-4">VII SEVN</h1>
+        <p className="text-sm text-gray-600">Loading...</p>
+      </div>
+    </div>
+  );
+}
+
 // Error Boundary Component
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },

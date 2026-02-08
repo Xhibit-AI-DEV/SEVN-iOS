@@ -71,8 +71,49 @@
     }
   </style>
   <script>
-    // Comprehensive font loading blocker
+    // Comprehensive font loading blocker + iOS Crash Prevention
     (function() {
+      // 🛡️ iOS WebKit Crash Prevention
+      // Monitor memory usage and throttle image loading
+      let imageLoadCount = 0;
+      const MAX_CONCURRENT_IMAGES = 5;
+      
+      // Override Image constructor to throttle loading
+      const OriginalImage = window.Image;
+      window.Image = function() {
+        const img = new OriginalImage();
+        const originalSrc = Object.getOwnPropertyDescriptor(OriginalImage.prototype, 'src');
+        
+        Object.defineProperty(img, 'src', {
+          get: function() {
+            return originalSrc.get.call(this);
+          },
+          set: function(value) {
+            // Throttle image loading
+            if (imageLoadCount >= MAX_CONCURRENT_IMAGES) {
+              console.log('⏳ Throttling image load:', value.substring(0, 50));
+              setTimeout(() => {
+                originalSrc.set.call(this, value);
+                imageLoadCount++;
+              }, 100);
+            } else {
+              originalSrc.set.call(this, value);
+              imageLoadCount++;
+            }
+            
+            // Decrement counter when image loads
+            this.addEventListener('load', () => {
+              imageLoadCount = Math.max(0, imageLoadCount - 1);
+            });
+            this.addEventListener('error', () => {
+              imageLoadCount = Math.max(0, imageLoadCount - 1);
+            });
+          }
+        });
+        
+        return img;
+      };
+      
       // LAYER 0: Global error suppression - MOST AGGRESSIVE
       window.addEventListener('error', function(e) {
         if (e.message && (

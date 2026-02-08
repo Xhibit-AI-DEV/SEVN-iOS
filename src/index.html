@@ -14,19 +14,33 @@
     (function() {
       'use strict';
       
-      // Auto-redirect to customer.html if running in Capacitor (mobile app)
-      // Check immediately and also after a short delay to ensure Capacitor loads
-      function checkAndRedirect() {
+      // IMMEDIATE redirect check - check for both Capacitor and mobile user agent
+      function isCapacitorOrMobile() {
+        // Check for Capacitor global
         if (typeof window.Capacitor !== 'undefined') {
-          window.location.href = '/customer.html';
+          console.log('🔄 Capacitor detected - redirecting to customer.html');
+          return true;
+        }
+        // Check for mobile user agent as backup
+        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+          console.log('🔄 Mobile device detected - redirecting to customer.html');
           return true;
         }
         return false;
       }
       
-      if (!checkAndRedirect()) {
-        // If not found immediately, check after a short delay
-        setTimeout(checkAndRedirect, 50);
+      // Try redirect immediately
+      if (isCapacitorOrMobile()) {
+        console.log('🔄 Redirecting to customer.html...');
+        window.location.replace('/customer.html');
+      } else {
+        // Check again after Capacitor loads
+        setTimeout(function() {
+          if (isCapacitorOrMobile()) {
+            console.log('🔄 [Delayed] Redirecting to customer.html...');
+            window.location.replace('/customer.html');
+          }
+        }, 100);
       }
       
       // Global error suppression - MOST AGGRESSIVE

@@ -1,7 +1,7 @@
 {
   "appId": "com.sevn.stylistadmin",
   "appName": "SEVN Stylist",
-  "webDir": "dist",
+  "webDir": ".",
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 2000,

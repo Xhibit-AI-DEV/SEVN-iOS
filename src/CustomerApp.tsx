@@ -8,6 +8,7 @@ import { WaitlistPage } from './components/WaitlistPage';
 import { ProfilePage } from './components/ProfilePage';
 import { MessagesPage } from './components/MessagesPage';
 import { StylistsPage } from './components/StylistsPage';
+import { SignIn } from './components/SignIn';
 import { projectId, publicAnonKey } from './utils/supabase/info';
 
 // Simple loading screen to prevent overwhelming iOS with all images at once
@@ -68,11 +69,41 @@ function CustomerAppContent() {
     email: string;
     contentfulId?: string;
   } | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  // Check authentication on mount
+  useEffect(() => {
+    const authToken = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
+    const userRole = localStorage.getItem('user_role');
+    
+    if (authToken && userRole === 'customer') {
+      setIsAuthenticated(true);
+    } else {
+      setIsAuthenticated(false);
+      // Redirect to signin if not on signin page
+      if (!window.location.hash.includes('/signin')) {
+        navigate('/signin');
+      }
+    }
+  }, [navigate]);
 
   // Debug: Log current path
   useEffect(() => {
     console.log('Current path:', window.location.pathname, window.location.hash);
   }, []);
+
+  // Show loading while checking auth
+  if (isAuthenticated === null) {
+    return <LoadingScreen />;
+  }
+
+  // Protected route wrapper
+  const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
+    if (!isAuthenticated) {
+      return <SignIn />;
+    }
+    return children;
+  };
 
   const handleImageUpload = async (file: File) => {
     console.log('📸 [CustomerApp.tsx] handleImageUpload called');
@@ -168,9 +199,10 @@ function CustomerAppContent() {
         <Route path="/lissy" element={<LissyLanding onImageUpload={handleImageUpload} />} />
         <Route path="/lissy/intake" element={<IntakeForm uploadedImage={null} onComplete={() => navigate('/lissy/waitlist')} />} />
         <Route path="/lissy/waitlist" element={<WaitlistPage customerName={customerData?.name} />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/messages" element={<MessagesPage />} />
-        <Route path="/stylists" element={<StylistsPage />} />
+        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
+        <Route path="/stylists" element={<ProtectedRoute><StylistsPage /></ProtectedRoute>} />
+        <Route path="/signin" element={<SignIn />} />
         <Route path="/" element={<HomePage />} />
         <Route path="*" element={<HomePage />} />
       </Routes>

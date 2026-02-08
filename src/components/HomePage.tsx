@@ -15,8 +15,8 @@ export function HomePage() {
     <div 
       className="w-full min-h-screen bg-[#fffefd] flex flex-col overflow-x-hidden"
       style={{
-        paddingTop: 'max(env(safe-area-inset-top, 0px), 44px)',
-        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 20px)',
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
       {/* Header - VII SEVN on left, hamburger on right */}

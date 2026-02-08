@@ -124,8 +124,8 @@ export function SignIn() {
     <div 
       className="w-full min-h-screen overflow-x-hidden overflow-y-auto bg-[#E2DFDD] flex flex-col" 
       style={{ 
-        paddingTop: 'max(env(safe-area-inset-top, 0px), 44px)', 
-        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 20px)', 
+        paddingTop: 'env(safe-area-inset-top)', 
+        paddingBottom: 'env(safe-area-inset-bottom)', 
         WebkitOverflowScrolling: 'touch' 
       }}
     >

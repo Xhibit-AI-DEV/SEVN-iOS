@@ -154,8 +154,8 @@ export function ChrisLanding({ onImageUpload }: ChrisLandingProps) {
     <div 
       className="relative w-full min-h-screen overflow-x-hidden bg-white"
       style={{
-        paddingTop: 'max(env(safe-area-inset-top, 0px), 44px)',
-        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 20px)',
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
       {/* Top Navigation Bar - matches HomePage */}

@@ -54,7 +54,7 @@
     /* Prevent font loading errors - comprehensive font-face definitions */
     html {
       /* Support safe areas for iOS notch */
-      height: 100%;
+      /* REMOVED height: 100% - was preventing scroll when children have safe area padding */
       /* REMOVED overflow: hidden - was blocking scroll on iOS */
     }
     
@@ -65,7 +65,7 @@
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       width: 100%;
-      height: 100%;
+      min-height: 100%; /* Changed from height to min-height to allow scrolling */
       /* REMOVED overflow: hidden - was blocking scroll on iOS */
       /* REMOVED position: fixed - was locking scroll on iOS */
     }
@@ -82,7 +82,7 @@
     
     #root {
       width: 100%;
-      height: 100%;
+      min-height: 100%; /* Changed from height to min-height to allow scrolling */
       /* REMOVED overflow: hidden - was blocking scroll on iOS */
       /* REMOVED position: fixed - was locking scroll on iOS */
     }

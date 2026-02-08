@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { Heart, Link, Loader2, Menu, Plus } from 'lucide-react';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import 'swiper/css';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { toast } from 'sonner@2.0.3';
 import { EditProfileModal } from './EditProfileModal';
@@ -36,6 +34,9 @@ export function ProfilePage() {
   const [activeTab, setActiveTab] = useState<'edits' | 'likes'>('edits');
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
   const swiperRef = useRef<any>(null);
 
   useEffect(() => {
@@ -801,10 +802,7 @@ export function ProfilePage() {
         {/* Tab Navigation */}
         <div className="flex gap-6 mb-4 border-b border-[#e0e0e0]">
           <button
-            onClick={() => {
-              setActiveTab('edits');
-              swiperRef.current?.swiper?.slideTo(0);
-            }}
+            onClick={() => setActiveTab('edits')}
             className={`font-['Helvetica_Neue:Medium',sans-serif] text-[13px] tracking-[2px] text-[#1e1709] uppercase pb-3 border-b-2 transition-colors ${
               activeTab === 'edits' ? 'border-[#1e1709]' : 'border-transparent'
             }`}
@@ -812,10 +810,7 @@ export function ProfilePage() {
             POSTS
           </button>
           <button
-            onClick={() => {
-              setActiveTab('likes');
-              swiperRef.current?.swiper?.slideTo(1);
-            }}
+            onClick={() => setActiveTab('likes')}
             className={`font-['Helvetica_Neue:Medium',sans-serif] text-[13px] tracking-[2px] text-[#1e1709] uppercase pb-3 border-b-2 transition-colors ${
               activeTab === 'likes' ? 'border-[#1e1709]' : 'border-transparent'
             }`}
@@ -824,146 +819,129 @@ export function ProfilePage() {
           </button>
         </div>
 
-        {/* Ionic Swipeable Container */}
-        <Swiper 
-          initialSlide={0}
-          speed={400}
-          spaceBetween={0}
-          onSlideChange={(swiper) => {
-            const index = swiper.activeIndex;
-            setActiveTab(index === 0 ? 'edits' : 'likes');
-          }}
-          ref={swiperRef}
-        >
-          {/* EDITS Section */}
-          <SwiperSlide>
-            <div className="w-full">
-              <div className="mb-6">
-                {edits.length > 0 ? (
-                  <div className="flex gap-[8px] overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-                    {edits.map(edit => renderEditCard(edit, false))}
-                  </div>
-                ) : (
-                  <div className="relative w-[300px] h-[450px]">
-                    {/* Stacked cards effect - showing 3 layers with 4px spacing */}
-                    <div className="absolute left-0 top-0 w-full h-full">
-                      {/* Back card - 8px offset */}
-                      <div 
-                        className="absolute w-full h-full rounded-[8px] border border-[#1e1709] bg-[#f5f5f5]"
-                        style={{ 
-                          left: '8px',
-                          top: '8px',
-                          right: '0px',
-                          bottom: '0px'
-                        }}
-                      />
-                      {/* Middle card - 4px offset */}
-                      <div 
-                        className="absolute w-full h-full rounded-[8px] border border-[#1e1709] bg-[#f5f5f5]"
-                        style={{ 
-                          left: '4px',
-                          top: '4px',
-                          right: '4px',
-                          bottom: '4px'
-                        }}
-                      />
-                      {/* Front card */}
-                      <div 
-                        className="absolute w-full h-full rounded-[8px] border border-[#1e1709] bg-[#f5f5f5]"
-                        style={{ 
-                          left: '0px',
-                          top: '0px',
-                          right: '8px',
-                          bottom: '8px'
-                        }}
-                      />
-                    </div>
-                  </div>
-                )}
+        {/* Tab Content */}
+        {activeTab === 'edits' && (
+          <div className="mb-6">
+            {edits.length > 0 ? (
+              <div className="flex gap-[8px] overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                {edits.map(edit => renderEditCard(edit, false))}
               </div>
-            </div>
-          </SwiperSlide>
-
-          {/* LIKES Section */}
-          <SwiperSlide>
-            <div className="w-full">
-              <div className="mb-6">
-                {/* Products Column */}
-                <div className="mb-6">
-                  <h3 className="font-['Helvetica_Neue:Regular',sans-serif] text-[12px] tracking-[1px] text-[#1e1709] uppercase mb-3 leading-[20px] px-4">
-                    Products
-                  </h3>
-                  {likedProducts.length > 0 ? (
-                    <div className="flex gap-[12px] overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-                      {likedProducts.map(like => renderProductCard(like))}
-                    </div>
-                  ) : (
-                    <div className="flex gap-[12px] overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-                      {/* Empty state - outline boxes */}
-                      {[1, 2, 3].map((i) => (
-                        <div 
-                          key={i}
-                          className="relative shrink-0 w-[112px] border border-[#1e1709] bg-[#f5f5f5]"
-                        >
-                          <div className="w-full h-[150px]" />
-                          <div className="p-2 h-[44px]" />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Edits Column */}
-                <div>
-                  <h3 className="font-['Helvetica_Neue:Regular',sans-serif] text-[12px] tracking-[1px] text-[#1e1709] uppercase mb-3 leading-[20px] px-4">
-                    Edits
-                  </h3>
-                  {likedEdits.length > 0 ? (
-                    <div className="flex gap-[8px] overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-                      {likedEdits.map(edit => renderEditCard(edit, true))}
-                    </div>
-                  ) : (
-                    <div className="relative w-[300px] h-[450px] mx-4">
-                      {/* Stacked cards effect - showing 3 layers with 4px spacing */}
-                      <div className="absolute left-0 top-0 w-full h-full">
-                        {/* Back card - 8px offset */}
-                        <div 
-                          className="absolute w-full h-full rounded-[8px] border border-[#1e1709] bg-[#f5f5f5]"
-                          style={{ 
-                            left: '8px',
-                            top: '8px',
-                            right: '0px',
-                            bottom: '0px'
-                          }}
-                        />
-                        {/* Middle card - 4px offset */}
-                        <div 
-                          className="absolute w-full h-full rounded-[8px] border border-[#1e1709] bg-[#f5f5f5]"
-                          style={{ 
-                            left: '4px',
-                            top: '4px',
-                            right: '4px',
-                            bottom: '4px'
-                          }}
-                        />
-                        {/* Front card */}
-                        <div 
-                          className="absolute w-full h-full rounded-[8px] border border-[#1e1709] bg-[#f5f5f5]"
-                          style={{ 
-                            left: '0px',
-                            top: '0px',
-                            right: '8px',
-                            bottom: '8px'
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
+            ) : (
+              <div className="relative w-[300px] h-[450px]">
+                {/* Stacked cards effect - showing 3 layers with 4px spacing */}
+                <div className="absolute left-0 top-0 w-full h-full">
+                  {/* Back card - 8px offset */}
+                  <div 
+                    className="absolute w-full h-full rounded-[8px] border border-[#1e1709] bg-[#f5f5f5]"
+                    style={{ 
+                      left: '8px',
+                      top: '8px',
+                      right: '0px',
+                      bottom: '0px'
+                    }}
+                  />
+                  {/* Middle card - 4px offset */}
+                  <div 
+                    className="absolute w-full h-full rounded-[8px] border border-[#1e1709] bg-[#f5f5f5]"
+                    style={{ 
+                      left: '4px',
+                      top: '4px',
+                      right: '4px',
+                      bottom: '4px'
+                    }}
+                  />
+                  {/* Front card */}
+                  <div 
+                    className="absolute w-full h-full rounded-[8px] border border-[#1e1709] bg-[#f5f5f5]"
+                    style={{ 
+                      left: '0px',
+                      top: '0px',
+                      right: '8px',
+                      bottom: '8px'
+                    }}
+                  />
                 </div>
               </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'likes' && (
+          <div className="mb-6">
+            {/* Products Column */}
+            <div className="mb-6">
+              <h3 className="font-['Helvetica_Neue:Regular',sans-serif] text-[12px] tracking-[1px] text-[#1e1709] uppercase mb-3 leading-[20px]">
+                Products
+              </h3>
+              {likedProducts.length > 0 ? (
+                <div className="flex gap-[12px] overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                  {likedProducts.map(like => renderProductCard(like))}
+                </div>
+              ) : (
+                <div className="flex gap-[12px] overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                  {/* Empty state - outline boxes */}
+                  {[1, 2, 3].map((i) => (
+                    <div 
+                      key={i}
+                      className="relative shrink-0 w-[112px] border border-[#1e1709] bg-[#f5f5f5]"
+                    >
+                      <div className="w-full h-[150px]" />
+                      <div className="p-2 h-[44px]" />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </SwiperSlide>
-        </Swiper>
+
+            {/* Edits Column */}
+            <div>
+              <h3 className="font-['Helvetica_Neue:Regular',sans-serif] text-[12px] tracking-[1px] text-[#1e1709] uppercase mb-3 leading-[20px]">
+                Edits
+              </h3>
+              {likedEdits.length > 0 ? (
+                <div className="flex gap-[8px] overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                  {likedEdits.map(edit => renderEditCard(edit, true))}
+                </div>
+              ) : (
+                <div className="relative w-[300px] h-[450px]">
+                  {/* Stacked cards effect - showing 3 layers with 4px spacing */}
+                  <div className="absolute left-0 top-0 w-full h-full">
+                    {/* Back card - 8px offset */}
+                    <div 
+                      className="absolute w-full h-full rounded-[8px] border border-[#1e1709] bg-[#f5f5f5]"
+                      style={{ 
+                        left: '8px',
+                        top: '8px',
+                        right: '0px',
+                        bottom: '0px'
+                      }}
+                    />
+                    {/* Middle card - 4px offset */}
+                    <div 
+                      className="absolute w-full h-full rounded-[8px] border border-[#1e1709] bg-[#f5f5f5]"
+                      style={{ 
+                        left: '4px',
+                        top: '4px',
+                        right: '4px',
+                        bottom: '4px'
+                      }}
+                    />
+                    {/* Front card */}
+                    <div 
+                      className="absolute w-full h-full rounded-[8px] border border-[#1e1709] bg-[#f5f5f5]"
+                      style={{ 
+                        left: '0px',
+                        top: '0px',
+                        right: '8px',
+                        bottom: '8px'
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
         </div>
       </div>
       

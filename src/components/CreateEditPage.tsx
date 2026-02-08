@@ -80,14 +80,14 @@ export function CreateEditPage() {
 
   // Auto-open native media picker in create mode
   useEffect(() => {
-    if (!isEditMode && !mainMedia) {
+    if (!isEditMode && !mainMedia && isInitialPickerOpen) {
       // Small delay to ensure component is fully mounted
       const timer = setTimeout(() => {
         handleNativeMediaPick();
-      }, 100);
+      }, 300);
       return () => clearTimeout(timer);
     }
-  }, [isEditMode]);
+  }, [isEditMode, isInitialPickerOpen]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -95,6 +95,7 @@ export function CreateEditPage() {
       const url = URL.createObjectURL(file);
       setMainMedia(url);
       setMediaFile(file);
+      setIsInitialPickerOpen(false);
       
       if (file.type.startsWith('image/')) {
         setMediaType('image');

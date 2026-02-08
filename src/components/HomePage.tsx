@@ -14,8 +14,8 @@ export function HomePage() {
   return (
     <div className="fixed inset-0 w-full h-full overflow-hidden bg-[#fffefd]">
       {/* Header - VII SEVN on left, hamburger on right - with safe area */}
-      <div className="bg-white h-[48px] w-full relative" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-        <div className="h-full flex items-center justify-between px-4 mx-auto">
+      <div className="bg-white w-full relative flex items-end" style={{ paddingTop: 'env(safe-area-inset-top)', height: 'calc(48px + env(safe-area-inset-top))' }}>
+        <div className="h-[48px] flex items-center justify-between px-4 mx-auto w-full">
           <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-black">
             VII SEVN
           </p>
@@ -26,7 +26,7 @@ export function HomePage() {
       </div>
 
       {/* Scrollable content - takes remaining height */}
-      <div className="absolute inset-x-0 overflow-y-auto pb-24" style={{ top: `calc(48px + env(safe-area-inset-top))`, bottom: 0, WebkitOverflowScrolling: 'touch' }}>
+      <div className="absolute inset-x-0 overflow-y-auto overflow-x-hidden pb-24" style={{ top: `calc(48px + env(safe-area-inset-top))`, bottom: 0, WebkitOverflowScrolling: 'touch' }}>
         {/* FEATURED STYLISTS Section */}
         <div className="mb-4">
           <h2 className="font-['Helvetica_Neue:Light',sans-serif] text-[16px] tracking-[3px] text-[#1e1709] uppercase mb-4 leading-[22px] px-4">

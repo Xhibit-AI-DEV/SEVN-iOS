@@ -624,10 +624,6 @@
     inset: 86.68% 28.85% 6.81% 30.81%;
   }
 
-  .inset-x-0 {
-    inset-inline: calc(var(--spacing) * 0);
-  }
-
   .top-0 {
     top: calc(var(--spacing) * 0);
   }

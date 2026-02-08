@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router';
 import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
+import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
 
 interface BottomNavigationProps {
   activeTab?: 'discover' | 'profile';
@@ -38,6 +40,46 @@ export function BottomNavigation({ activeTab = 'discover', className = '' }: Bot
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
+
+  const handleCreateClick = async () => {
+    // Check if running on native platform
+    if (!Capacitor.isNativePlatform()) {
+      // On web, just navigate to create page (will show file input)
+      navigate('/create-edit');
+      return;
+    }
+
+    try {
+      // Open photo library directly
+      const image = await CapacitorCamera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Photos, // Go directly to photo library
+      });
+
+      if (image.webPath) {
+        // Convert to blob for upload
+        const response = await fetch(image.webPath);
+        const blob = await response.blob();
+        const file = new File([blob], `edit-${Date.now()}.${image.format}`, {
+          type: `image/${image.format}`
+        });
+
+        // Navigate to CreateEditPage with the selected media
+        navigate('/create-edit', {
+          state: {
+            mediaUrl: image.webPath,
+            mediaFile: file,
+            mediaType: 'image'
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error picking media:', error);
+      // User cancelled - do nothing
+    }
+  };
 
   return (
     <div 
@@ -86,7 +128,7 @@ export function BottomNavigation({ activeTab = 'discover', className = '' }: Bot
         <button
           className="flex flex-col items-center justify-center"
           style={{ marginBottom: '6px' }}
-          onClick={() => navigate('/create-edit')}
+          onClick={handleCreateClick}
         >
           <div className="w-[60px] h-[60px] rounded-full flex items-center justify-center relative" style={{ backgroundColor: 'rgba(255, 254, 253, 0.85)', boxShadow: '0 3px 12px rgba(0, 0, 0, 0.12)', zIndex: 10 }}>
             <Plus className="w-[26px] h-[26px] text-[#1e1709]" strokeWidth={1} />

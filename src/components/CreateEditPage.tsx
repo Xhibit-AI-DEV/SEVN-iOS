@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams, useLocation } from 'react-router';
 import svgPaths from "../imports/svg-ib8s7izy1q";
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { toast } from 'sonner@2.0.3';
@@ -9,12 +9,17 @@ import { Capacitor } from '@capacitor/core';
 
 export function CreateEditPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { editId } = useParams<{ editId?: string }>();
   const isEditMode = !!editId;
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [mainMedia, setMainMedia] = useState<string | null>(null);
-  const [mediaFile, setMediaFile] = useState<File | null>(null);
-  const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null);
+  
+  // Get media from navigation state (if passed from BottomNavigation)
+  const navigationState = location.state as { mediaUrl?: string; mediaFile?: File; mediaType?: 'image' | 'video' } | null;
+  
+  const [mainMedia, setMainMedia] = useState<string | null>(navigationState?.mediaUrl || null);
+  const [mediaFile, setMediaFile] = useState<File | null>(navigationState?.mediaFile || null);
+  const [mediaType, setMediaType] = useState<'image' | 'video' | null>(navigationState?.mediaType || null);
   const [editLink, setEditLink] = useState('');
   const [shoppingLinks, setShoppingLinks] = useState<Array<{ url: string; title?: string; image?: string }>>([]);
   const [newShoppingLink, setNewShoppingLink] = useState('');
@@ -26,7 +31,6 @@ export function CreateEditPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingMetadata, setIsFetchingMetadata] = useState(false);
   const [isLoadingEdit, setIsLoadingEdit] = useState(isEditMode);
-  const [isInitialPickerOpen, setIsInitialPickerOpen] = useState(!isEditMode);
 
   // Load existing edit data if in edit mode
   useEffect(() => {
@@ -78,24 +82,12 @@ export function CreateEditPage() {
     }
   }, [isEditMode, editId]);
 
-  // Auto-open native media picker in create mode
-  useEffect(() => {
-    if (!isEditMode && !mainMedia && isInitialPickerOpen) {
-      // Small delay to ensure component is fully mounted
-      const timer = setTimeout(() => {
-        handleNativeMediaPick();
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [isEditMode, isInitialPickerOpen]);
-
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const url = URL.createObjectURL(file);
       setMainMedia(url);
       setMediaFile(file);
-      setIsInitialPickerOpen(false);
       
       if (file.type.startsWith('image/')) {
         setMediaType('image');
@@ -110,7 +102,6 @@ export function CreateEditPage() {
     // Check if running on native platform
     if (!Capacitor.isNativePlatform()) {
       // Fallback to web file input
-      setIsInitialPickerOpen(false);
       fileInputRef.current?.click();
       return;
     }
@@ -135,7 +126,6 @@ export function CreateEditPage() {
         setMainMedia(image.webPath);
         setMediaFile(file);
         setMediaType('image');
-        setIsInitialPickerOpen(false);
       }
     } catch (error) {
       console.error('Error picking media:', error);
@@ -143,7 +133,6 @@ export function CreateEditPage() {
       if (!isEditMode && !mainMedia) {
         navigate(-1);
       }
-      setIsInitialPickerOpen(false);
     }
   };
 

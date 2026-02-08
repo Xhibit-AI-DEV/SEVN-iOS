@@ -12,23 +12,27 @@ export function HomePage() {
   const navigate = useNavigate();
 
   return (
-    <div className="fixed inset-0 w-full h-full overflow-hidden bg-[#fffefd]">
-      {/* Header - VII SEVN on left, hamburger on right - with safe area */}
-      <div className="bg-white w-full relative flex items-end" style={{ paddingTop: 'env(safe-area-inset-top)', height: 'calc(48px + env(safe-area-inset-top))' }}>
-        <div className="h-[48px] flex items-center justify-between px-4 mx-auto w-full">
-          <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-black">
-            VII SEVN
-          </p>
-          <button className="w-6 h-6 flex items-center justify-center">
-            <Menu className="w-6 h-6 text-[#1e1709]" strokeWidth={1.1} />
-          </button>
-        </div>
+    <div 
+      className="w-full min-h-screen bg-[#fffefd] flex flex-col overflow-x-hidden"
+      style={{
+        paddingTop: 'max(env(safe-area-inset-top, 0px), 44px)',
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 20px)',
+      }}
+    >
+      {/* Header - VII SEVN on left, hamburger on right */}
+      <div className="bg-white w-full shrink-0 flex items-center justify-between px-4 h-[48px] border-b border-gray-200">
+        <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-black">
+          VII SEVN
+        </p>
+        <button className="w-6 h-6 flex items-center justify-center">
+          <Menu className="w-6 h-6 text-[#1e1709]" strokeWidth={1.1} />
+        </button>
       </div>
 
-      {/* Scrollable content - takes remaining height */}
-      <div className="absolute inset-x-0 overflow-y-auto overflow-x-hidden pb-24" style={{ top: `calc(48px + env(safe-area-inset-top))`, bottom: 0, WebkitOverflowScrolling: 'touch' }}>
+      {/* Scrollable content - flex-1 makes it take remaining space */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
         {/* FEATURED STYLISTS Section */}
-        <div className="mb-4">
+        <div className="mb-4 mt-4">
           <h2 className="font-['Helvetica_Neue:Light',sans-serif] text-[16px] tracking-[3px] text-[#1e1709] uppercase mb-4 leading-[22px] px-4">
             FEATURED STYLISTS
           </h2>
@@ -168,8 +172,13 @@ export function HomePage() {
         </div>
       </div>
       
-      {/* Bottom navigation */}
-      <div className="fixed bottom-0 left-0 right-0 z-50">
+      {/* Bottom navigation - positioned at bottom with safe area */}
+      <div 
+        className="fixed left-0 right-0 z-50"
+        style={{
+          bottom: 'max(env(safe-area-inset-bottom, 0px), 0px)',
+        }}
+      >
         <BottomNavigation activeTab="discover" />
       </div>
     </div>

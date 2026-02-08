@@ -52,6 +52,12 @@
     }
     
     /* Prevent font loading errors - comprehensive font-face definitions */
+    html {
+      /* Support safe areas for iOS notch */
+      height: 100%;
+      overflow: hidden;
+    }
+    
     body {
       margin: 0;
       padding: 0;
@@ -59,8 +65,14 @@
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       width: 100%;
-      height: 100vh;
-      overflow: visible;
+      height: 100%;
+      overflow: hidden;
+      /* Critical for iOS safe area */
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
     }
     
     /* CRITICAL: iOS-specific fixes to prevent zoom and viewport issues */
@@ -75,9 +87,13 @@
     
     #root {
       width: 100%;
-      height: 100vh;
-      overflow: visible;
-      -webkit-overflow-scrolling: touch;
+      height: 100%;
+      overflow: hidden;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
     }
   </style>
   <script>

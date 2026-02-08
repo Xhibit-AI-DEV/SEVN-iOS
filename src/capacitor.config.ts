@@ -15,8 +15,23 @@ const config: CapacitorConfig = {
   },
   
   ios: {
-    contentInset: 'automatic',
+    contentInset: 'always',
     scheme: 'SEVN',
+    // Ensure safe area is properly handled
+    scrollEnabled: true,
+    // Status bar configuration
+    preferredContentMode: 'mobile',
+  },
+  
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 0,
+    },
+    StatusBar: {
+      style: 'default',
+      backgroundColor: '#ffffff',
+      overlay: false,
+    },
   },
 
   android: {

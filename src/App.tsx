@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, Navigate } from 'react-router';
 import { Toaster } from 'sonner@2.0.3';
-import { SplashScreen } from '@capacitor/splash-screen';
 import { HomePage } from './components/HomePage';
 import { StylistsPage } from './components/StylistsPage';
 import { MessagesPage } from './components/MessagesPage';
@@ -209,9 +208,6 @@ function AppContent() {
 }
 
 export default function App() {
-  // Hide splash screen when app loads
-  SplashScreen.hide().catch(err => console.log('Splash screen already hidden'));
-  
   return (
     <BrowserRouter>
       <AppContent />

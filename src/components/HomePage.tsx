@@ -1,26 +1,21 @@
-import { BottomNavigation } from './BottomNavigation';
-import { useNavigate } from 'react-router';
 import { Menu } from 'lucide-react';
-import imgScreenshot20231117At12528 from "figma:asset/4b4531903296dd337e2503bb17f59748fdc6c9ee.png";
-import imgScreenshot20231117At12530 from "figma:asset/20128333cc3dc0dc5a9ed76f88c9c981a3185bd7.png";
-import imgScreenshot20231117At12531 from "figma:asset/e0a9d1b58aed482da9011bb5f685dc39e3501d17.png";
-import imgLissyRoddy from "figma:asset/21ead93bac0da68ed5f33efdfb07c0bf632228cc.png";
-import imgChrisWhyle from "figma:asset/083df4dc1c94d586d53c3644182d81e287c70454.png";
-import imgChrisEdit from "figma:asset/d6d0374d1209d254e69a363bf2bd48de2a8fd831.png";
+import { useNavigate } from 'react-router';
+import { ImageWithFallback } from './figma/ImageWithFallback';
+import { BottomNav } from './BottomNav';
 
-export function HomePage() {
+export default function HomePage() {
   const navigate = useNavigate();
 
   return (
-    <div 
-      className="w-full min-h-screen bg-[#fffefd] flex flex-col overflow-x-hidden"
-      style={{
-        paddingTop: 'env(safe-area-inset-top)',
-        paddingBottom: 'env(safe-area-inset-bottom)',
-      }}
-    >
-      {/* Header - VII SEVN on left, hamburger on right */}
-      <div className="bg-white w-full shrink-0 flex items-center justify-between px-4 h-[48px] border-b border-gray-200">
+    <div className="w-full h-screen flex flex-col" style={{ height: '100vh', height: '100dvh' }}>
+      {/* Fixed Header - with safe area padding */}
+      <div 
+        className="bg-white w-full flex items-center justify-between px-4 border-b border-gray-200 fixed top-0 left-0 right-0 z-50"
+        style={{
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+          height: 'calc(48px + env(safe-area-inset-top, 0px))',
+        }}
+      >
         <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-black">
           VII SEVN
         </p>
@@ -29,8 +24,16 @@ export function HomePage() {
         </button>
       </div>
 
-      {/* Scrollable content - flex-1 makes it take remaining space */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
+      {/* Scrollable content - single scroll container */}
+      <main 
+        className="flex-1 overflow-y-auto overflow-x-hidden bg-[#fffefd]"
+        style={{ 
+          WebkitOverflowScrolling: 'touch',
+          minHeight: 0, /* Critical for flex child scrolling */
+          paddingTop: 'calc(48px + env(safe-area-inset-top, 0px))',
+          paddingBottom: 'calc(80px + max(env(safe-area-inset-bottom, 0px), 20px))',
+        }}
+      >
         {/* FEATURED STYLISTS Section */}
         <div className="mb-4 mt-4">
           <h2 className="font-['Helvetica_Neue:Light',sans-serif] text-[16px] tracking-[3px] text-[#1e1709] uppercase mb-4 leading-[22px] px-4">
@@ -47,7 +50,12 @@ export function HomePage() {
             >
               {/* Circular image */}
               <div className="absolute inset-[5.05%_4.71%_4.69%_4.71%] pointer-events-none rounded-[147px]">
-                <img alt="" loading="lazy" className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" src={imgLissyRoddy} />
+                <ImageWithFallback 
+                  alt="Lissy Roddy" 
+                  loading="lazy" 
+                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
+                  src="figma:asset/21ead93bac0da68ed5f33efdfb07c0bf632228cc.png" 
+                />
                 <div className="absolute inset-0 rounded-[147px]" style={{ border: '1px solid #EAEAEA' }} />
               </div>
               
@@ -64,9 +72,24 @@ export function HomePage() {
             <div className="relative shrink-0 size-[225px] border border-black/50 rounded-[1px]" style={{ borderWidth: '1px' }}>
               {/* Layered circular images */}
               <div className="absolute inset-[5.05%_4.71%_4.69%_4.71%] pointer-events-none rounded-[147px]">
-                <img alt="" loading="lazy" className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" src={imgScreenshot20231117At12528} />
-                <img alt="" loading="lazy" className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" src={imgScreenshot20231117At12530} />
-                <img alt="" loading="lazy" className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" src={imgScreenshot20231117At12531} />
+                <ImageWithFallback 
+                  alt="Val Drozg" 
+                  loading="lazy" 
+                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
+                  src="figma:asset/4b4531903296dd337e2503bb17f59748fdc6c9ee.png" 
+                />
+                <ImageWithFallback 
+                  alt="Val Drozg" 
+                  loading="lazy" 
+                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
+                  src="figma:asset/20128333cc3dc0dc5a9ed76f88c9c981a3185bd7.png" 
+                />
+                <ImageWithFallback 
+                  alt="Val Drozg" 
+                  loading="lazy" 
+                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
+                  src="figma:asset/e0a9d1b58aed482da9011bb5f685dc39e3501d17.png" 
+                />
                 <div className="absolute inset-0 rounded-[147px]" style={{ border: '1px solid #EAEAEA' }} />
               </div>
               
@@ -87,7 +110,12 @@ export function HomePage() {
             >
               {/* Layered circular images */}
               <div className="absolute inset-[5.05%_4.71%_4.69%_4.71%] pointer-events-none rounded-[147px]">
-                <img alt="" loading="lazy" className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" src={imgChrisWhyle} />
+                <ImageWithFallback 
+                  alt="Chris Whyle" 
+                  loading="lazy" 
+                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
+                  src="figma:asset/083df4dc1c94d586d53c3644182d81e287c70454.png" 
+                />
                 <div className="absolute inset-0 rounded-[147px]" style={{ border: '1px solid #EAEAEA' }} />
               </div>
               
@@ -120,11 +148,11 @@ export function HomePage() {
               <div className="absolute inset-[0_8px_8px_0] rounded-[8px]">
                 {/* Main image */}
                 <div className="absolute inset-0 rounded-[8px]">
-                  <img 
-                    alt=""
-                    loading="lazy"
+                  <ImageWithFallback 
+                    alt="Chris Edit" 
+                    loading="lazy" 
                     className="absolute inset-0 w-full h-full object-cover rounded-[8px]"
-                    src={imgChrisEdit}
+                    src="figma:asset/d6d0374d1209d254e69a363bf2bd48de2a8fd831.png"
                   />
                 </div>
                 
@@ -170,17 +198,10 @@ export function HomePage() {
             </div>
           </div>
         </div>
-      </div>
+      </main>
       
       {/* Bottom navigation - positioned at bottom with safe area */}
-      <div 
-        className="fixed left-0 right-0 z-50"
-        style={{
-          bottom: 'max(env(safe-area-inset-bottom, 0px), 0px)',
-        }}
-      >
-        <BottomNavigation activeTab="discover" />
-      </div>
+      <BottomNav />
     </div>
   );
 }

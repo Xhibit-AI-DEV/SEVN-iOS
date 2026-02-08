@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, useNavigate } from 'react-router';
 import { Toaster, toast } from 'sonner@2.0.3';
-import { HomePage } from './components/HomePage';
+import HomePage from './components/HomePage';
 import { StylistsPage } from './components/StylistsPage';
 import { MessagesPage } from './components/MessagesPage';
 import { MessageDetailPage } from './components/MessageDetailPage';

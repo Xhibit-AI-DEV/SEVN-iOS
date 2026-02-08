@@ -620,6 +620,10 @@
     inset: 86.68% 28.85% 6.81% 30.81%;
   }
 
+  .inset-x-0 {
+    inset-inline: calc(var(--spacing) * 0);
+  }
+
   .top-0 {
     top: calc(var(--spacing) * 0);
   }
@@ -2064,7 +2068,15 @@
     border-style: solid;
   }
 
-  .border-\[\#1E1709\], .border-\[\#1e1709\] {
+  .border-\[\#1E1709\] {
+    border-color: #1e1709;
+  }
+
+  .border-\[\#1E1709\]\/20 {
+    border-color: oklab(20.9087% .00300588 .0268476 / .2);
+  }
+
+  .border-\[\#1e1709\] {
     border-color: #1e1709;
   }
 
@@ -2226,6 +2238,10 @@
 
   .bg-\[\#15120A\] {
     background-color: #15120a;
+  }
+
+  .bg-\[\#E2DFDD\] {
+    background-color: #e2dfdd;
   }
 
   .bg-\[\#E6E6E3\] {
@@ -3374,6 +3390,12 @@
   }
 
   @media (hover: hover) {
+    .hover\:bg-\[\#1E1709\]\/90:hover {
+      background-color: oklab(20.9087% .00300588 .0268476 / .9);
+    }
+  }
+
+  @media (hover: hover) {
     .hover\:bg-\[\#1e1709\]:hover {
       background-color: #1e1709;
     }
@@ -3596,6 +3618,12 @@
   }
 
   @media (hover: hover) {
+    .hover\:text-\[\#1E1709\]:hover {
+      color: #1e1709;
+    }
+  }
+
+  @media (hover: hover) {
     .hover\:text-\[\#1e1709\]:hover {
       color: #1e1709;
     }
@@ -3636,6 +3664,10 @@
       --tw-shadow: 0 10px 15px -3px var(--tw-shadow-color, #0000001a), 0 4px 6px -4px var(--tw-shadow-color, #0000001a);
       box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
     }
+  }
+
+  .focus\:border-\[\#1E1709\]:focus {
+    border-color: #1e1709;
   }
 
   .focus\:border-\[\#1e1709\]:focus {

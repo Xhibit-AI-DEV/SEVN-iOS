@@ -121,13 +121,13 @@ export function SignIn() {
   };
 
   return (
-    <div className="w-full min-h-screen overflow-x-hidden bg-white flex flex-col">
+    <div className="w-full min-h-screen overflow-x-hidden bg-[#E2DFDD] flex flex-col">
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center px-4">
         <div className="w-full max-w-[393px]">
           {/* Logo/Header */}
           <div className="text-center mb-8">
-            <h1 className="font-['Helvetica_Neue:Bold',sans-serif] text-[32px] tracking-[4px] text-[#1e1709] uppercase mb-2">
+            <h1 className="font-['Helvetica_Neue:Bold',sans-serif] text-[32px] tracking-[4px] text-[#1E1709] uppercase mb-2">
               SEVN SELECTS
             </h1>
           </div>
@@ -135,7 +135,7 @@ export function SignIn() {
           {/* Sign In/Sign Up Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block font-['Helvetica_Neue:Medium',sans-serif] text-[12px] tracking-[1px] text-[#1e1709] uppercase mb-2">
+              <label className="block font-['Helvetica_Neue:Medium',sans-serif] text-[12px] tracking-[1px] text-[#1E1709] uppercase mb-2">
                 Email
               </label>
               <input
@@ -143,13 +143,13 @@ export function SignIn() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-black/20 rounded-lg font-['Helvetica_Neue:Regular',sans-serif] text-[14px] focus:outline-none focus:border-[#1e1709]"
+                className="w-full px-4 py-3 border border-[#1E1709]/20 rounded-lg font-['Helvetica_Neue:Regular',sans-serif] text-[14px] text-[#1E1709] bg-white focus:outline-none focus:border-[#1E1709]"
                 placeholder="you@example.com"
               />
             </div>
 
             <div>
-              <label className="block font-['Helvetica_Neue:Medium',sans-serif] text-[12px] tracking-[1px] text-[#1e1709] uppercase mb-2">
+              <label className="block font-['Helvetica_Neue:Medium',sans-serif] text-[12px] tracking-[1px] text-[#1E1709] uppercase mb-2">
                 Password
               </label>
               <input
@@ -158,7 +158,7 @@ export function SignIn() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full px-4 py-3 border border-black/20 rounded-lg font-['Helvetica_Neue:Regular',sans-serif] text-[14px] focus:outline-none focus:border-[#1e1709]"
+                className="w-full px-4 py-3 border border-[#1E1709]/20 rounded-lg font-['Helvetica_Neue:Regular',sans-serif] text-[14px] text-[#1E1709] bg-white focus:outline-none focus:border-[#1E1709]"
                 placeholder="••••••••"
               />
             </div>
@@ -172,10 +172,10 @@ export function SignIn() {
                   required
                   className="mr-2 shrink-0"
                   id="terms-checkbox"
-                  style={{ accentColor: '#000' }}
+                  style={{ accentColor: '#1E1709' }}
                 />
-                <label htmlFor="terms-checkbox" className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] text-gray-600">
-                  I agree to the <a href="https://www.sevn.app/termsofservice" target="_blank" rel="noopener noreferrer" className="text-[#1e1709] hover:underline">Terms of Service</a> and <a href="https://www.sevn.app/privacypolicy" target="_blank" rel="noopener noreferrer" className="text-[#1e1709] hover:underline">Privacy Policy</a>
+                <label htmlFor="terms-checkbox" className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] text-[#1E1709]/70">
+                  I agree to the <a href="https://www.sevn.app/termsofservice" target="_blank" rel="noopener noreferrer" className="text-[#1E1709] hover:underline font-['Helvetica_Neue:Medium',sans-serif]">Terms of Service</a> and <a href="https://www.sevn.app/privacypolicy" target="_blank" rel="noopener noreferrer" className="text-[#1E1709] hover:underline font-['Helvetica_Neue:Medium',sans-serif]">Privacy Policy</a>
                 </label>
               </div>
             )}
@@ -183,7 +183,7 @@ export function SignIn() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-[#1e1709] text-white rounded-lg font-['Helvetica_Neue:Medium',sans-serif] text-[14px] tracking-[1px] uppercase hover:bg-[#1e1709]/90 transition-colors disabled:opacity-50 flex items-center justify-center"
+              className="w-full py-3 bg-[#1E1709] text-white rounded-lg font-['Helvetica_Neue:Medium',sans-serif] text-[14px] tracking-[1px] uppercase hover:bg-[#1E1709]/90 transition-colors disabled:opacity-50 flex items-center justify-center"
             >
               {loading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -197,15 +197,15 @@ export function SignIn() {
           <div className="mt-6 text-center">
             <button
               onClick={() => setIsSignUp(!isSignUp)}
-              className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] text-gray-600 hover:text-[#1e1709] transition-colors"
+              className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] text-[#1E1709]/70 hover:text-[#1E1709] transition-colors"
             >
               {isSignUp ? (
                 <>
-                  Already have an account? <span className="font-['Helvetica_Neue:Medium',sans-serif]">Sign In</span>
+                  Already have an account? <span className="font-['Helvetica_Neue:Medium',sans-serif] text-[#1E1709]">Sign In</span>
                 </>
               ) : (
                 <>
-                  Don't have an account? <span className="font-['Helvetica_Neue:Medium',sans-serif] underline">Sign Up</span>
+                  Don't have an account? <span className="font-['Helvetica_Neue:Medium',sans-serif] text-[#1E1709] underline">Sign Up</span>
                 </>
               )}
             </button>

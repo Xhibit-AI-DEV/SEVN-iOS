@@ -12,9 +12,9 @@ export function HomePage() {
   const navigate = useNavigate();
 
   return (
-    <div className="relative w-full min-h-screen overflow-x-hidden bg-[#fffefd]">
-      {/* Header - VII SEVN on left, hamburger on right */}
-      <div className="bg-white h-[48px] w-full relative">
+    <div className="fixed inset-0 w-full h-full overflow-hidden bg-[#fffefd]">
+      {/* Header - VII SEVN on left, hamburger on right - with safe area */}
+      <div className="bg-white h-[48px] w-full relative" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <div className="h-full flex items-center justify-between px-4 mx-auto">
           <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-black">
             VII SEVN
@@ -25,8 +25,8 @@ export function HomePage() {
         </div>
       </div>
 
-      {/* Scrollable content */}
-      <div className="w-full mx-auto overflow-y-auto pb-24 pt-4">
+      {/* Scrollable content - takes remaining height */}
+      <div className="absolute inset-x-0 overflow-y-auto overflow-x-hidden pb-24" style={{ top: `calc(48px + env(safe-area-inset-top))`, bottom: 0, WebkitOverflowScrolling: 'touch' }}>
         {/* FEATURED STYLISTS Section */}
         <div className="px-4 mb-4">
           <h2 className="font-['Helvetica_Neue:Light',sans-serif] text-[16px] tracking-[3px] text-[#1e1709] uppercase mb-4 leading-[22px]">

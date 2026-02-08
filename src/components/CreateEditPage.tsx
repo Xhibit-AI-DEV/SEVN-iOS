@@ -80,14 +80,14 @@ export function CreateEditPage() {
 
   // Auto-open native media picker in create mode
   useEffect(() => {
-    if (!isEditMode && isInitialPickerOpen) {
+    if (!isEditMode && !mainMedia) {
       // Small delay to ensure component is fully mounted
       const timer = setTimeout(() => {
         handleNativeMediaPick();
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [isEditMode, isInitialPickerOpen]);
+  }, [isEditMode]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -342,10 +342,10 @@ export function CreateEditPage() {
       )}
 
       {/* Main Content */}
-      {!isLoadingEdit && !isInitialPickerOpen && (
+      {!isLoadingEdit && (
         <div className="w-full px-4 pb-24">
           
-          {/* Upload Area - Only show in create mode */}
+          {/* Upload Area - Only show in create mode if no media yet */}
           {!isEditMode && !mainMedia && (
             <button
               onClick={() => handleNativeMediaPick()}

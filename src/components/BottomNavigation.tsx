@@ -42,14 +42,23 @@ export function BottomNavigation({ activeTab = 'discover', className = '' }: Bot
   }, [lastScrollY]);
 
   const handleCreateClick = async () => {
+    console.log('🎬 ========== CREATE BUTTON CLICKED ==========');
+    console.log('🎬 Is native platform:', Capacitor.isNativePlatform());
+    console.log('🎬 Platform:', Capacitor.getPlatform());
+    
     // Check if running on native platform
     if (!Capacitor.isNativePlatform()) {
       // On web, just navigate to create page (will show file input)
+      console.log('🌐 Web platform - navigating to /create-edit');
       navigate('/create-edit');
       return;
     }
 
+    console.log('📱 Native platform detected - opening camera picker...');
+    
     try {
+      console.log('📸 Calling CapacitorCamera.getPhoto...');
+      
       // Open photo library directly
       const image = await CapacitorCamera.getPhoto({
         quality: 90,
@@ -58,7 +67,14 @@ export function BottomNavigation({ activeTab = 'discover', className = '' }: Bot
         source: CameraSource.Photos, // Go directly to photo library
       });
 
+      console.log('✅ Image selected:', {
+        webPath: image.webPath,
+        format: image.format,
+        hasWebPath: !!image.webPath
+      });
+
       if (image.webPath) {
+        console.log('🔄 Converting image to blob...');
         // Convert to blob for upload
         const response = await fetch(image.webPath);
         const blob = await response.blob();
@@ -66,6 +82,13 @@ export function BottomNavigation({ activeTab = 'discover', className = '' }: Bot
           type: `image/${image.format}`
         });
 
+        console.log('✅ File created:', {
+          name: file.name,
+          size: file.size,
+          type: file.type
+        });
+
+        console.log('🚀 Navigating to /create-edit with media...');
         // Navigate to CreateEditPage with the selected media
         navigate('/create-edit', {
           state: {
@@ -74,11 +97,18 @@ export function BottomNavigation({ activeTab = 'discover', className = '' }: Bot
             mediaType: 'image'
           }
         });
+        console.log('✅ Navigation complete');
       }
     } catch (error) {
-      console.error('Error picking media:', error);
+      console.error('❌ Error picking media:', error);
+      console.error('❌ Error details:', {
+        message: (error as Error).message,
+        stack: (error as Error).stack
+      });
       // User cancelled - do nothing
     }
+    
+    console.log('🎬 ========== CREATE BUTTON HANDLER END ==========');
   };
 
   return (

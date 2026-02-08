@@ -369,7 +369,13 @@ export function CustomerInboxPage() {
   console.log('📊 All orders:', orders);
 
   return (
-    <div className="relative w-full min-h-screen overflow-x-hidden bg-[#FFFEFD]">
+    <div 
+      className="relative w-full min-h-screen overflow-x-hidden bg-[#FFFEFD]"
+      style={{
+        paddingTop: 'max(env(safe-area-inset-top, 0px), 44px)',
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 20px)',
+      }}
+    >
       <div className="w-[393px] mx-auto relative pb-24">
         {/* Header */}
         <div className="sticky top-0 bg-[#FFFEFD] z-10 pt-5 pb-4 border-b border-black/70">
@@ -389,7 +395,7 @@ export function CustomerInboxPage() {
         </div>
 
         {/* Orders List */}
-        <div>
+        <div style={{ WebkitOverflowScrolling: 'touch' }}>
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-6 h-6 text-[#1e1709] animate-spin" />

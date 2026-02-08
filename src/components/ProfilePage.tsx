@@ -651,7 +651,13 @@ export function ProfilePage() {
   }
 
   return (
-    <div className="relative w-full min-h-screen overflow-x-hidden bg-[#fffefd]">
+    <div 
+      className="relative w-full min-h-screen overflow-x-hidden bg-[#fffefd]"
+      style={{
+        paddingTop: 'max(env(safe-area-inset-top, 0px), 44px)',
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 20px)',
+      }}
+    >
       {/* Header */}
       <div className="sticky top-0 bg-white h-[48px] w-full z-40 border-b border-[#1e1709]">
         <div className="h-full flex items-center justify-between px-4 max-w-[393px] mx-auto">
@@ -671,7 +677,7 @@ export function ProfilePage() {
       </div>
 
       {/* Scrollable content */}
-      <div className="w-full max-w-[393px] mx-auto overflow-y-auto pb-24 pt-6 px-4">
+      <div className="w-full max-w-[393px] mx-auto overflow-y-auto pb-24 pt-6 px-4" style={{ WebkitOverflowScrolling: 'touch' }}>
         {/* Profile Section */}
         <div className="flex items-start gap-8 mb-3">
           {/* Avatar with + button */}

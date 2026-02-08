@@ -115,12 +115,12 @@ export function CreateEditPage() {
     }
 
     try {
-      // Show action sheet to choose source
+      // Go directly to photo library without showing action sheet
       const image = await CapacitorCamera.getPhoto({
         quality: 90,
         allowEditing: false,
         resultType: CameraResultType.Uri,
-        source: CameraSource.Prompt, // Shows "Camera" or "Photo Library"
+        source: CameraSource.Photos, // Go directly to photo library
       });
 
       if (image.webPath) {

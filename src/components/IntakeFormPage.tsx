@@ -227,7 +227,7 @@ export function IntakeFormPage() {
         quality: 90,
         allowEditing: false,
         resultType: CameraResultType.Uri,
-        source: CameraSource.Prompt,
+        source: CameraSource.Photos, // Go directly to photo library
       });
 
       if (image.webPath && referenceImages.length < 4) {

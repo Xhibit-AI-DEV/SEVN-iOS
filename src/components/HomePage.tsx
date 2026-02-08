@@ -7,15 +7,9 @@ export default function HomePage() {
   const navigate = useNavigate();
 
   return (
-    <div className="w-full h-screen flex flex-col" style={{ height: '100vh', height: '100dvh' }}>
-      {/* Fixed Header - with safe area padding */}
-      <div 
-        className="bg-white w-full flex items-center justify-between px-4 border-b border-gray-200 fixed top-0 left-0 right-0 z-50"
-        style={{
-          paddingTop: 'env(safe-area-inset-top, 0px)',
-          height: 'calc(48px + env(safe-area-inset-top, 0px))',
-        }}
-      >
+    <div className="min-h-screen bg-[#fffefd] flex flex-col" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      {/* Header */}
+      <div className="bg-white w-full h-[48px] shrink-0 flex items-center justify-between px-4 border-b border-gray-200">
         <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-black">
           VII SEVN
         </p>
@@ -24,16 +18,8 @@ export default function HomePage() {
         </button>
       </div>
 
-      {/* Scrollable content - single scroll container */}
-      <main 
-        className="flex-1 overflow-y-auto overflow-x-hidden bg-[#fffefd]"
-        style={{ 
-          WebkitOverflowScrolling: 'touch',
-          minHeight: 0, /* Critical for flex child scrolling */
-          paddingTop: 'calc(48px + env(safe-area-inset-top, 0px))',
-          paddingBottom: 'calc(80px + max(env(safe-area-inset-bottom, 0px), 20px))',
-        }}
-      >
+      {/* Content */}
+      <div className="flex-1 pb-24">
         {/* FEATURED STYLISTS Section */}
         <div className="mb-4 mt-4">
           <h2 className="font-['Helvetica_Neue:Light',sans-serif] text-[16px] tracking-[3px] text-[#1e1709] uppercase mb-4 leading-[22px] px-4">
@@ -198,7 +184,7 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-      </main>
+      </div>
       
       {/* Bottom navigation - positioned at bottom with safe area */}
       <BottomNav />

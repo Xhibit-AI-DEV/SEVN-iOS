@@ -57,7 +57,7 @@ export function BottomNavigation({ activeTab = 'discover', className = '' }: Bot
     console.log('📱 Native platform detected - opening camera picker...');
     
     try {
-      console.log('📸 Calling CapacitorCamera.getPhoto...');
+      console.log('📸 Checking camera permissions and calling CapacitorCamera.getPhoto...');
       
       // Open photo library directly
       const image = await CapacitorCamera.getPhoto({
@@ -65,6 +65,8 @@ export function BottomNavigation({ activeTab = 'discover', className = '' }: Bot
         allowEditing: false,
         resultType: CameraResultType.Uri,
         source: CameraSource.Photos, // Go directly to photo library
+        promptLabelPhoto: 'Select from Photos',
+        promptLabelPicture: 'Take Photo',
       });
 
       console.log('✅ Image selected:', {
@@ -103,9 +105,18 @@ export function BottomNavigation({ activeTab = 'discover', className = '' }: Bot
       console.error('❌ Error picking media:', error);
       console.error('❌ Error details:', {
         message: (error as Error).message,
-        stack: (error as Error).stack
+        stack: (error as Error).stack,
+        name: (error as Error).name
       });
-      // User cancelled - do nothing
+      
+      // Check if it's a user cancellation (not a real error)
+      const errorMessage = (error as Error).message;
+      if (errorMessage && !errorMessage.toLowerCase().includes('cancel')) {
+        // Only show error if it's not a cancellation
+        console.error('❌ Real error occurred (not cancellation)');
+      } else {
+        console.log('ℹ️ User cancelled photo selection');
+      }
     }
     
     console.log('🎬 ========== CREATE BUTTON HANDLER END ==========');

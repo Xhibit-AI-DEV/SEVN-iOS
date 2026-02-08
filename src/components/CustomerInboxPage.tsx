@@ -370,32 +370,31 @@ export function CustomerInboxPage() {
 
   return (
     <div 
-      className="relative w-full min-h-screen overflow-x-hidden bg-[#FFFEFD]"
+      className="w-full h-screen bg-[#FFFEFD] flex flex-col overflow-hidden"
       style={{
         paddingTop: 'max(env(safe-area-inset-top, 0px), 44px)',
         paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 20px)',
       }}
     >
-      <div className="w-[393px] mx-auto relative pb-24">
-        {/* Header */}
-        <div className="sticky top-0 bg-[#FFFEFD] z-10 pt-5 pb-4 border-b border-black/70">
-          <div className="flex items-center gap-3 pl-4">
-            {/* Back button */}
-            <button 
-              onClick={() => navigate('/home')}
-              className="w-6 h-6 flex items-center justify-center flex-shrink-0"
-            >
-              <ArrowLeft className="w-6 h-6 text-[#1e1709]" strokeWidth={1.5} />
-            </button>
-            
-            <h1 className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-[#1e1709] uppercase flex-1">
-              Inbox
-            </h1>
-          </div>
-        </div>
+      {/* Header */}
+      <div className="bg-[#FFFEFD] w-full shrink-0 flex items-center gap-3 pl-4 h-[48px] border-b border-black/70">
+        {/* Back button */}
+        <button 
+          onClick={() => navigate('/home')}
+          className="w-6 h-6 flex items-center justify-center flex-shrink-0"
+        >
+          <ArrowLeft className="w-6 h-6 text-[#1e1709]" strokeWidth={1.5} />
+        </button>
+        
+        <h1 className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-[#1e1709] uppercase flex-1">
+          Inbox
+        </h1>
+      </div>
 
+      {/* Scrollable content - flex-1 makes it take remaining space */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden pb-24" style={{ WebkitOverflowScrolling: 'touch', minHeight: 0 }}>
         {/* Orders List */}
-        <div style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="w-[393px] mx-auto">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-6 h-6 text-[#1e1709] animate-spin" />

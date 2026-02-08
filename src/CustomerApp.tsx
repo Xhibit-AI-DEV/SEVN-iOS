@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, useNavigate } from 'react-router';
 import { Toaster, toast } from 'sonner@2.0.3';
 import { HomePage } from './components/HomePage';
@@ -9,6 +9,44 @@ import { ProfilePage } from './components/ProfilePage';
 import { MessagesPage } from './components/MessagesPage';
 import { StylistsPage } from './components/StylistsPage';
 import { projectId, publicAnonKey } from './utils/supabase/info';
+
+// Error Boundary Component
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: any) {
+    console.error('❌ CustomerApp Error Boundary caught:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="w-full min-h-screen flex flex-col items-center justify-center bg-white px-4">
+          <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
+          <p className="text-gray-600 mb-4 text-center">{this.state.error?.message}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-3 bg-black text-white rounded-lg"
+          >
+            Reload App
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 function CustomerAppContent() {
   const navigate = useNavigate();
@@ -149,7 +187,9 @@ function CustomerAppContent() {
 export default function CustomerApp() {
   return (
     <HashRouter>
-      <CustomerAppContent />
+      <ErrorBoundary>
+        <CustomerAppContent />
+      </ErrorBoundary>
     </HashRouter>
   );
 }

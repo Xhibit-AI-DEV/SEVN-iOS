@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.sevn.stylistadmin',
+  appId: 'com.xhibits',
   appName: 'SEVN Stylist',
   webDir: 'dist',
   bundledWebRuntime: false,

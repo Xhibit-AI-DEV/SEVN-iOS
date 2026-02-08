@@ -444,7 +444,6 @@
   html, body {
     width: 100%;
     max-width: 100%;
-    position: relative;
     overflow-x: hidden;
   }
 
@@ -472,7 +471,6 @@
 
   body {
     overscroll-behavior-x: none;
-    touch-action: pan-y pinch-zoom;
   }
 
   .scrollbar-hide {

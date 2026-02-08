@@ -121,7 +121,14 @@ export function SignIn() {
   };
 
   return (
-    <div className="w-full min-h-screen overflow-x-hidden overflow-y-auto bg-[#E2DFDD] flex flex-col" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)', WebkitOverflowScrolling: 'touch' }}>
+    <div 
+      className="w-full min-h-screen overflow-x-hidden overflow-y-auto bg-[#E2DFDD] flex flex-col" 
+      style={{ 
+        paddingTop: 'max(env(safe-area-inset-top, 0px), 44px)', 
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 20px)', 
+        WebkitOverflowScrolling: 'touch' 
+      }}
+    >
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-[393px]">

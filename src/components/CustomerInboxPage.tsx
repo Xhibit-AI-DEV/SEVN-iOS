@@ -372,8 +372,8 @@ export function CustomerInboxPage() {
     <div 
       className="w-full h-screen bg-[#FFFEFD] flex flex-col overflow-hidden"
       style={{
-        paddingTop: 'env(safe-area-inset-top, 0px)',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        paddingTop: 'max(env(safe-area-inset-top, 0px), 44px)',
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 20px)',
       }}
     >
       {/* Header */}

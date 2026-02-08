@@ -151,7 +151,13 @@ export function ChrisLanding({ onImageUpload }: ChrisLandingProps) {
   };
 
   return (
-    <div className="relative w-full min-h-screen overflow-x-hidden bg-white">
+    <div 
+      className="relative w-full min-h-screen overflow-x-hidden bg-white"
+      style={{
+        paddingTop: 'max(env(safe-area-inset-top, 0px), 44px)',
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 20px)',
+      }}
+    >
       {/* Top Navigation Bar - matches HomePage */}
       <div className="bg-white h-[48px] w-full relative z-50">
         <div className="h-full flex items-center justify-between px-4 max-w-[393px] mx-auto">

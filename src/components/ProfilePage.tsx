@@ -7,6 +7,8 @@ import { EditProfileModal } from './EditProfileModal';
 import { MoreMenuModal } from './MoreMenuModal';
 import { DeleteAccountModal } from './DeleteAccountModal';
 import { BottomNavigation } from './BottomNavigation';
+import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
 
 // Cache to prevent refetching
 const profileCache: any = {
@@ -228,6 +230,86 @@ export function ProfilePage() {
       // Upload avatar
       const formData = new FormData();
       formData.append('avatar', file);
+
+      const uploadResponse = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/profiles/${userId}/avatar`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          body: formData,
+        }
+      );
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload avatar');
+      }
+
+      const uploadData = await uploadResponse.json();
+      const newAvatarUrl = uploadData.avatar_url;
+
+      // Update profile with new avatar URL
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/profiles/${userId}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            ...profile,
+            avatar_url: newAvatarUrl,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+
+      const data = await response.json();
+      setProfile(data.profile);
+      
+      // Update cache
+      if (profileCache.data) {
+        profileCache.data.profile = data.profile;
+        profileCache.timestamp = Date.now();
+      }
+    } catch (error: any) {
+      console.error('Error uploading avatar:', error);
+      toast.error('Failed to upload avatar');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleAvatarUploadFromCamera = async () => {
+    if (!userId) return;
+
+    const accessToken = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
+    if (!accessToken) {
+      toast.error('Please sign in to upload avatar');
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+
+    try {
+      const image = await CapacitorCamera.getPhoto({
+        quality: 90,
+        allowEditing: true,
+        resultType: CameraResultType.Base64,
+        source: CameraSource.Camera,
+      });
+
+      if (!image.base64String) {
+        throw new Error('Failed to capture image');
+      }
+
+      const formData = new FormData();
+      formData.append('avatar', `data:image/jpeg;base64,${image.base64String}`);
 
       const uploadResponse = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/profiles/${userId}/avatar`,
@@ -623,6 +705,16 @@ export function ProfilePage() {
               onChange={handleAvatarUpload}
               className="hidden"
             />
+            {/* Camera icon overlay */}
+            {Capacitor.isPluginAvailable('Camera') && (
+              <button
+                onClick={handleAvatarUploadFromCamera}
+                disabled={isUploadingAvatar}
+                className="absolute top-0 left-0 w-[26px] h-[26px] bg-[#1e1709] border-2 border-[#fffefd] rounded-full flex items-center justify-center hover:bg-[#3e3709] transition-colors disabled:opacity-50"
+              >
+                <Camera className="w-[14px] h-[14px] text-[#fffefd]" strokeWidth={2.5} />
+              </button>
+            )}
           </div>
           
           {/* Stats */}

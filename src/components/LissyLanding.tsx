@@ -7,6 +7,8 @@ import imgScreenshot20231117At12528 from "figma:asset/4b4531903296dd337e2503bb17
 import imgScreenshot20231117At12529 from "figma:asset/7ba87817f8223271b091058d7d6c574cf1ba0452.png";
 import img021 from "figma:asset/e848b14a74d352089a614d152282f09191ed8fc0.png";
 import imgShareIcon from "figma:asset/acdcb062503544d45e9ec42f141e5eaf2bc04359.png";
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
 
 interface LissyLandingProps {
   onImageUpload: (file: File) => void;
@@ -483,6 +485,23 @@ export function LissyLanding({ onImageUpload }: LissyLandingProps) {
     }, 100);
   };
 
+  const takePhoto = async () => {
+    if (Capacitor.isNativePlatform()) {
+      const image = await Camera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Camera,
+      });
+      const response = await fetch(image.webPath!);
+      const blob = await response.blob();
+      const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
+      handleFileChange({ target: { files: [file] } } as React.ChangeEvent<HTMLInputElement>);
+    } else {
+      triggerFileInput();
+    }
+  };
+
   return (
     <div className="relative w-full min-h-screen overflow-x-hidden bg-white">
       {/* Top Navigation Bar - matches HomePage */}
@@ -546,7 +565,7 @@ export function LissyLanding({ onImageUpload }: LissyLandingProps) {
               </p>
             </div>
             <div className="mt-4">
-              <ButtonDark onClick={triggerFileInput} />
+              <ButtonDark onClick={takePhoto} />
             </div>
           </div>
         </div>

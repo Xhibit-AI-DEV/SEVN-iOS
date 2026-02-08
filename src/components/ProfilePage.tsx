@@ -661,9 +661,14 @@ export function ProfilePage() {
         paddingTop: 'env(safe-area-inset-top)',
       }}
     >
-      {/* Header */}
-      <div className="bg-white h-[48px] w-full shrink-0 border-b border-[#1e1709]">
-        <div className="h-full flex items-center justify-between px-4 max-w-[393px] mx-auto">
+      {/* Header with safe area */}
+      <div 
+        className="bg-white w-full shrink-0 border-b border-[#1e1709]"
+        style={{
+          paddingTop: 'env(safe-area-inset-top)',
+        }}
+      >
+        <div className="h-[48px] flex items-center justify-between px-4 max-w-[393px] mx-auto">
           <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-black">
             VII SEVN
           </p>
@@ -679,8 +684,14 @@ export function ProfilePage() {
         </div>
       </div>
 
-      {/* Scrollable content - flex-1 makes it take remaining space */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden pb-24" style={{ WebkitOverflowScrolling: 'touch', minHeight: 0 }}>
+      {/* Scrollable content */}
+      <div 
+        className="flex-1 overflow-y-auto overflow-x-hidden"
+        style={{
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom))',
+        }}
+      >
         <div className="w-full max-w-[393px] mx-auto pt-6 px-4">
         {/* Profile Section */}
         <div className="flex items-start gap-8 mb-3">

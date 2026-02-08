@@ -65,7 +65,7 @@ export function SignIn() {
             setTimeout(() => {
               setIsSignUp(false);
               toast.info('Switched to sign in mode - please enter your password');
-            }, 2000);
+            }, 500);
           }
         }
       } else {
@@ -108,7 +108,7 @@ export function SignIn() {
             setTimeout(() => {
               setIsSignUp(true);
               toast.info('Switched to sign up mode - create your account');
-            }, 2000);
+            }, 500);
           }
         }
       }
@@ -121,9 +121,9 @@ export function SignIn() {
   };
 
   return (
-    <div className="w-full min-h-screen overflow-x-hidden bg-[#E2DFDD] flex flex-col">
+    <div className="w-full min-h-screen overflow-x-hidden overflow-y-auto bg-[#E2DFDD] flex flex-col" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)', WebkitOverflowScrolling: 'touch' }}>
       {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center px-4">
+      <div className="flex-1 flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-[393px]">
           {/* Logo/Header */}
           <div className="text-center mb-8">
@@ -143,7 +143,7 @@ export function SignIn() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-[#1E1709]/20 rounded-lg font-['Helvetica_Neue:Regular',sans-serif] text-[14px] text-[#1E1709] bg-white focus:outline-none focus:border-[#1E1709]"
+                className="w-full px-4 py-3 border border-[#1E1709]/20 rounded-lg font-['Helvetica_Neue:Regular',sans-serif] text-[16px] text-[#1E1709] bg-white focus:outline-none focus:border-[#1E1709]"
                 placeholder="you@example.com"
               />
             </div>
@@ -158,7 +158,7 @@ export function SignIn() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full px-4 py-3 border border-[#1E1709]/20 rounded-lg font-['Helvetica_Neue:Regular',sans-serif] text-[14px] text-[#1E1709] bg-white focus:outline-none focus:border-[#1E1709]"
+                className="w-full px-4 py-3 border border-[#1E1709]/20 rounded-lg font-['Helvetica_Neue:Regular',sans-serif] text-[16px] text-[#1E1709] bg-white focus:outline-none focus:border-[#1E1709]"
                 placeholder="••••••••"
               />
             </div>

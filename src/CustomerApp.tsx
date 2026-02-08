@@ -2,21 +2,55 @@ import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, useNavigate } from 'react-router';
 import { Toaster, toast } from 'sonner@2.0.3';
 import { HomePage } from './components/HomePage';
+import { StylistsPage } from './components/StylistsPage';
+import { MessagesPage } from './components/MessagesPage';
+import { MessageDetailPage } from './components/MessageDetailPage';
+import { CustomerOrderView } from './components/CustomerOrderView';
+import { ProfilePage } from './components/ProfilePage';
 import { LissyLanding } from './components/LissyLanding';
 import { IntakeForm } from './components/IntakeForm';
 import { WaitlistPage } from './components/WaitlistPage';
-import { ProfilePage } from './components/ProfilePage';
-import { MessagesPage } from './components/MessagesPage';
-import { StylistsPage } from './components/StylistsPage';
+import { ChrisLanding } from './components/ChrisLanding';
+import { ChrisIntakeForm } from './components/ChrisIntakeForm';
+import { ChrisWaitlistPage } from './components/ChrisWaitlistPage';
+import { GenericWaitlistPage } from './components/GenericWaitlistPage';
+import { EditIntakeForm } from './components/EditIntakeForm';
+import { EditDetailPage } from './components/EditDetailPage';
+import { CreateEditPage } from './components/CreateEditPage';
+import { CustomerInboxPage } from './components/CustomerInboxPage';
+import { IntakeFormPage } from './components/IntakeFormPage';
+import { RorySelectsDetail } from './components/RorySelectsDetail';
+import { AdminDashboard } from './components/AdminDashboard';
+import { AdminProfileFix } from './components/AdminProfileFix';
 import { SignIn } from './components/SignIn';
+import { DebugApiTest } from './components/DebugApiTest';
+import { DebugAuth } from './components/DebugAuth';
+import { PasswordReset } from './components/PasswordReset';
+import { ChangePasswordPage } from './components/ChangePasswordPage';
+import { ChangeEmailPage } from './components/ChangeEmailPage';
+import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
+import { TermsOfServicePage } from './components/TermsOfServicePage';
+import { BlockedAccountsPage } from './components/BlockedAccountsPage';
+import { NotificationsPage } from './components/NotificationsPage';
+import { HelpContactPage } from './components/HelpContactPage';
+import { DebugOrders } from './components/DebugOrders';
+import { SimpleDebug } from './components/SimpleDebug';
 import { projectId, publicAnonKey } from './utils/supabase/info';
 
-// Simple loading screen to prevent overwhelming iOS with all images at once
+/**
+ * UNIFIED APP - Combines customer and admin/stylist features
+ * Role-based routing:
+ * - "customer" role: sees customer features (intake, waitlist, messages, profile)
+ * - "admin" or "stylist" role: sees admin features (workspace, customer list, edits)
+ * - Public routes: signin, password reset, etc.
+ */
+
+// Simple loading screen
 function LoadingScreen() {
   return (
     <div className="w-full min-h-screen flex flex-col items-center justify-center bg-white">
       <div className="text-center">
-        <h1 className="text-[24px] font-['Helvetica_Neue:Regular',sans-serif] tracking-[3px] mb-4">VII SEVN</h1>
+        <h1 className="text-[24px] font-['Helvetica_Neue:Regular',sans-serif] tracking-[3px] mb-4">SEVN</h1>
         <p className="text-sm text-gray-600">Loading...</p>
       </div>
     </div>
@@ -38,7 +72,7 @@ class ErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, errorInfo: any) {
-    console.error('❌ CustomerApp Error Boundary caught:', error, errorInfo);
+    console.error('❌ App Error Boundary caught:', error, errorInfo);
   }
 
   render() {
@@ -61,35 +95,37 @@ class ErrorBoundary extends React.Component<
   }
 }
 
-function CustomerAppContent() {
+function AppContent() {
   const navigate = useNavigate();
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
+  const [chrisUploadedImage, setChrisUploadedImage] = useState<File | null>(null);
   const [customerData, setCustomerData] = useState<{
     name: string;
     email: string;
     contentfulId?: string;
   } | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   // Check authentication on mount
   useEffect(() => {
     const authToken = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
-    const userRole = localStorage.getItem('user_role');
+    const role = localStorage.getItem('user_role');
     
-    if (authToken && userRole === 'customer') {
+    console.log('🔐 Auth check:', { hasToken: !!authToken, role });
+    
+    if (authToken) {
       setIsAuthenticated(true);
+      setUserRole(role || 'customer');
     } else {
       setIsAuthenticated(false);
-      // Redirect to signin if not on signin page
-      if (!window.location.hash.includes('/signin')) {
-        navigate('/signin');
-      }
+      setUserRole(null);
     }
-  }, [navigate]);
+  }, []);
 
   // Debug: Log current path
   useEffect(() => {
-    console.log('Current path:', window.location.pathname, window.location.hash);
+    console.log('📍 Current path:', window.location.pathname, window.location.hash);
   }, []);
 
   // Show loading while checking auth
@@ -97,7 +133,7 @@ function CustomerAppContent() {
     return <LoadingScreen />;
   }
 
-  // Protected route wrapper
+  // Protected route wrapper - requires authentication only
   const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
     if (!isAuthenticated) {
       return <SignIn />;
@@ -105,10 +141,33 @@ function CustomerAppContent() {
     return children;
   };
 
+  // Admin-only route wrapper - requires admin or stylist role
+  const AdminRoute = ({ children }: { children: React.ReactElement }) => {
+    if (!isAuthenticated) {
+      return <SignIn />;
+    }
+    if (userRole !== 'admin' && userRole !== 'stylist') {
+      // Redirect non-admin users to home
+      return (
+        <div className="w-full min-h-screen flex flex-col items-center justify-center bg-white px-4">
+          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+          <p className="text-gray-600 mb-4 text-center">You don't have permission to access this page.</p>
+          <button
+            onClick={() => navigate('/home')}
+            className="px-6 py-3 bg-black text-white rounded-lg"
+          >
+            Go to Home
+          </button>
+        </div>
+      );
+    }
+    return children;
+  };
+
   const handleImageUpload = async (file: File) => {
-    console.log('📸 [CustomerApp.tsx] handleImageUpload called');
-    console.log('📸 [CustomerApp.tsx] File received:', file);
-    console.log('📸 [CustomerApp.tsx] File details:', {
+    console.log('📸 [App] handleImageUpload called');
+    console.log('📸 [App] File received:', file);
+    console.log('📸 [App] File details:', {
       name: file.name,
       type: file.type,
       size: file.size,
@@ -118,93 +177,151 @@ function CustomerAppContent() {
     setUploadedImage(file);
     
     // Save to sessionStorage for persistence
-    console.log('📸 [CustomerApp.tsx] Creating FileReader...');
+    console.log('📸 [App] Creating FileReader...');
     const reader = new FileReader();
     
     reader.onloadend = () => {
-      console.log('📸 [CustomerApp.tsx] FileReader completed');
+      console.log('📸 [App] FileReader completed');
       const base64 = reader.result as string;
-      console.log('📸 [CustomerApp.tsx] Base64 length:', base64.length);
+      console.log('📸 [App] Base64 length:', base64.length);
       
       sessionStorage.setItem('lissy_uploaded_image', base64);
       sessionStorage.setItem('lissy_uploaded_image_name', file.name);
       sessionStorage.setItem('lissy_uploaded_image_type', file.type);
       
-      console.log('✅ [CustomerApp.tsx] Image saved to sessionStorage:', file.name);
-      console.log('✅ [CustomerApp.tsx] Verification - sessionStorage has:', {
+      console.log('✅ [App] Image saved to sessionStorage:', file.name);
+      console.log('✅ [App] Verification - sessionStorage has:', {
         hasBase64: !!sessionStorage.getItem('lissy_uploaded_image'),
         name: sessionStorage.getItem('lissy_uploaded_image_name'),
         type: sessionStorage.getItem('lissy_uploaded_image_type')
       });
       
       // Navigate AFTER sessionStorage is written
-      console.log('🚀 [CustomerApp.tsx] Navigating to /lissy/intake...');
+      console.log('🚀 [App] Navigating to /lissy/intake...');
       navigate('/lissy/intake');
     };
     
     reader.onerror = (error) => {
-      console.error('❌ [CustomerApp.tsx] FileReader error:', error);
-      console.error('❌ [CustomerApp.tsx] Reader state:', reader.readyState);
+      console.error('❌ [App] FileReader error:', error);
+      console.error('❌ [App] Reader state:', reader.readyState);
       toast.error('Failed to process image');
       // Still navigate even if sessionStorage fails
       navigate('/lissy/intake');
     };
     
-    console.log('📸 [CustomerApp.tsx] Starting FileReader.readAsDataURL...');
+    console.log('📸 [App] Starting FileReader.readAsDataURL...');
     reader.readAsDataURL(file);
   };
 
-  const handleIntakeSubmit = async (formData: any) => {
-    console.log('Intake form submitted:', formData);
-    setCustomerData({
-      name: formData.name,
-      email: formData.email,
-    });
-
-    try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/submit-intake`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify(formData),
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Intake submission failed:', errorText);
-        toast.error('Failed to submit intake form');
-        return;
-      }
-
-      const data = await response.json();
-      console.log('Intake submission successful:', data);
+  const handleChrisImageUpload = (file: File) => {
+    setChrisUploadedImage(file);
+    console.log('📸 Chris image uploaded:', file.name, file.type, file.size);
+    
+    // Save to sessionStorage for persistence
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      sessionStorage.setItem('chris_uploaded_image', base64);
+      sessionStorage.setItem('chris_uploaded_image_name', file.name);
+      sessionStorage.setItem('chris_uploaded_image_type', file.type);
+      console.log('✅ Chris image saved to sessionStorage:', file.name);
       
-      // Navigate to waitlist
-      navigate('/lissy/waitlist');
-    } catch (error) {
-      console.error('Intake submission error:', error);
-      toast.error('Failed to submit intake form');
-    }
+      // Navigate AFTER sessionStorage is written
+      navigate('/chris/intake');
+    };
+    reader.onerror = (error) => {
+      console.error('❌ Failed to save Chris image to sessionStorage:', error);
+      // Still navigate even if sessionStorage fails
+      navigate('/chris/intake');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleIntakeComplete = () => {
+    // IntakeForm handles its own navigation with state - no need to navigate here
+    console.log('✅ Intake complete - form will handle navigation');
+  };
+
+  const handleChrisIntakeComplete = () => {
+    // ChrisIntakeForm handles its own navigation with state - no need to navigate here
+    console.log('✅ Chris intake complete - form will handle navigation');
   };
 
   return (
     <>
       <Routes>
-        <Route path="/home" element={<HomePage />} />
-        <Route path="/lissy" element={<LissyLanding onImageUpload={handleImageUpload} />} />
-        <Route path="/lissy/intake" element={<IntakeForm uploadedImage={null} onComplete={() => navigate('/lissy/waitlist')} />} />
-        <Route path="/lissy/waitlist" element={<WaitlistPage customerName={customerData?.name} />} />
-        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-        <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
-        <Route path="/stylists" element={<ProtectedRoute><StylistsPage /></ProtectedRoute>} />
+        {/* PUBLIC ROUTES - No authentication required */}
         <Route path="/signin" element={<SignIn />} />
-        <Route path="/" element={<HomePage />} />
-        <Route path="*" element={<HomePage />} />
+        <Route path="/password-reset" element={<PasswordReset />} />
+        <Route path="/debug" element={<DebugApiTest />} />
+        <Route path="/debug-auth" element={<DebugAuth />} />
+        <Route path="/simple-debug" element={<SimpleDebug />} />
+        
+        {/* SHARED ROUTES - Accessible by all authenticated users */}
+        <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+        <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/change-password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
+        <Route path="/change-email" element={<ProtectedRoute><ChangeEmailPage /></ProtectedRoute>} />
+        <Route path="/privacy-policy" element={<ProtectedRoute><PrivacyPolicyPage /></ProtectedRoute>} />
+        <Route path="/terms-of-service" element={<ProtectedRoute><TermsOfServicePage /></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+        <Route path="/help-contact" element={<ProtectedRoute><HelpContactPage /></ProtectedRoute>} />
+        
+        {/* CUSTOMER ROUTES - Accessible by customers (and admins can see them too) */}
+        <Route path="/stylists" element={<ProtectedRoute><StylistsPage /></ProtectedRoute>} />
+        <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
+        <Route path="/message-detail/:orderId" element={<ProtectedRoute><MessageDetailPage /></ProtectedRoute>} />
+        <Route path="/order/:orderId" element={<ProtectedRoute><CustomerOrderView /></ProtectedRoute>} />
+        
+        {/* INTAKE FLOWS - Public access to landing pages, protected for forms */}
+        <Route path="/lissy" element={<LissyLanding onImageUpload={handleImageUpload} />} />
+        <Route path="/lissy/intake" element={<IntakeForm uploadedImage={null} onComplete={handleIntakeComplete} />} />
+        <Route path="/lissy/waitlist" element={<WaitlistPage customerName={customerData?.name} />} />
+        <Route path="/lissy/intake/edit/:orderId" element={<ProtectedRoute><EditIntakeForm /></ProtectedRoute>} />
+        
+        <Route path="/chris" element={<ProtectedRoute><ChrisLanding onImageUpload={handleChrisImageUpload} /></ProtectedRoute>} />
+        <Route path="/chris/intake" element={
+          <ProtectedRoute>
+            {chrisUploadedImage ? (
+              <ChrisIntakeForm uploadedImage={chrisUploadedImage} onComplete={handleChrisIntakeComplete} />
+            ) : (
+              <div className="w-full min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                  <p className="text-gray-600 mb-4">No image uploaded</p>
+                  <button 
+                    onClick={() => navigate('/chris')}
+                    className="px-4 py-2 bg-black text-white rounded"
+                  >
+                    Go Back
+                  </button>
+                </div>
+              </div>
+            )}
+          </ProtectedRoute>
+        } />
+        <Route path="/chris/waitlist" element={<ProtectedRoute><ChrisWaitlistPage /></ProtectedRoute>} />
+        
+        {/* UNIVERSAL INTAKE FORMS - By username */}
+        <Route path="/intake/:username" element={<ProtectedRoute><IntakeFormPage /></ProtectedRoute>} />
+        <Route path="/u/:username/waitlist" element={<ProtectedRoute><GenericWaitlistPage /></ProtectedRoute>} />
+        
+        {/* ADMIN/STYLIST ONLY ROUTES */}
+        <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+        <Route path="/admin-dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+        <Route path="/admin-profile-fix" element={<AdminRoute><AdminProfileFix /></AdminRoute>} />
+        <Route path="/customer-inbox" element={<AdminRoute><CustomerInboxPage /></AdminRoute>} />
+        <Route path="/blocked-accounts" element={<AdminRoute><BlockedAccountsPage /></AdminRoute>} />
+        <Route path="/debug-orders" element={<AdminRoute><DebugOrders /></AdminRoute>} />
+        
+        {/* EDITS/POSTS - Admin can create, all can view */}
+        <Route path="/edit/:editId" element={<ProtectedRoute><EditDetailPage /></ProtectedRoute>} />
+        <Route path="/create-edit" element={<ProtectedRoute><CreateEditPage /></ProtectedRoute>} />
+        <Route path="/create-edit/:editId" element={<ProtectedRoute><CreateEditPage /></ProtectedRoute>} />
+        <Route path="/rory-selects/:editId" element={<ProtectedRoute><RorySelectsDetail /></ProtectedRoute>} />
+        
+        {/* Catch all - redirect to home */}
+        <Route path="*" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
       </Routes>
       <Toaster 
         position="top-center" 
@@ -232,7 +349,7 @@ export default function CustomerApp() {
   return (
     <HashRouter>
       <ErrorBoundary>
-        <CustomerAppContent />
+        <AppContent />
       </ErrorBoundary>
     </HashRouter>
   );

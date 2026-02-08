@@ -26,15 +26,15 @@ export function HomePage() {
       </div>
 
       {/* Scrollable content - takes remaining height */}
-      <div className="absolute inset-x-0 overflow-y-auto overflow-x-hidden pb-24" style={{ top: `calc(48px + env(safe-area-inset-top))`, bottom: 0, WebkitOverflowScrolling: 'touch' }}>
+      <div className="absolute inset-x-0 overflow-y-auto pb-24" style={{ top: `calc(48px + env(safe-area-inset-top))`, bottom: 0, WebkitOverflowScrolling: 'touch' }}>
         {/* FEATURED STYLISTS Section */}
-        <div className="px-4 mb-4">
-          <h2 className="font-['Helvetica_Neue:Light',sans-serif] text-[16px] tracking-[3px] text-[#1e1709] uppercase mb-4 leading-[22px]">
+        <div className="mb-4">
+          <h2 className="font-['Helvetica_Neue:Light',sans-serif] text-[16px] tracking-[3px] text-[#1e1709] uppercase mb-4 leading-[22px] px-4">
             FEATURED STYLISTS
           </h2>
           
-          {/* Horizontal scroll of stylist cards */}
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" style={{ scrollSnapType: 'none', WebkitOverflowScrolling: 'touch' }}>
+          {/* Horizontal scroll of stylist cards - FULL BLEED */}
+          <div className="flex gap-3 overflow-x-auto pb-2 pl-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" style={{ scrollSnapType: 'none', WebkitOverflowScrolling: 'touch' }}>
             {/* First Featured Stylist - LISSY RODDY */}
             <button 
               className="relative shrink-0 size-[225px] border border-black/50 rounded-[1px]"
@@ -77,7 +77,7 @@ export function HomePage() {
 
             {/* Third Featured Stylist - CHRIS WHYLE */}
             <button 
-              className="relative shrink-0 size-[225px] border border-black/50 rounded-[1px]"
+              className="relative shrink-0 size-[225px] border border-black/50 rounded-[1px] mr-4"
               onClick={() => navigate('/chris')}
               style={{ borderWidth: '1px' }}
             >

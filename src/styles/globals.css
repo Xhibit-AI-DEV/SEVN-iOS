@@ -212,6 +212,13 @@
     overflow-x: hidden;
     position: relative;
   }
+  
+  /* Force all children to respect bounds */
+  #root {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
 
   body {
     @apply bg-background text-foreground;

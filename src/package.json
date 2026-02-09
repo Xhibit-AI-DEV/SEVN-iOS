@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build && cp build/customer.html build/index.html",
     "preview": "vite preview",
     "cap:sync": "cap sync",
     "cap:open:ios": "cap open ios",

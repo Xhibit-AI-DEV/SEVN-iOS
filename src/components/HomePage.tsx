@@ -16,6 +16,11 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#fffefd] flex flex-col" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      {/* VERSION BANNER - FOR DEBUGGING */}
+      <div className="bg-red-600 text-white text-center py-1 text-xs font-bold">
+        BUILD v2.9.2025 - 3:45PM
+      </div>
+      
       {/* Header */}
       <div className="bg-white w-full h-[48px] shrink-0 flex items-center justify-between px-4 border-b border-[#1e1709]">
         <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-black">

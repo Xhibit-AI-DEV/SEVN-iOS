@@ -52,6 +52,7 @@ function LoadingScreen() {
       <div className="text-center">
         <h1 className="text-[24px] font-['Helvetica_Neue:Regular',sans-serif] tracking-[3px] mb-4">SEVN</h1>
         <p className="text-sm text-gray-600">Loading...</p>
+        <p className="text-xs text-red-600 mt-4 font-bold">BUILD v2.9.2025</p>
       </div>
     </div>
   );
@@ -113,6 +114,13 @@ function AppContent() {
     const role = localStorage.getItem('user_role');
     
     console.log('🔐 Auth check:', { hasToken: !!authToken, role });
+    console.log('🔐 Full localStorage:', {
+      auth_token: !!localStorage.getItem('auth_token'),
+      access_token: !!localStorage.getItem('access_token'),
+      user_role: localStorage.getItem('user_role'),
+      user_email: localStorage.getItem('user_email'),
+      user_id: localStorage.getItem('user_id'),
+    });
     
     // Set auth state immediately - don't wait
     setIsAuthenticated(!!authToken);
@@ -122,6 +130,7 @@ function AppContent() {
   // Debug: Log current path
   useEffect(() => {
     console.log('📍 Current path:', window.location.pathname, window.location.hash);
+    console.log('📍 Current href:', window.location.href);
   }, []);
 
   // Show loading while checking auth
@@ -254,8 +263,16 @@ function AppContent() {
         <Route path="/simple-debug" element={<SimpleDebug />} />
         
         {/* SHARED ROUTES - Accessible by all authenticated users */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/home" element={<HomePage />} />
+        <Route path="/" element={
+          <ErrorBoundary>
+            <HomePage />
+          </ErrorBoundary>
+        } />
+        <Route path="/home" element={
+          <ErrorBoundary>
+            <HomePage />
+          </ErrorBoundary>
+        } />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         <Route path="/change-password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
         <Route path="/change-email" element={<ProtectedRoute><ChangeEmailPage /></ProtectedRoute>} />

@@ -65,8 +65,8 @@ export function ProfilePage() {
       try {
         const accessToken = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
         if (!accessToken) {
-          console.log('❌ No access token, redirecting to signin');
-          navigate('/signin');
+          console.log('❌ ProfilePage: No access token found');
+          setIsLoading(false);
           return;
         }
 
@@ -80,8 +80,8 @@ export function ProfilePage() {
 
         if (!authResponse.ok) {
           if (authResponse.status === 401) {
-            console.log('❌ Unauthorized, redirecting to signin');
-            navigate('/signin');
+            console.log('❌ ProfilePage: Unauthorized - token invalid');
+            setIsLoading(false);
             return;
           }
           throw new Error('Failed to authenticate');

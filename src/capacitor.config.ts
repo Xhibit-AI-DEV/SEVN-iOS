@@ -12,6 +12,8 @@ const config: CapacitorConfig = {
     iosScheme: 'https',
     url: undefined,
     cleartext: false,
+    // Clear cache on app launch
+    cleartext: false,
   },
   
   ios: {

@@ -1,7 +1,11 @@
+import { createRoot } from 'react-dom/client';
+import CustomerApp from './CustomerApp.tsx';
 
-  import { createRoot } from "react-dom/client";
-  import App from "./App.tsx";
-  import "./index.css";
+const root = createRoot(document.getElementById('root')!);
+root.render(<CustomerApp />);
 
-  createRoot(document.getElementById("root")!).render(<App />);
-  
+// Hide splash screen after app loads
+const splashScreen = document.getElementById('splash-screen');
+if (splashScreen) {
+  splashScreen.classList.add('hidden');
+}

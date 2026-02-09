@@ -9,6 +9,8 @@ export function IonicBottomNav() {
 
   const handleCreateClick = async () => {
     console.log('🎬 Create button clicked');
+    console.log('📍 Platform check:', Capacitor.getPlatform());
+    console.log('🤖 Is native?', Capacitor.isNativePlatform());
     
     // Check if running on native platform
     if (!Capacitor.isNativePlatform()) {
@@ -20,6 +22,30 @@ export function IonicBottomNav() {
     console.log('📱 Native platform - opening camera picker');
     
     try {
+      // Request permissions explicitly
+      console.log('🔑 Requesting photo permissions...');
+      const permissionStatus = await CapacitorCamera.checkPermissions();
+      console.log('📋 Current permissions:', permissionStatus);
+      
+      if (permissionStatus.photos === 'denied') {
+        console.error('❌ Photo permissions denied');
+        alert('Photo permissions are required. Please enable them in Settings.');
+        return;
+      }
+      
+      if (permissionStatus.photos === 'prompt' || permissionStatus.photos === 'prompt-with-rationale') {
+        console.log('📸 Requesting photo permissions...');
+        const requestResult = await CapacitorCamera.requestPermissions({ permissions: ['photos'] });
+        console.log('✅ Permission request result:', requestResult);
+        
+        if (requestResult.photos === 'denied') {
+          console.error('❌ User denied photo permissions');
+          alert('Photo permissions are required to create edits.');
+          return;
+        }
+      }
+      
+      console.log('📸 Opening camera picker...');
       const image = await CapacitorCamera.getPhoto({
         quality: 90,
         allowEditing: false,

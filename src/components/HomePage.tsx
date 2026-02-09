@@ -15,11 +15,17 @@ export default function HomePage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#fffefd] flex flex-col" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-      {/* VERSION BANNER - FOR DEBUGGING */}
-      <div className="bg-red-600 text-white text-center py-1 text-xs font-bold">
-        BUILD v2.9.2025 - 3:45PM
+    <div className="min-h-screen bg-[#fffefd] flex flex-col">
+      {/* VERSION BANNER - FOR DEBUGGING - FIXED POSITION */}
+      <div 
+        className="fixed top-0 left-0 right-0 bg-red-600 text-white text-center py-1 text-xs font-bold z-[9999]"
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      >
+        BUILD v2.9.2025 - 4:30PM - FIXED LAYOUT
       </div>
+      
+      {/* Spacer for version banner + safe area */}
+      <div style={{ height: 'calc(24px + env(safe-area-inset-top))' }} />
       
       {/* Header */}
       <div className="bg-white w-full h-[48px] shrink-0 flex items-center justify-between px-4 border-b border-[#1e1709]">

@@ -25,8 +25,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: '/index.html',
-        admin: '/admin.html',
-        customer: '/customer.html',
         'architecture-diagram': '/architecture-diagram.html',
         'design-flows-documentation': '/design-flows-documentation.html',
         'test-landing': '/test-landing.html',

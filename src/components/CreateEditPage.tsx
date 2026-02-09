@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router';
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonButton, IonBackButton } from '@ionic/react';
 import svgPaths from "../imports/svg-ib8s7izy1q";
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { toast } from 'sonner@2.0.3';
@@ -306,36 +307,21 @@ export function CreateEditPage() {
   };
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-[#fffefd]">
-      {/* Top Nav - Fixed */}
-      <div 
-        className="bg-[#fffefd] h-[48px] w-full flex-shrink-0 flex items-center justify-between px-4 border-b border-[#1e1709]/10"
-        style={{ paddingTop: 'env(safe-area-inset-top)' }}
-      >
-        <button 
-          className="size-[24px]"
-          onClick={() => navigate(-1)}
-        >
-          <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 24 24">
-            <path d={svgPaths.p13e8e2e0} stroke="#1E1709" strokeLinecap="square" strokeLinejoin="round" strokeWidth="1.1" />
-          </svg>
-        </button>
-        
-        <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-black">
-          POST EDIT
-        </p>
-        
-        {/* Empty div for layout balance */}
-        <div className="size-[24px]" />
-      </div>
+    <IonPage>
+      {/* Top Nav - Fixed header area */}
+      <IonHeader>
+        <IonToolbar>
+          <IonButtons slot="start">
+            <IonBackButton />
+          </IonButtons>
+          <IonTitle className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-black">
+            POST EDIT
+          </IonTitle>
+        </IonToolbar>
+      </IonHeader>
 
-      {/* Scrollable Content Area */}
-      <div 
-        className="flex-1 overflow-y-auto overflow-x-hidden"
-        style={{ 
-          paddingBottom: 'calc(50px + env(safe-area-inset-bottom))', // Bottom nav height + safe area
-        }}
-      >
+      {/* EVERYTHING scrolls here */}
+      <IonContent className="w-full" style={{ paddingBottom: '50px' }}>
         {/* Loading state for edit mode */}
         {isLoadingEdit && (
           <div className="flex items-center justify-center min-h-[400px]">
@@ -600,7 +586,7 @@ export function CreateEditPage() {
             )}
           </div>
         )}
-      </div>
-    </div>
+      </IonContent>
+    </IonPage>
   );
 }

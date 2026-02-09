@@ -1,6 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, useNavigate } from 'react-router';
 import { Toaster, toast } from 'sonner@2.0.3';
+
+/* Core Ionic CSS required for Ionic components */
+import '@ionic/react/css/core.css';
+
+/* Basic Ionic CSS display */
+import '@ionic/react/css/normalize.css';
+import '@ionic/react/css/structure.css';
+import '@ionic/react/css/typography.css';
+
+/* Optional Ionic CSS utilities */
+import '@ionic/react/css/padding.css';
+import '@ionic/react/css/float-elements.css';
+import '@ionic/react/css/text-alignment.css';
+import '@ionic/react/css/text-transformation.css';
+import '@ionic/react/css/flex-utils.css';
+import '@ionic/react/css/display.css';
+
 import HomePage from './components/HomePage';
 import { StylistsPage } from './components/StylistsPage';
 import { MessagesPage } from './components/MessagesPage';

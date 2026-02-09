@@ -79,24 +79,25 @@
     }
     
     /* Prevent font loading errors - comprehensive font-face definitions */
-    body {
+    html, body {
+      height: 100%;
+      width: 100%;
       margin: 0;
+    }
+    
+    body {
       padding: 0;
       font-family: "Helvetica Neue", Helvetica, Arial, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', sans-serif;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      width: 100%;
-      height: 100vh;
-      /* ALLOW SCROLLING - only block horizontal */
-      overflow-y: auto;
-      overflow-x: hidden;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
     }
+    
     #root {
       width: 100%;
-      min-height: 100vh;
-      overflow-y: auto;
-      overflow-x: hidden;
-      -webkit-overflow-scrolling: touch;
+      height: 100%;
+      margin: 0;
     }
   </style>
   <script>

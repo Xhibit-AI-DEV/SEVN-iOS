@@ -24,7 +24,7 @@ export default function HomePage() {
     >
       {/* VERSION BANNER - FOR DEBUGGING */}
       <div className="bg-red-600 text-white text-center py-1 text-xs font-bold">
-        BUILD v2.9.2025 - 5:00PM - SAFE AREA FIX
+        BUILD v2.9.2025 - 5:30PM - SCROLLING FIX + PUBLIC ROUTES
       </div>
       
       {/* Header */}

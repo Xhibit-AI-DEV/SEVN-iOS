@@ -273,7 +273,7 @@ function AppContent() {
             <HomePage />
           </ErrorBoundary>
         } />
-        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProfilePage />} />
         <Route path="/change-password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
         <Route path="/change-email" element={<ProtectedRoute><ChangeEmailPage /></ProtectedRoute>} />
         <Route path="/privacy-policy" element={<ProtectedRoute><PrivacyPolicyPage /></ProtectedRoute>} />
@@ -328,10 +328,10 @@ function AppContent() {
         <Route path="/debug-orders" element={<AdminRoute><DebugOrders /></AdminRoute>} />
         
         {/* EDITS/POSTS - Admin can create, all can view */}
-        <Route path="/edit/:editId" element={<ProtectedRoute><EditDetailPage /></ProtectedRoute>} />
-        <Route path="/create-edit" element={<ProtectedRoute><CreateEditPage /></ProtectedRoute>} />
+        <Route path="/edit/:editId" element={<EditDetailPage />} />
+        <Route path="/create-edit" element={<CreateEditPage />} />
         <Route path="/create-edit/:editId" element={<ProtectedRoute><CreateEditPage /></ProtectedRoute>} />
-        <Route path="/rory-selects/:editId" element={<ProtectedRoute><RorySelectsDetail /></ProtectedRoute>} />
+        <Route path="/rory-selects/:editId" element={<RorySelectsDetail />} />
         
         {/* Catch all - redirect to home */}
         <Route path="*" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />

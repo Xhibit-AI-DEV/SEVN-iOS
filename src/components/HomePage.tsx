@@ -2,6 +2,7 @@ import { Menu } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { IonicBottomNav } from './IonicBottomNav';
+import { DebugVersion } from './DebugVersion';
 
 // Import stylist images - must import as variables, NOT strings
 import imgLissyRoddy from "figma:asset/21ead93bac0da68ed5f33efdfb07c0bf632228cc.png";
@@ -23,9 +24,7 @@ export default function HomePage() {
       }}
     >
       {/* VERSION BANNER - FOR DEBUGGING */}
-      <div className="bg-red-600 text-white text-center py-1 text-xs font-bold">
-        BUILD v2.9.2025 - 5:30PM - SCROLLING FIX + PUBLIC ROUTES
-      </div>
+      <DebugVersion />
       
       {/* Header */}
       <div className="bg-white w-full h-[48px] shrink-0 flex items-center justify-between px-4 border-b border-[#1e1709]">

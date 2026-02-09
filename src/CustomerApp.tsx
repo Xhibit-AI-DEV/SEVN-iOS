@@ -52,7 +52,7 @@ function LoadingScreen() {
       <div className="text-center">
         <h1 className="text-[24px] font-['Helvetica_Neue:Regular',sans-serif] tracking-[3px] mb-4">SEVN</h1>
         <p className="text-sm text-gray-600">Loading...</p>
-        <p className="text-xs text-red-600 mt-4 font-bold">BUILD v2.9.2025</p>
+        <p className="text-xs text-red-600 mt-4 font-bold">BUILD v2.9.2025 - 5:45PM - CATCH-ALL FIX</p>
       </div>
     </div>
   );
@@ -334,7 +334,7 @@ function AppContent() {
         <Route path="/rory-selects/:editId" element={<RorySelectsDetail />} />
         
         {/* Catch all - redirect to home */}
-        <Route path="*" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+        <Route path="*" element={<HomePage />} />
       </Routes>
       <Toaster 
         position="top-center" 

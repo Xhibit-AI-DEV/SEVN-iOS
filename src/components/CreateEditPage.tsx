@@ -230,6 +230,7 @@ export function CreateEditPage() {
       // Get access token (check both possible storage keys for backwards compatibility)
       const accessToken = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
       if (!accessToken) {
+        toast.error('Please sign in to publish an edit');
         navigate('/signin');
         return;
       }
@@ -305,12 +306,12 @@ export function CreateEditPage() {
   };
 
   return (
-    <div 
-      className="relative w-full min-h-screen overflow-x-hidden bg-[#fffefd]"
-      style={{ paddingTop: 'env(safe-area-inset-top)' }}
-    >
-      {/* Top Nav */}
-      <div className="bg-[#fffefd] h-[48px] w-full overflow-clip flex items-center justify-between px-4">
+    <div className="fixed inset-0 flex flex-col bg-[#fffefd]">
+      {/* Top Nav - Fixed */}
+      <div 
+        className="bg-[#fffefd] h-[48px] w-full flex-shrink-0 flex items-center justify-between px-4 border-b border-[#1e1709]/10"
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      >
         <button 
           className="size-[24px]"
           onClick={() => navigate(-1)}
@@ -328,270 +329,278 @@ export function CreateEditPage() {
         <div className="size-[24px]" />
       </div>
 
-      {/* Loading state for edit mode */}
-      {isLoadingEdit && (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="animate-spin w-8 h-8 text-[#1e1709]" />
-        </div>
-      )}
+      {/* Scrollable Content Area */}
+      <div 
+        className="flex-1 overflow-y-auto overflow-x-hidden"
+        style={{ 
+          paddingBottom: 'calc(50px + env(safe-area-inset-bottom))', // Bottom nav height + safe area
+        }}
+      >
+        {/* Loading state for edit mode */}
+        {isLoadingEdit && (
+          <div className="flex items-center justify-center min-h-[400px]">
+            <Loader2 className="animate-spin w-8 h-8 text-[#1e1709]" />
+          </div>
+        )}
 
-      {/* Main Content */}
-      {!isLoadingEdit && (
-        <div className="w-full px-4 pb-24">
-          
-          {/* Upload Landing Screen - Only show in create mode if no media yet */}
-          {!isEditMode && !mainMedia && (
-            <div className="flex flex-col items-center px-6 pt-4 pb-8">
-              {/* Image with triple border effect - matching Chris's edit on HomePage */}
-              <div className="relative w-full max-w-[280px] h-[400px] mb-6">
-                {/* Triple border effect with 4px spacing */}
-                <div className="absolute border border-[#1e1709] inset-[4px] opacity-80 rounded-[8px]" />
-                <div className="absolute border border-[#1e1709] inset-[8px_0_0_8px] rounded-[8px]" />
-                
-                {/* Main image container with border */}
-                <div className="absolute inset-[0_8px_8px_0] rounded-[8px]">
-                  <img 
-                    src={laundromatImage}
-                    alt="Fashion example"
-                    className="absolute inset-0 w-full h-full object-cover rounded-[8px]"
-                  />
-                  {/* Border on top */}
-                  <div className="absolute border border-[#1e1709] inset-0 rounded-[8px] pointer-events-none" />
+        {/* Main Content */}
+        {!isLoadingEdit && (
+          <div className="w-full px-4 pb-24">
+            
+            {/* Upload Landing Screen - Only show in create mode if no media yet */}
+            {!isEditMode && !mainMedia && (
+              <div className="flex flex-col items-center px-6 pt-4 pb-8">
+                {/* Image with triple border effect - matching Chris's edit on HomePage */}
+                <div className="relative w-full max-w-[280px] h-[400px] mb-6">
+                  {/* Triple border effect with 4px spacing */}
+                  <div className="absolute border border-[#1e1709] inset-[4px] opacity-80 rounded-[8px]" />
+                  <div className="absolute border border-[#1e1709] inset-[8px_0_0_8px] rounded-[8px]" />
+                  
+                  {/* Main image container with border */}
+                  <div className="absolute inset-[0_8px_8px_0] rounded-[8px]">
+                    <img 
+                      src={laundromatImage}
+                      alt="Fashion example"
+                      className="absolute inset-0 w-full h-full object-cover rounded-[8px]"
+                    />
+                    {/* Border on top */}
+                    <div className="absolute border border-[#1e1709] inset-0 rounded-[8px] pointer-events-none" />
+                  </div>
                 </div>
+
+                {/* Headline text */}
+                <h2 className="font-['Helvetica_Neue:Medium',sans-serif] text-[20px] leading-[18px] text-[#1e1709] text-center mb-2 px-2">
+                  STYLE → SELL
+                </h2>
+                
+                {/* Subheadline text */}
+                <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[12px] leading-[26px] tracking-[1px] text-[#1e1709] text-center mb-8 max-w-[280px] px-2">
+                  Link your Edit to Depop or Shops
+                </p>
+
+                {/* Upload button */}
+                <button
+                  onClick={handleNativeMediaPick}
+                  className="w-full max-w-[280px] bg-[#1e1709] text-[#fffefd] py-4 rounded-[8px] font-['Helvetica_Neue:Bold',sans-serif] text-[16px] tracking-[2px] uppercase"
+                >
+                  UPLOAD
+                </button>
               </div>
+            )}
 
-              {/* Headline text */}
-              <h2 className="font-['Helvetica_Neue:Medium',sans-serif] text-[20px] leading-[18px] text-[#1e1709] text-center mb-2 px-2">
-                STYLE → SELL
-              </h2>
-              
-              {/* Subheadline text */}
-              <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[12px] leading-[26px] tracking-[1px] text-[#1e1709] text-center mb-8 max-w-[280px] px-2">
-                Link your Edit to Depop or Shops
-              </p>
+            {/* Media Preview - Show in edit mode or after upload in create mode */}
+            {(isEditMode || mainMedia) && mainMedia && (
+              <div className="relative w-full h-[471px] rounded-[8px] border border-[#1e1709] overflow-hidden mb-2">
+                {mediaType === 'image' ? (
+                  <img 
+                    alt="Upload preview"
+                    className="w-full h-full object-cover"
+                    src={mainMedia}
+                  />
+                ) : (
+                  <video 
+                    className="w-full h-full object-cover"
+                    src={mainMedia}
+                    controls
+                  />
+                )}
+              </div>
+            )}
 
-              {/* Upload button */}
-              <button
-                onClick={handleNativeMediaPick}
-                className="w-full max-w-[280px] bg-[#1e1709] text-[#fffefd] py-4 rounded-[8px] font-['Helvetica_Neue:Bold',sans-serif] text-[16px] tracking-[2px] uppercase"
-              >
-                UPLOAD
-              </button>
-            </div>
-          )}
+            {/* File input - only enabled in create mode */}
+            {!isEditMode && (
+              <input 
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+            )}
 
-          {/* Media Preview - Show in edit mode or after upload in create mode */}
-          {(isEditMode || mainMedia) && mainMedia && (
-            <div className="relative w-full h-[471px] rounded-[8px] border border-[#1e1709] overflow-hidden mb-2">
-              {mediaType === 'image' ? (
-                <img 
-                  alt="Upload preview"
-                  className="w-full h-full object-cover"
-                  src={mainMedia}
-                />
-              ) : (
-                <video 
-                  className="w-full h-full object-cover"
-                  src={mainMedia}
-                  controls
-                />
-              )}
-            </div>
-          )}
+            {/* Shopping Links */}
+            {mainMedia && (
+              <>
+                <div className="mb-6">
+                  <div className="flex gap-2 mb-3">
+                    <input
+                      type="url"
+                      value={newShoppingLink}
+                      onChange={(e) => setNewShoppingLink(e.target.value)}
+                      placeholder="Add shopping link"
+                      className="flex-1 border border-[#1e1709] rounded-[8px] px-3 py-2 font-['Arial:Regular',sans-serif] text-[14px] bg-white"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddShoppingLink();
+                        }
+                      }}
+                    />
+                    <button
+                      onClick={handleAddShoppingLink}
+                      className="bg-[#1e1709] text-white px-4 py-2 rounded-[8px] font-['Arial:Regular',sans-serif] text-[14px]"
+                    >
+                      Add
+                    </button>
+                  </div>
 
-          {/* File input - only enabled in create mode */}
-          {!isEditMode && (
-            <input 
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,video/*"
-              onChange={handleFileUpload}
-              className="hidden"
-            />
-          )}
+                  {/* Shopping link thumbnails */}
+                  {shoppingLinks.length > 0 && (
+                    <div className="flex gap-[8px] overflow-x-auto pb-2 scrollbar-hide">
+                      {shoppingLinks.map((link, index) => {
+                        let hostname = 'Product';
+                        try {
+                          if (link.url) {
+                            hostname = new URL(link.url).hostname;
+                          }
+                        } catch (e) {
+                          hostname = link.url || 'Product';
+                        }
+                        
+                        console.log(`🖼️ Rendering link ${index}:`, {
+                          url: link.url,
+                          title: link.title,
+                          image: link.image,
+                          hasImage: !!link.image
+                        });
+                        
+                        return (
+                          <div key={index} className="relative shrink-0 w-[100px] h-[100px] rounded-[8px] border border-[#1e1709] overflow-hidden bg-[#f5f5f5]">
+                            {link.image ? (
+                              <img 
+                                src={link.image} 
+                                alt={link.title || 'Product'}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  console.error(`❌ Failed to load image for ${link.url}:`, link.image);
+                                  console.error('Image load error:', e);
+                                }}
+                                onLoad={() => {
+                                  console.log(`✅ Successfully loaded image for ${link.url}`);
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <div className="text-center p-2">
+                                  <svg className="w-[24px] h-[24px] mx-auto mb-1" fill="none" viewBox="0 0 16 15.9959">
+                                    <path d={svgPaths.p35bf1680} fill="#1E1709" />
+                                    <path d={svgPaths.p5abf740} fill="#1E1709" />
+                                    <path d={svgPaths.p3f6aa700} fill="#1E1709" />
+                                  </svg>
+                                  <p className="font-['Arial:Regular',sans-serif] text-[10px] text-[#1e1709] break-all line-clamp-2">
+                                    {hostname}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                            <button
+                              onClick={() => removeShoppingLink(index)}
+                              className="absolute top-1 right-1 bg-white border border-[#1e1709] rounded-full size-[20px] flex items-center justify-center z-10"
+                            >
+                              <span className="text-[12px] leading-none">×</span>
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
 
-          {/* Shopping Links */}
-          {mainMedia && (
-            <>
-              <div className="mb-6">
-                <div className="flex gap-2 mb-3">
+                {/* Edit Link */}
+                <div className="mb-6">
+                  <div className="flex gap-[4px] items-center mb-2">
+                    <svg className="w-[16px] h-[16px]" fill="none" viewBox="0 0 16 15.9959">
+                      <path d={svgPaths.p35bf1680} fill="#1E1709" />
+                      <path d={svgPaths.p5abf740} fill="#1E1709" />
+                      <path d={svgPaths.p3f6aa700} fill="#1E1709" />
+                    </svg>
+                    <label className="font-['Arial:Regular',sans-serif] text-[14px] text-[#1e1709]">
+                      Edit Link
+                    </label>
+                  </div>
                   <input
                     type="url"
-                    value={newShoppingLink}
-                    onChange={(e) => setNewShoppingLink(e.target.value)}
-                    placeholder="Add shopping link"
-                    className="flex-1 border border-[#1e1709] rounded-[8px] px-3 py-2 font-['Arial:Regular',sans-serif] text-[14px] bg-white"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddShoppingLink();
-                      }
-                    }}
+                    value={editLink}
+                    onChange={(e) => setEditLink(e.target.value)}
+                    placeholder="https://example.com"
+                    className="w-full border border-[#1e1709] rounded-[8px] px-3 py-2 font-['Helvetica_Neue:Regular',sans-serif] text-[14px] bg-white outline-none"
                   />
-                  <button
-                    onClick={handleAddShoppingLink}
-                    className="bg-[#1e1709] text-white px-4 py-2 rounded-[8px] font-['Arial:Regular',sans-serif] text-[14px]"
+                </div>
+
+                {/* Divider */}
+                <div className="h-[1px] w-full bg-[#1e1709] mb-0" />
+
+                {/* Tags Section */}
+                <div>
+                  <button 
+                    className="flex items-center w-full py-4"
+                    onClick={() => setShowTags(!showTags)}
                   >
-                    Add
+                    <p className="font-['Arial:Regular',sans-serif] text-[16px] text-black flex-1 text-left">
+                      Tags
+                    </p>
+                    <svg 
+                      className={`w-[20px] h-[20px] transition-transform ${showTags ? 'rotate-180' : 'rotate-0'}`} 
+                      fill="none" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M6 9l6 6 6-6" stroke="#1E1709" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                  
+                  {showTags && (
+                    <input
+                      type="text"
+                      value={tags}
+                      onChange={(e) => setTags(e.target.value)}
+                      placeholder="streetwear, vintage, designer..."
+                      className="w-full px-0 py-2 font-['Arial:Regular',sans-serif] text-[14px] bg-transparent border-0 outline-none mb-4"
+                    />
+                  )}
+                </div>
+
+                {/* Divider */}
+                <div className="h-[1px] w-full bg-[#1e1709] mb-0" />
+
+                {/* Private Toggle */}
+                <div className="flex items-center justify-end gap-[8px] py-4">
+                  <p className="font-['Arial:Regular',sans-serif] text-[14px] text-black">
+                    Private
+                  </p>
+                  <button
+                    onClick={() => setIsPrivate(!isPrivate)}
+                    className={`h-[24px] w-[44px] rounded-[40px] relative transition-colors ${
+                      isPrivate ? 'bg-[#1e1709]' : 'bg-[#d0d0d0]'
+                    }`}
+                  >
+                    <div 
+                      className={`absolute bg-white rounded-full size-[20px] top-[2px] transition-all ${
+                        isPrivate ? 'left-[22px]' : 'left-[2px]'
+                      }`} 
+                    />
                   </button>
                 </div>
 
-                {/* Shopping link thumbnails */}
-                {shoppingLinks.length > 0 && (
-                  <div className="flex gap-[8px] overflow-x-auto pb-2 scrollbar-hide">
-                    {shoppingLinks.map((link, index) => {
-                      let hostname = 'Product';
-                      try {
-                        if (link.url) {
-                          hostname = new URL(link.url).hostname;
-                        }
-                      } catch (e) {
-                        hostname = link.url || 'Product';
-                      }
-                      
-                      console.log(`🖼️ Rendering link ${index}:`, {
-                        url: link.url,
-                        title: link.title,
-                        image: link.image,
-                        hasImage: !!link.image
-                      });
-                      
-                      return (
-                        <div key={index} className="relative shrink-0 w-[100px] h-[100px] rounded-[8px] border border-[#1e1709] overflow-hidden bg-[#f5f5f5]">
-                          {link.image ? (
-                            <img 
-                              src={link.image} 
-                              alt={link.title || 'Product'}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                console.error(`❌ Failed to load image for ${link.url}:`, link.image);
-                                console.error('Image load error:', e);
-                              }}
-                              onLoad={() => {
-                                console.log(`✅ Successfully loaded image for ${link.url}`);
-                              }}
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <div className="text-center p-2">
-                                <svg className="w-[24px] h-[24px] mx-auto mb-1" fill="none" viewBox="0 0 16 15.9959">
-                                  <path d={svgPaths.p35bf1680} fill="#1E1709" />
-                                  <path d={svgPaths.p5abf740} fill="#1E1709" />
-                                  <path d={svgPaths.p3f6aa700} fill="#1E1709" />
-                                </svg>
-                                <p className="font-['Arial:Regular',sans-serif] text-[10px] text-[#1e1709] break-all line-clamp-2">
-                                  {hostname}
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                          <button
-                            onClick={() => removeShoppingLink(index)}
-                            className="absolute top-1 right-1 bg-white border border-[#1e1709] rounded-full size-[20px] flex items-center justify-center z-10"
-                          >
-                            <span className="text-[12px] leading-none">×</span>
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              {/* Edit Link */}
-              <div className="mb-6">
-                <div className="flex gap-[4px] items-center mb-2">
-                  <svg className="w-[16px] h-[16px]" fill="none" viewBox="0 0 16 15.9959">
-                    <path d={svgPaths.p35bf1680} fill="#1E1709" />
-                    <path d={svgPaths.p5abf740} fill="#1E1709" />
-                    <path d={svgPaths.p3f6aa700} fill="#1E1709" />
-                  </svg>
-                  <label className="font-['Arial:Regular',sans-serif] text-[14px] text-[#1e1709]">
-                    Edit Link
-                  </label>
-                </div>
-                <input
-                  type="url"
-                  value={editLink}
-                  onChange={(e) => setEditLink(e.target.value)}
-                  placeholder="https://example.com"
-                  className="w-full border border-[#1e1709] rounded-[8px] px-3 py-2 font-['Helvetica_Neue:Regular',sans-serif] text-[14px] bg-white outline-none"
-                />
-              </div>
-
-              {/* Divider */}
-              <div className="h-[1px] w-full bg-[#1e1709] mb-0" />
-
-              {/* Tags Section */}
-              <div>
+                {/* Bottom Publish/Save Button */}
                 <button 
-                  className="flex items-center w-full py-4"
-                  onClick={() => setShowTags(!showTags)}
+                  className="w-full bg-[#1e1709] text-white py-3 rounded-[8px] font-['Arial:Regular',sans-serif] text-[16px] font-bold disabled:opacity-50 mt-6"
+                  onClick={handlePublish}
+                  disabled={!mainMedia || isLoading}
                 >
-                  <p className="font-['Arial:Regular',sans-serif] text-[16px] text-black flex-1 text-left">
-                    Tags
-                  </p>
-                  <svg 
-                    className={`w-[20px] h-[20px] transition-transform ${showTags ? 'rotate-180' : 'rotate-0'}`} 
-                    fill="none" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M6 9l6 6 6-6" stroke="#1E1709" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                  {isLoading ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="animate-spin" size={20} />
+                      <span>{isEditMode ? 'Saving...' : 'Publishing...'}</span>
+                    </div>
+                  ) : (
+                    isEditMode ? 'Save Changes' : 'Publish'
+                  )}
                 </button>
-                
-                {showTags && (
-                  <input
-                    type="text"
-                    value={tags}
-                    onChange={(e) => setTags(e.target.value)}
-                    placeholder="streetwear, vintage, designer..."
-                    className="w-full px-0 py-2 font-['Arial:Regular',sans-serif] text-[14px] bg-transparent border-0 outline-none mb-4"
-                  />
-                )}
-              </div>
-
-              {/* Divider */}
-              <div className="h-[1px] w-full bg-[#1e1709] mb-0" />
-
-              {/* Private Toggle */}
-              <div className="flex items-center justify-end gap-[8px] py-4">
-                <p className="font-['Arial:Regular',sans-serif] text-[14px] text-black">
-                  Private
-                </p>
-                <button
-                  onClick={() => setIsPrivate(!isPrivate)}
-                  className={`h-[24px] w-[44px] rounded-[40px] relative transition-colors ${
-                    isPrivate ? 'bg-[#1e1709]' : 'bg-[#d0d0d0]'
-                  }`}
-                >
-                  <div 
-                    className={`absolute bg-white rounded-full size-[20px] top-[2px] transition-all ${
-                      isPrivate ? 'left-[22px]' : 'left-[2px]'
-                    }`} 
-                  />
-                </button>
-              </div>
-
-              {/* Bottom Publish/Save Button */}
-              <button 
-                className="w-full bg-[#1e1709] text-white py-3 rounded-[8px] font-['Arial:Regular',sans-serif] text-[16px] font-bold disabled:opacity-50 mt-6"
-                onClick={handlePublish}
-                disabled={!mainMedia || isLoading}
-              >
-                {isLoading ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <Loader2 className="animate-spin" size={20} />
-                    <span>{isEditMode ? 'Saving...' : 'Publishing...'}</span>
-                  </div>
-                ) : (
-                  isEditMode ? 'Save Changes' : 'Publish'
-                )}
-              </button>
-            </>
-          )}
-        </div>
-      )}
+              </>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -838,6 +838,10 @@
     z-index: 60;
   }
 
+  .z-\[999999\] {
+    z-index: 999999;
+  }
+
   .col-1 {
     grid-column: 1;
   }

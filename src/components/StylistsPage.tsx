@@ -20,7 +20,10 @@ export function StylistsPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="relative w-full min-h-screen overflow-x-hidden bg-[#fffefd]">
+    <div 
+      className="relative w-full min-h-screen overflow-x-hidden bg-[#fffefd]"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
       {/* Header */}
       <div className="bg-white h-[135px] w-full px-4 relative">
         <div className="h-full flex items-start pt-5 max-w-[393px] mx-auto">
@@ -37,7 +40,10 @@ export function StylistsPage() {
       </div>
 
       {/* Scrollable content */}
-      <div className="w-full max-w-[393px] mx-auto overflow-y-auto pb-24">
+      <div 
+        className="w-full max-w-[393px] mx-auto overflow-y-auto"
+        style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}
+      >
         {/* Featured Stylists Section */}
         <div className="flex flex-col gap-4 px-4 mb-6">
           <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[20px] tracking-[3px] text-[#1e1709] uppercase">

@@ -290,7 +290,7 @@ export function MoreMenuModal({
           )}
 
           {/* Bottom padding for safe area */}
-          <div className="h-24" />
+          <div style={{ paddingBottom: 'calc(24px + env(safe-area-inset-bottom))' }} />
         </div>
       </div>
     </div>

@@ -443,7 +443,10 @@ export function IntakeFormPage() {
   const isLastQuestion = currentQuestion === intakeQuestions.length - 1;
 
   return (
-    <div className="min-h-screen bg-white w-full overflow-x-hidden">
+    <div 
+      className="min-h-screen bg-white w-full overflow-x-hidden"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
       {/* Top Navigation Bar */}
       <div className="bg-white h-[48px] w-full relative z-50 border-b border-gray-100">
         <div className="h-full flex items-center justify-between px-4 max-w-[393px] mx-auto">

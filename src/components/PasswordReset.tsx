@@ -93,9 +93,15 @@ export function PasswordReset() {
   };
 
   return (
-    <div className="w-full min-h-screen overflow-x-hidden bg-white flex flex-col">
-      <div className="flex-1 flex items-center justify-center px-4">
-        <div className="w-full max-w-[393px]">
+    <div 
+      className="w-full min-h-screen overflow-x-hidden bg-white flex flex-col"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
+      <div 
+        className="flex-1 flex items-center justify-center px-4"
+        style={{ paddingBottom: 'calc(24px + env(safe-area-inset-bottom))' }}
+      >
+        <div className="w-full max-w-[390px]">
           <div className="text-center mb-8">
             <h1 className="font-['Helvetica_Neue:Bold',sans-serif] text-[32px] tracking-[4px] text-[#1e1709] uppercase mb-2">
               PASSWORD RESET

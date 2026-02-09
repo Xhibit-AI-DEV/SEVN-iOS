@@ -6,6 +6,7 @@ import { toast } from 'sonner@2.0.3';
 import { Loader2, Camera, Image as ImageIcon } from 'lucide-react';
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
+import laundromatImage from 'figma:asset/1f70f8addd2ecb3091c805e461a74ebf7efafd81.png';
 
 export function CreateEditPage() {
   const navigate = useNavigate();
@@ -304,7 +305,10 @@ export function CreateEditPage() {
   };
 
   return (
-    <div className="relative w-full min-h-screen overflow-x-hidden bg-[#fffefd]">
+    <div 
+      className="relative w-full min-h-screen overflow-x-hidden bg-[#fffefd]"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
       {/* Top Nav */}
       <div className="bg-[#fffefd] h-[48px] w-full overflow-clip flex items-center justify-between px-4">
         <button 
@@ -317,7 +321,7 @@ export function CreateEditPage() {
         </button>
         
         <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-black">
-          CREATE POST
+          POST EDIT
         </p>
         
         {/* Empty div for layout balance */}
@@ -335,19 +339,45 @@ export function CreateEditPage() {
       {!isLoadingEdit && (
         <div className="w-full px-4 pb-24">
           
-          {/* Upload Area - Only show in create mode if no media yet */}
+          {/* Upload Landing Screen - Only show in create mode if no media yet */}
           {!isEditMode && !mainMedia && (
-            <button
-              onClick={() => handleNativeMediaPick()}
-              className="w-full h-[471px] rounded-[8px] border-2 border-dashed border-[#1e1709] mb-6 flex flex-col items-center justify-center gap-4 bg-[rgba(255,254,253,0.5)]"
-            >
-              <svg className="w-[48px] h-[48px]" fill="none" viewBox="0 0 24 24">
-                <path d="M12 5v14M5 12h14" stroke="#1E1709" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-              <p className="font-['Arial:Regular',sans-serif] text-[16px] text-[#1e1709]">
-                Upload Image or Video
+            <div className="flex flex-col items-center px-6 pt-4 pb-8">
+              {/* Image with triple border effect - matching Chris's edit on HomePage */}
+              <div className="relative w-full max-w-[280px] h-[400px] mb-6">
+                {/* Triple border effect with 4px spacing */}
+                <div className="absolute border border-[#1e1709] inset-[4px] opacity-80 rounded-[8px]" />
+                <div className="absolute border border-[#1e1709] inset-[8px_0_0_8px] rounded-[8px]" />
+                
+                {/* Main image container with border */}
+                <div className="absolute inset-[0_8px_8px_0] rounded-[8px]">
+                  <img 
+                    src={laundromatImage}
+                    alt="Fashion example"
+                    className="absolute inset-0 w-full h-full object-cover rounded-[8px]"
+                  />
+                  {/* Border on top */}
+                  <div className="absolute border border-[#1e1709] inset-0 rounded-[8px] pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Headline text */}
+              <h2 className="font-['Helvetica_Neue:Medium',sans-serif] text-[20px] leading-[18px] text-[#1e1709] text-center mb-2 px-2">
+                STYLE → SELL
+              </h2>
+              
+              {/* Subheadline text */}
+              <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[12px] leading-[26px] tracking-[1px] text-[#1e1709] text-center mb-8 max-w-[280px] px-2">
+                Link your Edit to Depop or Shops
               </p>
-            </button>
+
+              {/* Upload button */}
+              <button
+                onClick={handleNativeMediaPick}
+                className="w-full max-w-[280px] bg-[#1e1709] text-[#fffefd] py-4 rounded-[8px] font-['Helvetica_Neue:Bold',sans-serif] text-[16px] tracking-[2px] uppercase"
+              >
+                UPLOAD
+              </button>
+            </div>
           )}
 
           {/* Media Preview - Show in edit mode or after upload in create mode */}

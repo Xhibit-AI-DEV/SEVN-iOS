@@ -182,8 +182,14 @@ export function CustomerOrderView() {
   }
 
   return (
-    <div className="w-full min-h-screen overflow-x-hidden bg-[#FFFEFD]">
-      <div className="w-[393px] mx-auto relative">
+    <div 
+      className="w-full min-h-screen overflow-x-hidden bg-[#FFFEFD]"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
+      <div 
+        className="w-[393px] mx-auto relative"
+        style={{ paddingBottom: 'calc(24px + env(safe-area-inset-bottom))' }}
+      >
         {/* Header */}
         <div className="sticky top-0 bg-[#FFFEFD] z-10 pt-5 pb-4 border-b border-black/70">
           <div className="flex items-center gap-3 pl-4">

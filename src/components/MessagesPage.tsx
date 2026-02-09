@@ -370,10 +370,16 @@ export function MessagesPage() {
   };
 
   return (
-    <div className="relative w-full min-h-screen overflow-x-hidden bg-[#FFFEFD]">
-      <div className="w-[393px] mx-auto relative pb-24">
+    <div 
+      className="relative w-full min-h-screen overflow-x-hidden bg-[#FFFEFD]"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
+      <div 
+        className="w-[393px] mx-auto relative"
+        style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}
+      >
         {/* Header */}
-        <div className="sticky top-0 bg-[#FFFEFD] z-10 pt-5 pb-4 border-b border-black/70">
+        <div className="sticky top-0 bg-[#FFFEFD] z-10 pt-5 pb-4 border-b border-[#1e1709]">
           <div className="flex items-center gap-3 pl-4">
             {/* Back button */}
             <button 

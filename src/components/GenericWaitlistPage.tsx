@@ -154,9 +154,15 @@ export function GenericWaitlistPage() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#fffefd] flex flex-col overflow-x-hidden">
+    <div 
+      className="w-full min-h-screen bg-[#fffefd] flex flex-col overflow-x-hidden"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
       {/* Header with back button */}
-      <div className="w-full px-6 pt-8 pb-6">
+      <div 
+        className="w-full px-6 pt-8 pb-6"
+        style={{ paddingBottom: 'calc(24px + env(safe-area-inset-bottom))' }}
+      >
         <button
           onClick={() => navigate(`/u/${username}`)}
           className="flex items-center gap-2 font-['Helvetica_Neue:Regular',sans-serif] text-[14px] tracking-[1px] text-[#1e1709] uppercase cursor-pointer"

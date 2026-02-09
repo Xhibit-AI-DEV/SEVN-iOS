@@ -5,10 +5,13 @@ export function HelpContactPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="relative w-full min-h-screen overflow-x-hidden bg-[#fffefd]">
+    <div 
+      className="relative w-full min-h-screen overflow-x-hidden bg-[#fffefd]"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
       {/* Header */}
       <div className="sticky top-0 bg-[#fffefd] h-[48px] w-full z-40 border-b border-[#1e1709]">
-        <div className="h-full flex items-center justify-between px-4 max-w-[393px] mx-auto">
+        <div className="flex items-center h-full px-4 max-w-[393px] mx-auto">
           <button 
             onClick={() => navigate(-1)}
             className="w-8 h-8 flex items-center justify-center hover:bg-[#1e1709]/10 rounded transition-colors"

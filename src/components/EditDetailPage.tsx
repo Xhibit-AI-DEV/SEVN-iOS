@@ -207,7 +207,10 @@ export function EditDetailPage() {
   const productLinks = edit.product_links || [];
 
   return (
-    <div className="relative w-full min-h-screen overflow-x-hidden bg-[#fffefd]">
+    <div 
+      className="relative w-full min-h-screen overflow-x-hidden bg-[#fffefd]"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
       {/* Top Nav Back Button */}
       <div className="bg-[#fffefd] h-[48px] w-full overflow-clip">
         <button 
@@ -221,7 +224,10 @@ export function EditDetailPage() {
       </div>
 
       {/* Main Content */}
-      <div className="w-full max-w-[393px] mx-auto px-4 pb-8">
+      <div 
+        className="w-full max-w-[393px] mx-auto px-4"
+        style={{ paddingBottom: 'calc(24px + env(safe-area-inset-bottom))' }}
+      >
         {/* Brand Tag, More Menu, and Share */}
         <div className="flex items-center justify-between w-full mb-5">
           <div className="bg-[rgba(255,254,253,0.8)] border border-[#1e1709] rounded-[30px] px-[12px] py-[4px]">

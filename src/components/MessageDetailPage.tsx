@@ -362,8 +362,14 @@ export function MessageDetailPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-white w-full overflow-x-hidden">
-      <div className="w-full mx-auto px-6 pb-12">
+    <div 
+      className="min-h-screen bg-white w-full overflow-x-hidden"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
+      <div 
+        className="w-full mx-auto px-6"
+        style={{ paddingBottom: 'calc(24px + env(safe-area-inset-bottom))' }}
+      >
         {/* Header */}
         <div className="sticky top-0 bg-white z-10 h-[48px] border-b border-gray-100 -mx-6 px-6 mb-6">
           <div className="h-full flex items-center justify-center relative">

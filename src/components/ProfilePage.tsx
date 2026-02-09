@@ -615,7 +615,7 @@ export function ProfilePage() {
     return (
       <div 
         key={like.productId} 
-        className="relative shrink-0 w-[112px] cursor-pointer border border-[#1e1709] bg-white"
+        className="relative shrink-0 w-[112px] cursor-pointer border border-[#1e1709] bg-white rounded-[5px] overflow-hidden"
         onClick={() => product?.url && window.open(product.url, '_blank')}
       >
         {/* Product Image */}
@@ -656,43 +656,32 @@ export function ProfilePage() {
 
   return (
     <div 
-      className="w-full h-screen bg-[#fffefd] flex flex-col overflow-hidden"
-      style={{
-        paddingTop: 'env(safe-area-inset-top)',
-      }}
+      className="relative w-full min-h-screen overflow-x-hidden bg-[#fffefd]"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
-      {/* Header with safe area */}
-      <div 
-        className="bg-white w-full shrink-0 border-b border-[#1e1709]"
-        style={{
-          paddingTop: 'env(safe-area-inset-top)',
-        }}
-      >
-        <div className="h-[48px] flex items-center justify-between px-4 max-w-[393px] mx-auto">
-          <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-black">
-            VII SEVN
-          </p>
-          <button 
-            onClick={() => {
-              console.log('Menu button clicked');
-              setShowMoreMenu(true);
-            }}
-            className="w-8 h-8 flex items-center justify-center hover:bg-[#1e1709]/10 rounded transition-colors z-50"
-          >
-            <Menu className="w-6 h-6 text-[#1e1709]" strokeWidth={1.1} />
-          </button>
-        </div>
+      {/* Header */}
+      <div className="bg-white w-full h-[48px] shrink-0 flex items-center justify-between px-4 border-b border-[#1e1709] max-w-[393px] mx-auto">
+        <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-black">
+          VII SEVN
+        </p>
+        <button 
+          onClick={() => {
+            console.log('Menu button clicked');
+            setShowMoreMenu(true);
+          }}
+          className="w-8 h-8 flex items-center justify-center hover:bg-[#1e1709]/10 rounded transition-colors z-50"
+        >
+          <Menu className="w-6 h-6 text-[#1e1709]" strokeWidth={1.1} />
+        </button>
       </div>
 
-      {/* Scrollable content */}
+      {/* Content with bottom safe area padding */}
       <div 
-        className="flex-1 overflow-y-auto overflow-x-hidden"
+        className="w-full max-w-[393px] mx-auto pt-6 px-4"
         style={{
-          WebkitOverflowScrolling: 'touch',
           paddingBottom: 'calc(80px + env(safe-area-inset-bottom))',
         }}
       >
-        <div className="w-full max-w-[393px] mx-auto pt-6 px-4">
         {/* Profile Section */}
         <div className="flex items-start gap-8 mb-3">
           {/* Avatar with + button */}
@@ -953,7 +942,6 @@ export function ProfilePage() {
             </div>
           </div>
         )}
-        </div>
       </div>
       
       {/* Bottom navigation */}

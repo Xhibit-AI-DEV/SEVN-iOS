@@ -17,7 +17,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#fffefd] flex flex-col" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       {/* Header */}
-      <div className="bg-white w-full h-[48px] shrink-0 flex items-center justify-between px-4 border-b border-gray-200">
+      <div className="bg-white w-full h-[48px] shrink-0 flex items-center justify-between px-4 border-b border-[#1e1709]">
         <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-black">
           VII SEVN
         </p>
@@ -27,7 +27,12 @@ export default function HomePage() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 pb-24">
+      <div 
+        className="flex-1"
+        style={{
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom))',
+        }}
+      >
         {/* FEATURED STYLISTS Section */}
         <div className="mb-4 mt-4">
           <h2 className="font-['Helvetica_Neue:Light',sans-serif] text-[16px] tracking-[3px] text-[#1e1709] uppercase mb-4 leading-[22px] px-4">

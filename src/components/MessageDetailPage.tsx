@@ -48,6 +48,7 @@ export function MessageDetailPage() {
         return;
       }
       
+      // First, get the current user's ID from their profile
       const profileResponse = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/profiles/me`,
         {
@@ -58,7 +59,20 @@ export function MessageDetailPage() {
       );
 
       if (!profileResponse.ok) {
-        throw new Error('Failed to fetch user profile');
+        const errorText = await profileResponse.text();
+        console.error('❌ Profile fetch failed:', profileResponse.status, errorText);
+        
+        // If auth error, clear token and redirect to signin
+        if (profileResponse.status === 401) {
+          console.error('❌ Authentication failed - clearing token and redirecting to signin');
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('auth_token');
+          toast.error('Session expired. Please sign in again.');
+          navigate('/signin');
+          return;
+        }
+        
+        throw new Error(`Failed to fetch user profile: ${profileResponse.status} - ${errorText}`);
       }
 
       const profileData = await profileResponse.json();

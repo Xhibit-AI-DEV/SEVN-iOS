@@ -4,7 +4,7 @@ import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBu
 import svgPaths from "../imports/svg-ib8s7izy1q";
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { toast } from 'sonner@2.0.3';
-import { Loader2, Camera, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Camera, Image as ImageIcon, X } from 'lucide-react';
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import laundromatImage from 'figma:asset/1f70f8addd2ecb3091c805e461a74ebf7efafd81.png';
@@ -309,15 +309,17 @@ export function CreateEditPage() {
   return (
     <IonPage>
       {/* Top Nav - Fixed header area */}
-      <IonHeader>
+      <IonHeader className="relative">
         <IonToolbar>
-          <IonButtons slot="start">
-            <IonBackButton />
-          </IonButtons>
-          <IonTitle className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-black">
-            POST EDIT
-          </IonTitle>
         </IonToolbar>
+        {/* X button positioned absolutely on the right */}
+        <button 
+          onClick={() => navigate(-1)} 
+          className="absolute right-4 top-3 z-[9999] p-2 bg-white"
+          style={{ position: 'absolute', right: '16px', top: '12px', zIndex: 9999 }}
+        >
+          <X className="w-6 h-6 text-[#1e1709]" strokeWidth={1.5} />
+        </button>
       </IonHeader>
 
       {/* EVERYTHING scrolls here */}
@@ -335,9 +337,9 @@ export function CreateEditPage() {
             
             {/* Upload Landing Screen - Only show in create mode if no media yet */}
             {!isEditMode && !mainMedia && (
-              <div className="flex flex-col items-center px-6 pt-4 pb-8">
+              <div className="flex flex-col items-center px-6 pt-12 pb-8">
                 {/* Image with triple border effect - matching Chris's edit on HomePage */}
-                <div className="relative w-full max-w-[280px] h-[400px] mb-6">
+                <div className="relative w-full max-w-[280px] h-[400px] mb-2">
                   {/* Triple border effect with 4px spacing */}
                   <div className="absolute border border-[#1e1709] inset-[4px] opacity-80 rounded-[8px]" />
                   <div className="absolute border border-[#1e1709] inset-[8px_0_0_8px] rounded-[8px]" />
@@ -355,7 +357,7 @@ export function CreateEditPage() {
                 </div>
 
                 {/* Headline text */}
-                <h2 className="font-['Helvetica_Neue:Medium',sans-serif] text-[20px] leading-[18px] text-[#1e1709] text-center mb-2 px-2">
+                <h2 className="font-['Helvetica_Neue:Medium',sans-serif] text-[20px] leading-[18px] text-[#1e1709] text-center mb-1 px-2">
                   STYLE → SELL
                 </h2>
                 
@@ -367,7 +369,7 @@ export function CreateEditPage() {
                 {/* Upload button */}
                 <button
                   onClick={handleNativeMediaPick}
-                  className="w-full max-w-[280px] bg-[#1e1709] text-[#fffefd] py-4 rounded-[8px] font-['Helvetica_Neue:Bold',sans-serif] text-[16px] tracking-[2px] uppercase"
+                  className="w-full max-w-[280px] px-6 h-[48px] bg-[#1e1709] text-white rounded-[8px] font-['Helvetica_Neue:Medium',sans-serif] text-[16px] tracking-[2px] uppercase hover:bg-[#2a2010] active:bg-[#3e3709] transition-colors"
                 >
                   UPLOAD
                 </button>
@@ -483,7 +485,7 @@ export function CreateEditPage() {
                               onClick={() => removeShoppingLink(index)}
                               className="absolute top-1 right-1 bg-white border border-[#1e1709] rounded-full size-[20px] flex items-center justify-center z-10"
                             >
-                              <span className="text-[12px] leading-none">×</span>
+                              <X className="text-[12px] leading-none" />
                             </button>
                           </div>
                         );

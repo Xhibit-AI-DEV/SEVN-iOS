@@ -1,8 +1,8 @@
 import { Menu } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { IonPage, IonHeader, IonToolbar, IonContent, IonButtons, IonButton } from '@ionic/react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { IonicBottomNav } from './IonicBottomNav';
-import { DebugVersion } from './DebugVersion';
 
 // Import stylist images - must import as variables, NOT strings
 import imgLissyRoddy from "figma:asset/21ead93bac0da68ed5f33efdfb07c0bf632228cc.png";
@@ -16,33 +16,23 @@ export default function HomePage() {
   const navigate = useNavigate();
 
   return (
-    <div 
-      className="min-h-screen bg-[#fffefd] flex flex-col"
-      style={{ 
-        paddingTop: 'env(safe-area-inset-top)',
-        paddingBottom: 'env(safe-area-inset-bottom)'
-      }}
-    >
-      {/* VERSION BANNER - FOR DEBUGGING */}
-      <DebugVersion />
-      
+    <IonPage>
       {/* Header */}
-      <div className="bg-white w-full h-[48px] shrink-0 flex items-center justify-between px-4 border-b border-[#1e1709]">
-        <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-black">
-          VII SEVN
-        </p>
-        <button className="w-6 h-6 flex items-center justify-center">
-          <Menu className="w-6 h-6 text-[#1e1709]" strokeWidth={1.1} />
-        </button>
-      </div>
+      <IonHeader>
+        <IonToolbar className="bg-white border-b border-[#1e1709]" style={{ '--background': 'white' }}>
+          <div className="w-full h-[48px] flex items-center justify-between px-4">
+            <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-black">
+              VII SEVN
+            </p>
+            <button className="w-6 h-6 flex items-center justify-center">
+              <Menu className="w-6 h-6 text-[#1e1709]" strokeWidth={1.1} />
+            </button>
+          </div>
+        </IonToolbar>
+      </IonHeader>
 
-      {/* Content */}
-      <div 
-        className="flex-1 overflow-y-auto"
-        style={{
-          paddingBottom: '80px',
-        }}
-      >
+      {/* Content - Everything scrolls here */}
+      <IonContent fullscreen className="bg-[#fffefd]">
         {/* FEATURED STYLISTS Section */}
         <div className="mb-4 mt-4">
           <h2 className="font-['Helvetica_Neue:Light',sans-serif] text-[16px] tracking-[3px] text-[#1e1709] uppercase mb-4 leading-[22px] px-4">
@@ -53,12 +43,24 @@ export default function HomePage() {
           <div className="flex gap-3 overflow-x-auto pb-2 pl-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" style={{ scrollSnapType: 'none', WebkitOverflowScrolling: 'touch' }}>
             {/* First Featured Stylist - LISSY RODDY */}
             <button 
-              className="relative shrink-0 size-[225px] border border-black/50 rounded-[1px]"
+              className="relative shrink-0 size-[225px] rounded-[1px]"
               onClick={() => navigate('/lissy')}
-              style={{ borderWidth: '1px' }}
+              style={{ border: '1px solid #1e1709' }}
             >
-              {/* Circular image */}
+              {/* Layered circular images */}
               <div className="absolute inset-[5.05%_4.71%_4.69%_4.71%] pointer-events-none rounded-[147px]">
+                <ImageWithFallback 
+                  alt="Lissy Roddy" 
+                  loading="lazy" 
+                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
+                  src={imgLissyRoddy} 
+                />
+                <ImageWithFallback 
+                  alt="Lissy Roddy" 
+                  loading="lazy" 
+                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
+                  src={imgLissyRoddy} 
+                />
                 <ImageWithFallback 
                   alt="Lissy Roddy" 
                   loading="lazy" 
@@ -78,7 +80,7 @@ export default function HomePage() {
             </button>
 
             {/* Second Featured Stylist - VAL DROZG */}
-            <div className="relative shrink-0 size-[225px] border border-black/50 rounded-[1px]" style={{ borderWidth: '1px' }}>
+            <div className="relative shrink-0 size-[225px] rounded-[1px]" style={{ border: '1px solid #1e1709' }}>
               {/* Layered circular images */}
               <div className="absolute inset-[5.05%_4.71%_4.69%_4.71%] pointer-events-none rounded-[147px]">
                 <ImageWithFallback 
@@ -113,12 +115,24 @@ export default function HomePage() {
 
             {/* Third Featured Stylist - CHRIS WHYLE */}
             <button 
-              className="relative shrink-0 size-[225px] border border-black/50 rounded-[1px] mr-4"
+              className="relative shrink-0 size-[225px] rounded-[1px] mr-4"
               onClick={() => navigate('/chris')}
-              style={{ borderWidth: '1px' }}
+              style={{ border: '1px solid #1e1709' }}
             >
               {/* Layered circular images */}
               <div className="absolute inset-[5.05%_4.71%_4.69%_4.71%] pointer-events-none rounded-[147px]">
+                <ImageWithFallback 
+                  alt="Chris Whyle" 
+                  loading="lazy" 
+                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
+                  src={imgChrisWhyle} 
+                />
+                <ImageWithFallback 
+                  alt="Chris Whyle" 
+                  loading="lazy" 
+                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
+                  src={imgChrisWhyle} 
+                />
                 <ImageWithFallback 
                   alt="Chris Whyle" 
                   loading="lazy" 
@@ -207,10 +221,10 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-      </div>
+      </IonContent>
       
       {/* Bottom navigation - positioned at bottom with safe area */}
       <IonicBottomNav />
-    </div>
+    </IonPage>
   );
 }

@@ -18,6 +18,9 @@ import '@ionic/react/css/text-transformation.css';
 import '@ionic/react/css/flex-utils.css';
 import '@ionic/react/css/display.css';
 
+/* CRITICAL: Import Tailwind AFTER Ionic so it can override */
+import './styles/globals.css';
+
 import HomePage from './components/HomePage';
 import { StylistsPage } from './components/StylistsPage';
 import { MessagesPage } from './components/MessagesPage';

@@ -1,209 +1,73 @@
-import { useNavigate } from 'react-router';
-import { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
-import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { Capacitor } from '@capacitor/core';
+import { Home, Plus, User } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router';
 
-interface BottomNavigationProps {
-  activeTab?: 'discover' | 'profile';
-  className?: string;
-}
-
-export function BottomNavigation({ activeTab = 'discover', className = '' }: BottomNavigationProps) {
+export function BottomNavigation() {
   const navigate = useNavigate();
-  const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const location = useLocation();
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const pageHeight = document.documentElement.scrollHeight - window.innerHeight;
-      const halfwayPoint = pageHeight / 2;
-      
-      // Only hide after scrolling past halfway
-      if (currentScrollY > halfwayPoint) {
-        if (currentScrollY > lastScrollY) {
-          // Scrolling down - hide navigation
-          setIsVisible(false);
-        } else {
-          // Scrolling up - show navigation
-          setIsVisible(true);
-        }
-      } else {
-        // Always show before halfway
-        setIsVisible(true);
-      }
-      
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
-
-  const handleCreateClick = async () => {
-    console.log('🎬 ========== CREATE BUTTON CLICKED ==========');
-    console.log('🎬 Is native platform:', Capacitor.isNativePlatform());
-    console.log('🎬 Platform:', Capacitor.getPlatform());
-    
-    // Check if running on native platform
-    if (!Capacitor.isNativePlatform()) {
-      // On web, just navigate to create page (will show file input)
-      console.log('🌐 Web platform - navigating to /create-edit');
-      navigate('/create-edit');
-      return;
+  const isActive = (path: string) => {
+    if (path === '/') {
+      return location.pathname === '/' || location.pathname === '/home';
     }
-
-    console.log('📱 Native platform detected - opening camera picker...');
-    
-    try {
-      console.log('📸 Checking camera permissions and calling CapacitorCamera.getPhoto...');
-      
-      // Open photo library directly
-      const image = await CapacitorCamera.getPhoto({
-        quality: 90,
-        allowEditing: false,
-        resultType: CameraResultType.Uri,
-        source: CameraSource.Photos, // Go directly to photo library
-        promptLabelPhoto: 'Select from Photos',
-        promptLabelPicture: 'Take Photo',
-      });
-
-      console.log('✅ Image selected:', {
-        webPath: image.webPath,
-        format: image.format,
-        hasWebPath: !!image.webPath
-      });
-
-      if (image.webPath) {
-        console.log('🔄 Converting image to blob...');
-        // Convert to blob for upload
-        const response = await fetch(image.webPath);
-        const blob = await response.blob();
-        const file = new File([blob], `edit-${Date.now()}.${image.format}`, {
-          type: `image/${image.format}`
-        });
-
-        console.log('✅ File created:', {
-          name: file.name,
-          size: file.size,
-          type: file.type
-        });
-
-        console.log('🚀 Navigating to /create-edit with media...');
-        // Navigate to CreateEditPage with the selected media
-        navigate('/create-edit', {
-          state: {
-            mediaUrl: image.webPath,
-            mediaFile: file,
-            mediaType: 'image'
-          }
-        });
-        console.log('✅ Navigation complete');
-      }
-    } catch (error) {
-      console.error('❌ Error picking media:', error);
-      console.error('❌ Error details:', {
-        message: (error as Error).message,
-        stack: (error as Error).stack,
-        name: (error as Error).name
-      });
-      
-      // Check if it's a user cancellation (not a real error)
-      const errorMessage = (error as Error).message;
-      if (errorMessage && !errorMessage.toLowerCase().includes('cancel')) {
-        // Only show error if it's not a cancellation
-        console.error('❌ Real error occurred (not cancellation)');
-      } else {
-        console.log('ℹ️ User cancelled photo selection');
-      }
-    }
-    
-    console.log('🎬 ========== CREATE BUTTON HANDLER END ==========');
+    return location.pathname === path;
   };
 
   return (
     <div 
-      className={`
-        fixed bottom-0 left-0 right-0 h-[80px] bg-white 
-        flex items-end justify-center
-        border-t border-[#1e1709]
-        ${className}
-      `}
+      className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-[#1e1709]/10 z-50"
+      style={{
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}
     >
-      <div className="flex items-end justify-center mx-auto px-8" style={{ gap: '40px' }}>
-        {/* Home/Discover */}
+      <div className="max-w-[393px] mx-auto h-[50px] flex items-center justify-around">
+        {/* Home Tab */}
         <button
-          className="flex flex-col items-center justify-center"
           onClick={() => navigate('/')}
+          className="flex flex-col items-center justify-center gap-[2px] min-w-[60px] transition-opacity"
+          style={{ opacity: isActive('/') ? 1 : 0.4 }}
         >
-          <div 
-            className={`w-[44px] h-[44px] rounded-full flex items-center justify-center transition-all ${
-              activeTab === 'discover' ? 'scale-110' : ''
-            }`}
-            style={{ backgroundColor: 'rgba(255, 254, 253, 0.85)' }}
-          >
-            <svg 
-              width="20" 
-              height="20" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              className="w-[20px] h-[20px]"
-              style={{ opacity: activeTab === 'discover' ? 1 : 0.6 }}
-            >
-              <rect 
-                x="4" 
-                y="4" 
-                width="16" 
-                height="16" 
-                stroke="#1E1709" 
-                strokeWidth="1" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
+          <Home 
+            className="w-[24px] h-[24px]" 
+            strokeWidth={1}
+            fill={isActive('/') ? '#1e1709' : 'none'}
+            stroke="#1e1709"
+          />
+          <span className="text-[10px] font-['Helvetica_Neue:Regular',sans-serif] text-[#1e1709]">
+            Home
+          </span>
         </button>
 
-        {/* Create - Center button - floats 6px higher */}
+        {/* Create Tab */}
         <button
-          className="flex flex-col items-center justify-center"
-          style={{ marginBottom: '6px' }}
-          onClick={handleCreateClick}
+          onClick={() => navigate('/create-edit')}
+          className="flex flex-col items-center justify-center gap-[2px] min-w-[60px] transition-opacity"
+          style={{ opacity: isActive('/create-edit') ? 1 : 0.4 }}
         >
-          <div className="w-[60px] h-[60px] rounded-full flex items-center justify-center relative" style={{ backgroundColor: 'rgba(255, 254, 253, 0.85)', boxShadow: '0 3px 12px rgba(0, 0, 0, 0.12)', zIndex: 10 }}>
-            <Plus className="w-[26px] h-[26px] text-[#1e1709]" strokeWidth={1} />
-          </div>
+          <Plus 
+            className="w-[24px] h-[24px]" 
+            strokeWidth={1}
+            stroke="#1e1709"
+          />
+          <span className="text-[10px] font-['Helvetica_Neue:Regular',sans-serif] text-[#1e1709]">
+            Create
+          </span>
         </button>
 
-        {/* Profile */}
+        {/* Profile Tab */}
         <button
-          className="flex flex-col items-center justify-center"
           onClick={() => navigate('/profile')}
+          className="flex flex-col items-center justify-center gap-[2px] min-w-[60px] transition-opacity"
+          style={{ opacity: isActive('/profile') ? 1 : 0.4 }}
         >
-          <div 
-            className={`w-[44px] h-[44px] rounded-full flex items-center justify-center transition-all ${
-              activeTab === 'profile' ? 'scale-110' : ''
-            }`}
-            style={{ backgroundColor: 'rgba(255, 254, 253, 0.85)' }}
-          >
-            <svg 
-              width="20" 
-              height="20" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              className="w-[20px] h-[20px]"
-              style={{ opacity: activeTab === 'profile' ? 1 : 0.6 }}
-            >
-              <path 
-                d="M12 4L20 20H4L12 4Z" 
-                stroke="#1E1709" 
-                strokeWidth="1" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
+          <User 
+            className="w-[24px] h-[24px]" 
+            strokeWidth={1}
+            fill={isActive('/profile') ? '#1e1709' : 'none'}
+            stroke="#1e1709"
+          />
+          <span className="text-[10px] font-['Helvetica_Neue:Regular',sans-serif] text-[#1e1709]">
+            Profile
+          </span>
         </button>
       </div>
     </div>

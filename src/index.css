@@ -1946,6 +1946,10 @@
     overflow-y: auto;
   }
 
+  .overflow-y-visible {
+    overflow-y: visible;
+  }
+
   .rounded {
     border-radius: .25rem;
   }
@@ -2691,10 +2695,6 @@
 
   .pb-32 {
     padding-bottom: calc(var(--spacing) * 32);
-  }
-
-  .pb-\[80px\] {
-    padding-bottom: 80px;
   }
 
   .pl-4 {

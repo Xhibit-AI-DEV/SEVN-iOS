@@ -15,9 +15,9 @@ export default function HomePage() {
   const navigate = useNavigate();
 
   return (
-    <div className="w-full min-h-screen flex flex-col bg-[#fffefd]">
-      {/* Header */}
-      <div className="w-full h-[48px] flex items-center justify-between px-4 bg-white border-b border-[#1e1709]">
+    <div className="h-full flex flex-col bg-[#fffefd]">
+      {/* Fixed Header - 48px */}
+      <div className="w-full h-[48px] flex items-center justify-between px-4 bg-white border-b border-[#1e1709] shrink-0">
         <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-black">
           VII SEVN
         </p>
@@ -26,8 +26,14 @@ export default function HomePage() {
         </button>
       </div>
 
-      {/* Content - Everything scrolls here */}
-      <div className="flex-1 overflow-y-auto pb-[80px]">
+      {/* Scrollable Content - flex: 1 */}
+      <div 
+        className="flex-1 overflow-y-auto overflow-x-hidden"
+        style={{
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: 'calc(50px + var(--safe-bottom))'
+        }}
+      >
         {/* FEATURED STYLISTS Section */}
         <div className="mb-4 mt-4">
           <h2 className="font-['Helvetica_Neue:Light',sans-serif] text-[16px] tracking-[3px] text-[#1e1709] uppercase mb-4 leading-[22px] px-4">
@@ -35,7 +41,13 @@ export default function HomePage() {
           </h2>
           
           {/* Horizontal scroll of stylist cards - FULL BLEED */}
-          <div className="flex gap-3 overflow-x-auto pb-2 pl-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" style={{ scrollSnapType: 'none', WebkitOverflowScrolling: 'touch' }}>
+          <div 
+            className="flex gap-3 overflow-x-auto overflow-y-visible pb-2 pl-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" 
+            style={{ 
+              scrollSnapType: 'none', 
+              WebkitOverflowScrolling: 'touch'
+            }}
+          >
             {/* First Featured Stylist - LISSY RODDY */}
             <button 
               className="relative shrink-0 size-[225px] rounded-[1px]"
@@ -218,7 +230,7 @@ export default function HomePage() {
         </div>
       </div>
       
-      {/* Bottom navigation - positioned at bottom with safe area */}
+      {/* Fixed Bottom Navigation */}
       <BottomNavigation />
     </div>
   );

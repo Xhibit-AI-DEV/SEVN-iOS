@@ -29,13 +29,7 @@
     "sonner": "^2.0.3",
     "motion": "^11.0.0",
     "@capacitor/core": "^6.0.0",
-    "@capacitor/ios": "^6.0.0",
-    "@capacitor/android": "^6.0.0",
-    "@capacitor/camera": "^6.0.0",
-    "@capacitor/keyboard": "^6.0.0",
-    "@capacitor/status-bar": "^6.0.0",
-    "@capacitor/preferences": "^6.0.0",
-    "@capacitor/splash-screen": "^6.0.0"
+    "@capacitor/camera": "^6.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
@@ -44,6 +38,12 @@
     "typescript": "^5.3.3",
     "vite": "^5.0.8",
     "tailwindcss": "^4.0.0",
-    "@capacitor/cli": "^6.0.0"
+    "@capacitor/cli": "^6.0.0",
+    "@capacitor/ios": "^6.0.0",
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/keyboard": "^6.0.0",
+    "@capacitor/status-bar": "^6.0.0",
+    "@capacitor/preferences": "^6.0.0",
+    "@capacitor/splash-screen": "^6.0.0"
   }
 }

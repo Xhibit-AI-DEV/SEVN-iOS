@@ -15,7 +15,7 @@ export default function HomePage() {
   const navigate = useNavigate();
 
   return (
-    <div className="h-full flex flex-col bg-[#fffefd]">
+    <div className="h-full flex flex-col bg-[#fffefd] relative">
       {/* Fixed Header - 48px */}
       <div className="w-full h-[48px] flex items-center justify-between px-4 bg-white border-b border-[#1e1709] shrink-0">
         <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-black">
@@ -28,10 +28,11 @@ export default function HomePage() {
 
       {/* Scrollable Content - flex: 1 */}
       <div 
-        className="flex-1 overflow-y-auto overflow-x-hidden"
+        className="flex-1 overflow-y-auto overflow-x-hidden relative"
         style={{
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: 'calc(50px + var(--safe-bottom))'
+          paddingBottom: 'calc(50px + var(--safe-bottom))',
+          zIndex: 1,
         }}
       >
         {/* FEATURED STYLISTS Section */}

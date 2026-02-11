@@ -2,23 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, useNavigate } from 'react-router';
 import { Toaster, toast } from 'sonner@2.0.3';
 
-/* Core Ionic CSS required for Ionic components */
-import '@ionic/react/css/core.css';
-
-/* Basic Ionic CSS display */
-import '@ionic/react/css/normalize.css';
-import '@ionic/react/css/structure.css';
-import '@ionic/react/css/typography.css';
-
-/* Optional Ionic CSS utilities */
-import '@ionic/react/css/padding.css';
-import '@ionic/react/css/float-elements.css';
-import '@ionic/react/css/text-alignment.css';
-import '@ionic/react/css/text-transformation.css';
-import '@ionic/react/css/flex-utils.css';
-import '@ionic/react/css/display.css';
-
-/* CRITICAL: Import Tailwind AFTER Ionic so it can override */
+/* CRITICAL: Import Tailwind styles */
 import './styles/globals.css';
 
 import HomePage from './components/HomePage';
@@ -55,6 +39,7 @@ import { NotificationsPage } from './components/NotificationsPage';
 import { HelpContactPage } from './components/HelpContactPage';
 import { DebugOrders } from './components/DebugOrders';
 import { SimpleDebug } from './components/SimpleDebug';
+import { UnifiedLanding } from './components/UnifiedLanding';
 import { projectId, publicAnonKey } from './utils/supabase/info';
 
 /**
@@ -72,7 +57,7 @@ function LoadingScreen() {
       <div className="text-center">
         <h1 className="text-[24px] font-['Helvetica_Neue:Regular',sans-serif] tracking-[3px] mb-4">SEVN</h1>
         <p className="text-sm text-gray-600">Loading...</p>
-        <p className="text-xs text-red-600 mt-4 font-bold">BUILD v2.9.2025 - 5:45PM - CATCH-ALL FIX</p>
+        <p className="text-xs text-red-600 mt-4 font-bold">BUILD v2.11.2025 - UNIFIED LANDING FIX</p>
       </div>
     </div>
   );
@@ -285,12 +270,12 @@ function AppContent() {
         {/* SHARED ROUTES - Accessible by all authenticated users */}
         <Route path="/" element={
           <ErrorBoundary>
-            <HomePage />
+            <UnifiedLanding />
           </ErrorBoundary>
         } />
         <Route path="/home" element={
           <ErrorBoundary>
-            <HomePage />
+            <UnifiedLanding />
           </ErrorBoundary>
         } />
         <Route path="/profile" element={<ProfilePage />} />

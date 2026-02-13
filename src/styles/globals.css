@@ -222,6 +222,9 @@
     max-width: 100%;
     overflow-x: hidden;
     /* REMOVED position: relative - not needed and can interfere */
+    /* iOS Safe Area Support */
+    height: 100vh;
+    height: -webkit-fill-available; /* iOS Safari fix */
   }
   
   /* Force all children to respect bounds */
@@ -229,6 +232,8 @@
     width: 100%;
     max-width: 100vw;
     overflow-x: hidden;
+    min-height: 100vh;
+    min-height: -webkit-fill-available; /* iOS Safari fix */
   }
 
   body {
@@ -259,6 +264,12 @@
   body {
     overscroll-behavior-x: none;
     /* REMOVED touch-action - was overriding index.html and blocking scroll */
+  }
+
+  /* CRITICAL iOS FIX: Override min-h-screen to use -webkit-fill-available */
+  .min-h-screen {
+    min-height: 100vh;
+    min-height: -webkit-fill-available !important;
   }
 
   /* Hide scrollbars for horizontal scroll containers */

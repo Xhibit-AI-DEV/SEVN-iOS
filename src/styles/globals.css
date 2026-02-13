@@ -222,9 +222,16 @@
     max-width: 100%;
     overflow-x: hidden;
     /* REMOVED position: relative - not needed and can interfere */
-    /* iOS Safe Area Support */
-    height: 100vh;
-    height: -webkit-fill-available; /* iOS Safari fix */
+  }
+  
+  /* iOS Safe Area Support - Critical fix for viewport height */
+  html {
+    height: 100%;
+  }
+  
+  body {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
   }
   
   /* Force all children to respect bounds */

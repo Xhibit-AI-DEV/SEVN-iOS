@@ -3,7 +3,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.xhibits',
   appName: 'SEVN',
-  webDir: 'build',
+  webDir: 'dist',
   bundledWebRuntime: false,
   
   server: {

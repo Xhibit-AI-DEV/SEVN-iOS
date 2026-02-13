@@ -12,8 +12,6 @@ const config: CapacitorConfig = {
     iosScheme: 'https',
     url: undefined,
     cleartext: false,
-    // Clear cache on app launch
-    cleartext: false,
   },
   
   ios: {
@@ -23,6 +21,8 @@ const config: CapacitorConfig = {
     scrollEnabled: true,
     // Status bar configuration
     preferredContentMode: 'mobile',
+    // Force viewport to use available height
+    limitsNavigationsToAppBoundDomains: false,
   },
   
   plugins: {

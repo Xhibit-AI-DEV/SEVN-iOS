@@ -125,15 +125,19 @@ export function SignIn() {
 
   return (
     <div 
-      className="w-full min-h-screen overflow-x-hidden overflow-y-auto bg-[#E2DFDD] flex flex-col" 
+      className="fixed inset-0 w-full overflow-x-hidden overflow-y-auto bg-[#E2DFDD]" 
       style={{ 
-        paddingTop: 'env(safe-area-inset-top)', 
-        paddingBottom: 'env(safe-area-inset-bottom)', 
-        WebkitOverflowScrolling: 'touch' 
+        top: 'env(safe-area-inset-top, 0)', 
+        bottom: 'env(safe-area-inset-bottom, 0)',
+        left: 0,
+        right: 0,
+        WebkitOverflowScrolling: 'touch',
+        height: '100vh',
+        height: '-webkit-fill-available'
       }}
     >
       {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center px-4 py-8">
+      <div className="min-h-full flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-[393px]">
           {/* Logo/Header */}
           <div className="text-center mb-8">

@@ -4,6 +4,7 @@
   "description": "SEVN Stylist Admin Interface - Complete order lifecycle management system",
   "private": true,
   "type": "module",
+  "homepage": ".",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

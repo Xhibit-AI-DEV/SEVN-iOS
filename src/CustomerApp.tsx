@@ -45,6 +45,7 @@ import { SimpleDebug } from './components/SimpleDebug';
 import { UnifiedLanding } from './components/UnifiedLanding';
 import { AdminCleanupPage } from './components/AdminCleanupPage';
 import { IOSLayoutTest } from './components/IOSLayoutTest';
+import { SimpleHeightTest } from './components/SimpleHeightTest';
 import { projectId, publicAnonKey } from './utils/supabase/info';
 
 /**
@@ -289,6 +290,7 @@ function AppContent() {
         <Route path="/debug-auth" element={<DebugAuth />} />
         <Route path="/simple-debug" element={<SimpleDebug />} />
         <Route path="/ios-test" element={<IOSLayoutTest />} />
+        <Route path="/height-test" element={<SimpleHeightTest />} />
         
         {/* SHARED ROUTES - Accessible by all authenticated users */}
         <Route path="/" element={

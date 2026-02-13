@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig({
+  base: './', // CRITICAL: Use relative paths for Capacitor
   plugins: [
     react({
       // Enable JSX in .tsx, .jsx files

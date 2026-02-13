@@ -1,34 +1,54 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner@2.0.3';
-import { Loader2, X } from 'lucide-react';
+import { Loader2, X, MoreHorizontal, Trash2 } from 'lucide-react';
 import { projectId } from '../utils/supabase/info';
 
 const intakeQuestions = [
   {
     id: 1,
-    question: "What's your style goal?",
-    placeholder: "e.g., Bold street style, High fashion editorial...",
+    question: "Are we styling you for anything specific, or are you in search of new styling ideas / direction?",
+    placeholder: "e.g., Specific event, Wardrobe refresh, New direction...",
   },
   {
     id: 2,
-    question: "What occasions are you styling for?",
-    placeholder: "e.g., Night out, Fashion events, Daily wear...",
+    question: "Can you give us insight into some of your favourite brands?",
+    placeholder: "e.g., The Row, Lemaire, COS, Acne Studios...",
   },
   {
     id: 3,
-    question: "Preferred brands or aesthetic?",
-    placeholder: "e.g., Avant-garde, Streetwear luxury...",
+    question: "Do you have a budget in mind?",
+    placeholder: "e.g., $500-1000, Flexible, No limit...",
   },
   {
     id: 4,
-    question: "Budget range?",
-    placeholder: "e.g., $500-1000, Flexible...",
+    question: "Is there a specific category you'd like to invest deeper within?",
+    placeholder: "e.g., Outerwear, Shoes, Accessories, Basics...",
   },
   {
     id: 5,
-    question: "Anything else Chris should know?",
-    placeholder: "Style preferences, sizing, colors...",
+    question: "Do you have any gaps in your wardrobe?",
+    placeholder: "e.g., Need more formal wear, Missing good basics...",
+  },
+  {
+    id: 6,
+    question: "Do you have any preference around how clothes fit?",
+    placeholder: "e.g., Oversized, Tailored, Relaxed, Form-fitting...",
+  },
+  {
+    id: 7,
+    question: "Can you provide any style references you like?",
+    placeholder: "e.g., Celebrities, brands, aesthetics, or upload images below...",
+  },
+  {
+    id: 8,
+    question: "Let us know if we need to avoid any specific colours, brands, materials or silhouettes.",
+    placeholder: "e.g., No bright colors, Avoid polyester, No cropped items...",
+  },
+  {
+    id: 9,
+    question: "Describe the event or daily occasion we are styling you for.",
+    placeholder: "e.g., Office environment, Casual weekends, Date nights...",
   },
 ];
 
@@ -54,6 +74,10 @@ export function EditIntakeForm() {
   const [referenceImageFiles, setReferenceImageFiles] = useState<File[]>([]);
   const [existingReferenceUrls, setExistingReferenceUrls] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // More menu state
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchOrder();
@@ -274,6 +298,42 @@ export function EditIntakeForm() {
     }
   };
 
+  const handleDeleteOrder = async () => {
+    setIsDeleting(true);
+
+    try {
+      const accessToken = localStorage.getItem('access_token');
+      if (!accessToken) {
+        toast.error('Please sign in to continue');
+        navigate('/signin');
+        return;
+      }
+
+      const deleteResponse = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/orders/${orderId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (!deleteResponse.ok) {
+        const errorData = await deleteResponse.json();
+        throw new Error(errorData.error || 'Failed to delete request');
+      }
+
+      toast.success('Request deleted successfully!');
+      navigate('/messages');
+    } catch (error: any) {
+      console.error('Error deleting intake:', error);
+      toast.error(error.message || 'Failed to delete request. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="relative w-full min-h-screen overflow-x-hidden bg-white flex items-center justify-center">
@@ -309,8 +369,56 @@ export function EditIntakeForm() {
             EDIT REQUEST
           </h1>
           
-          {/* Empty right side for balance */}
-          <div className="w-8" />
+          {/* More menu button aligned right */}
+          <div className="relative">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMoreMenu(!showMoreMenu);
+              }}
+              className="w-8 h-8 flex items-center justify-center hover:bg-black/5 rounded transition-colors"
+            >
+              <MoreHorizontal className="w-5 h-5 text-[#1e1709]" strokeWidth={1.5} />
+            </button>
+            
+            {/* More menu dropdown */}
+            {showMoreMenu && (
+              <>
+                {/* Backdrop to close menu */}
+                <div 
+                  className="fixed inset-0 z-40" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowMoreMenu(false);
+                  }}
+                />
+                
+                {/* Menu - fixed positioning from right edge */}
+                <div className="fixed top-[calc(env(safe-area-inset-top)+58px)] right-4 z-50 w-48 bg-white border border-black/10 rounded-lg shadow-lg overflow-hidden">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm('Delete your style request? This cannot be undone.')) {
+                        handleDeleteOrder();
+                      }
+                      setShowMoreMenu(false);
+                    }}
+                    disabled={isDeleting}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-left disabled:opacity-50"
+                  >
+                    {isDeleting ? (
+                      <Loader2 className="w-4 h-4 text-red-600 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4 text-red-600" strokeWidth={1.5} />
+                    )}
+                    <span className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] text-red-600">
+                      {isDeleting ? 'Deleting...' : 'Delete Request'}
+                    </span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 

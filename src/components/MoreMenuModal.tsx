@@ -1,5 +1,6 @@
 import { X, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { useState, useEffect } from 'react';
 
 interface MoreMenuModalProps {
   isOpen: boolean;
@@ -19,6 +20,13 @@ export function MoreMenuModal({
   onLogout
 }: MoreMenuModalProps) {
   const navigate = useNavigate();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    // Check if user is admin or stylist
+    const userRole = localStorage.getItem('user_role');
+    setIsAdmin(userRole === 'admin' || userRole === 'stylist');
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -197,6 +205,32 @@ export function MoreMenuModal({
                   Block User
                 </span>
                 <ChevronRight className="w-4 h-4 text-[#1e1709]" strokeWidth={1.5} />
+              </button>
+            </>
+          )}
+
+          {/* Admin Section - Only show for admin/stylist users */}
+          {isAdmin && isOwnProfile && (
+            <>
+              <div className="px-4 pt-5 pb-2">
+                <p className="font-['Helvetica_Neue:Medium',sans-serif] text-[11px] tracking-[1.5px] text-[#1e1709]/60 uppercase">
+                  Admin Tools
+                </p>
+              </div>
+
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  navigate('/admin-cleanup');
+                  onClose();
+                }}
+                className="w-full flex items-center justify-between px-4 py-4 hover:bg-red-50 transition-colors border-b border-[#1e1709]/10 cursor-pointer"
+              >
+                <span className="font-['Helvetica_Neue:Bold',sans-serif] text-[14px] tracking-[2px] text-red-600 uppercase">
+                  Clear Test Data
+                </span>
+                <ChevronRight className="w-4 h-4 text-red-600" strokeWidth={1.5} />
               </button>
             </>
           )}

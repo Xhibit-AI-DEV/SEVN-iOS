@@ -211,14 +211,14 @@ export function ChrisLanding({ onImageUpload }: ChrisLandingProps) {
               <Group4 />
             </div>
             <div className="flex flex-col gap-[6px] items-center mt-[20px]">
-              <p className="css-4hzbpn leading-[normal] not-italic text-[#1e1709] text-[12px] text-center tracking-[0.1em] uppercase w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 700 }}>
+              <p className="css-4hzbpn leading-[normal] not-italic text-[#1e1709] text-[14px] text-center tracking-[0.1em] uppercase w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 700 }}>
                 1:1 styling
               </p>
-              <p className="css-4hzbpn font-['Helvetica_Neue:Light',sans-serif] leading-[25px] not-italic text-[#1e1709] text-[14px] text-center tracking-[1px] uppercase w-[333px]">
-                Upload a reference look
+              <p className="css-4hzbpn leading-[normal] not-italic text-[#1e1709] text-[12px] text-center tracking-[0.1em] w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 700 }}>
+                Upload a reference look to get started.
               </p>
             </div>
-            <div className="mt-4">
+            <div className="mt-6">
               <ButtonDark onClick={triggerFileInput} />
             </div>
           </div>

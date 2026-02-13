@@ -1,13 +1,12 @@
-import { useState, useRef, useEffect } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router';
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonButton, IonBackButton } from '@ionic/react';
-import svgPaths from "../imports/svg-ib8s7izy1q";
-import { projectId, publicAnonKey } from '../utils/supabase/info';
-import { toast } from 'sonner@2.0.3';
-import { Loader2, Camera, Image as ImageIcon, X } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate, useLocation, useParams } from 'react-router';
+import { Loader2, Camera, Image as ImageIcon, X, MoreHorizontal, Trash2 } from 'lucide-react';
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
-import laundromatImage from 'figma:asset/1f70f8addd2ecb3091c805e461a74ebf7efafd81.png';
+import { toast } from 'sonner@2.0.3';
+import { projectId, publicAnonKey } from '../utils/supabase/info';
+import svgPaths from '../imports/svg-ib8s7izy1q';
+import exampleImage from 'figma:asset/2f209977b7bac06e4fe00539ef0b7db92574c8b3.png';
 
 export function CreateEditPage() {
   const navigate = useNavigate();
@@ -33,6 +32,10 @@ export function CreateEditPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingMetadata, setIsFetchingMetadata] = useState(false);
   const [isLoadingEdit, setIsLoadingEdit] = useState(isEditMode);
+  
+  // More menu state
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Load existing edit data if in edit mode
   useEffect(() => {
@@ -145,18 +148,24 @@ export function CreateEditPage() {
       return;
     }
 
-    // Normalize URL - remove protocol if present, remove trailing slash
+    // Normalize URL - add https:// if not present
     let normalizedUrl = newShoppingLink.trim();
-    normalizedUrl = normalizedUrl.replace(/^https?:\/\//, '');
+    
+    // Add protocol if missing
+    if (!normalizedUrl.match(/^https?:\/\//i)) {
+      normalizedUrl = `https://${normalizedUrl}`;
+    }
+    
+    // Remove trailing slash
     normalizedUrl = normalizedUrl.replace(/\/$/, '');
     
-    // Validate it's a real URL format (must have at least domain.tld/something)
+    // Validate it's a real URL format
     try {
-      const testUrl = normalizedUrl.startsWith('http') ? normalizedUrl : `https://${normalizedUrl}`;
-      new URL(testUrl);
+      new URL(normalizedUrl);
       
-      // Must have a path or be a valid domain
-      if (!normalizedUrl.includes('.')) {
+      // Must have a valid domain
+      const urlObj = new URL(normalizedUrl);
+      if (!urlObj.hostname.includes('.')) {
         return;
       }
       
@@ -230,11 +239,48 @@ export function CreateEditPage() {
     try {
       // Get access token (check both possible storage keys for backwards compatibility)
       const accessToken = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
+      
+      console.log('🔐 CreateEditPage auth check:', {
+        hasAccessToken: !!localStorage.getItem('access_token'),
+        hasAuthToken: !!localStorage.getItem('auth_token'),
+        finalToken: !!accessToken,
+        userId: localStorage.getItem('user_id'),
+        userEmail: localStorage.getItem('user_email'),
+      });
+      
       if (!accessToken) {
+        console.error('❌ No access token found in localStorage');
         toast.error('Please sign in to publish an edit');
-        navigate('/signin');
+        setIsLoading(false);
         return;
       }
+
+      // Validate token before proceeding
+      console.log('🔍 Validating token...');
+      const validationResponse = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/auth/validate-token`,
+        {
+          headers: { 'Authorization': `Bearer ${accessToken}` },
+        }
+      );
+
+      if (!validationResponse.ok) {
+        console.error('❌ Token validation failed');
+        toast.error('Session expired. Please sign in again.');
+        // Clear expired tokens
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_id');
+        localStorage.removeItem('user_email');
+        // Redirect to auth
+        setTimeout(() => {
+          navigate('/auth');
+        }, 2000);
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('✅ Token validated successfully');
 
       let mediaUrl = mainMedia;
 
@@ -265,6 +311,16 @@ export function CreateEditPage() {
       }
 
       // Create or update edit
+      console.log('📝 Sending edit data to server:', {
+        media_url: mediaUrl,
+        media_type: mediaType,
+        hasDescription: !!description,
+        hasTags: !!tags,
+        hasExternalLink: !!editLink,
+        productLinksCount: shoppingLinks.length,
+        is_public: !isPrivate,
+      });
+
       const editResponse = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/edits${isEditMode ? `/${editId}` : ''}`,
         {
@@ -285,9 +341,26 @@ export function CreateEditPage() {
         }
       );
 
+      console.log('📡 Edit response status:', editResponse.status);
+
       if (!editResponse.ok) {
         const errorData = await editResponse.json();
-        throw new Error(errorData.error || `Failed to ${isEditMode ? 'update' : 'create'} edit`);
+        console.error('❌ Edit creation failed:', errorData);
+        
+        // Handle JWT expiration specifically
+        if (errorData.error === 'JWT_EXPIRED' || errorData.code === 401) {
+          toast.error('Session expired. Please sign in again.');
+          // Clear tokens
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('auth_token');
+          // Redirect to auth after a delay
+          setTimeout(() => {
+            navigate('/auth');
+          }, 2000);
+          return;
+        }
+        
+        throw new Error(errorData.message || errorData.error || `Failed to ${isEditMode ? 'update' : 'create'} edit`);
       }
 
       const editData = await editResponse.json();
@@ -301,29 +374,173 @@ export function CreateEditPage() {
       }
     } catch (error: any) {
       console.error(`❌ Error ${isEditMode ? 'updating' : 'publishing'} edit:`, error);
+      toast.error(error.message || `Failed to ${isEditMode ? 'update' : 'publish'} edit`);
     } finally {
       setIsLoading(false);
     }
   };
 
-  return (
-    <IonPage>
-      {/* Top Nav - Fixed header area */}
-      <IonHeader className="relative">
-        <IonToolbar>
-        </IonToolbar>
-        {/* X button positioned absolutely on the right */}
-        <button 
-          onClick={() => navigate(-1)} 
-          className="absolute right-4 top-3 z-[9999] p-2 bg-white"
-          style={{ position: 'absolute', right: '16px', top: '12px', zIndex: 9999 }}
-        >
-          <X className="w-6 h-6 text-[#1e1709]" strokeWidth={1.5} />
-        </button>
-      </IonHeader>
+  const handleDeleteEdit = async () => {
+    if (!editId) {
+      return;
+    }
 
-      {/* EVERYTHING scrolls here */}
-      <IonContent className="w-full" style={{ paddingBottom: '50px' }}>
+    setIsDeleting(true);
+
+    try {
+      // Get access token (check both possible storage keys for backwards compatibility)
+      const accessToken = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
+      
+      console.log('🔐 CreateEditPage auth check:', {
+        hasAccessToken: !!localStorage.getItem('access_token'),
+        hasAuthToken: !!localStorage.getItem('auth_token'),
+        finalToken: !!accessToken,
+        userId: localStorage.getItem('user_id'),
+        userEmail: localStorage.getItem('user_email'),
+      });
+      
+      if (!accessToken) {
+        console.error('❌ No access token found in localStorage');
+        toast.error('Please sign in to delete an edit');
+        setIsDeleting(false);
+        return;
+      }
+
+      // Delete edit
+      console.log('📝 Sending delete request to server:', {
+        editId,
+      });
+
+      const deleteResponse = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/edits/${editId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      console.log('📡 Delete response status:', deleteResponse.status);
+
+      if (!deleteResponse.ok) {
+        const errorData = await deleteResponse.json();
+        console.error('❌ Edit deletion failed:', errorData);
+        throw new Error(errorData.error || `Failed to delete edit`);
+      }
+
+      const deleteData = await deleteResponse.json();
+      console.log(`✅ Edit deleted:`, deleteData.edit);
+      
+      // Navigate back to profile
+      navigate('/profile');
+    } catch (error: any) {
+      console.error(`❌ Error deleting edit:`, error);
+      toast.error(error.message || `Failed to delete edit`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  return (
+    <div className="w-full h-screen bg-white overflow-hidden flex flex-col" style={{ maxWidth: '100vw' }}>
+      {/* Hidden file input - always available for web fallback (only in create mode) */}
+      {!isEditMode && (
+        <input 
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,video/*"
+          onChange={handleFileUpload}
+          className="hidden"
+        />
+      )}
+      
+      {/* SECTION 1 — Fixed Header */}
+      <div className="shrink-0 bg-white border-b border-gray-200">
+        {/* Safe area top padding: 47px for status bar */}
+        <div className="h-[47px]" />
+        
+        {/* Header content - 16px top padding, 20px horizontal */}
+        <div className="flex items-center justify-between px-5 pt-4 pb-3">
+          {/* Back button */}
+          <button 
+            onClick={() => navigate(-1)} 
+            className="w-6 h-6 flex items-center justify-center"
+          >
+            <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 24 24">
+              <path d={svgPaths.p13e8e2e0} stroke="#1E1709" strokeLinecap="square" strokeLinejoin="round" strokeWidth="1.1" />
+            </svg>
+          </button>
+          
+          {/* Title centered */}
+          <h1 className="font-['Helvetica_Neue',sans-serif] text-[16px] tracking-[2px] text-[#1e1709] uppercase font-medium">
+            {isEditMode ? 'EDIT POST' : 'POST EDIT'}
+          </h1>
+          
+          {/* Right side - More menu (if editing) or Close button */}
+          {isEditMode ? (
+            <div className="relative">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowMoreMenu(!showMoreMenu);
+                }}
+                className="w-8 h-8 flex items-center justify-center hover:bg-black/5 rounded transition-colors"
+              >
+                <MoreHorizontal className="w-5 h-5 text-[#1e1709]" strokeWidth={1.5} />
+              </button>
+              
+              {/* More menu dropdown */}
+              {showMoreMenu && (
+                <div className="absolute right-0 top-10 z-50">
+                  {/* Backdrop to close menu */}
+                  <div 
+                    className="fixed inset-0 z-40" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowMoreMenu(false);
+                    }}
+                  />
+                  
+                  {/* Menu */}
+                  <div className="relative z-50 w-48 bg-white border border-black/10 rounded-lg shadow-lg overflow-hidden">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm('Delete this edit? This cannot be undone.')) {
+                          handleDeleteEdit();
+                        }
+                        setShowMoreMenu(false);
+                      }}
+                      disabled={isDeleting}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-left disabled:opacity-50"
+                    >
+                      {isDeleting ? (
+                        <Loader2 className="w-4 h-4 text-red-600 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-4 h-4 text-red-600" strokeWidth={1.5} />
+                      )}
+                      <span className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] text-red-600">
+                        {isDeleting ? 'Deleting...' : 'Delete Edit'}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button 
+              onClick={() => navigate(-1)} 
+              className="p-0"
+            >
+              <X className="w-6 h-6 text-[#1e1709]" strokeWidth={1.5} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* SECTION 2 — Scrollable Content (fills vertical space) */}
+      <div className="flex-1 overflow-y-auto">
         {/* Loading state for edit mode */}
         {isLoadingEdit && (
           <div className="flex items-center justify-center min-h-[400px]">
@@ -331,110 +548,126 @@ export function CreateEditPage() {
           </div>
         )}
 
-        {/* Main Content */}
+        {/* Main Content - NO DUPLICATION */}
         {!isLoadingEdit && (
-          <div className="w-full px-4 pb-24">
-            
+          <>
             {/* Upload Landing Screen - Only show in create mode if no media yet */}
             {!isEditMode && !mainMedia && (
-              <div className="flex flex-col items-center px-6 pt-12 pb-8">
-                {/* Image with triple border effect - matching Chris's edit on HomePage */}
-                <div className="relative w-full max-w-[280px] h-[400px] mb-2">
-                  {/* Triple border effect with 4px spacing */}
-                  <div className="absolute border border-[#1e1709] inset-[4px] opacity-80 rounded-[8px]" />
-                  <div className="absolute border border-[#1e1709] inset-[8px_0_0_8px] rounded-[8px]" />
-                  
-                  {/* Main image container with border */}
-                  <div className="absolute inset-[0_8px_8px_0] rounded-[8px]">
-                    <img 
-                      src={laundromatImage}
-                      alt="Fashion example"
-                      className="absolute inset-0 w-full h-full object-cover rounded-[8px]"
-                    />
-                    {/* Border on top */}
-                    <div className="absolute border border-[#1e1709] inset-0 rounded-[8px] pointer-events-none" />
+              <div className="flex flex-col px-5">
+                {/* 32px spacing from header */}
+                <div className="h-[32px]" />
+                
+                {/* Content block - top-anchored, not vertically centered */}
+                <div className="flex flex-col items-center">
+                  {/* Image with triple border effect - fixed height 410px, editorial width 330px */}
+                  <div className="w-full max-w-[330px]">
+                    <div className="relative w-full h-[410px]">
+                      {/* Triple border effect with 4px spacing */}
+                      <div className="absolute border border-[#1e1709] inset-[4px] opacity-80 rounded-[8px]" />
+                      <div className="absolute border border-[#1e1709] inset-[8px_0_0_8px] rounded-[8px]" />
+                      
+                      {/* Main image container with border */}
+                      <div className="absolute inset-[0_8px_8px_0] rounded-[8px]">
+                        <img 
+                          src={exampleImage}
+                          alt="Fashion example"
+                          className="absolute inset-0 w-full h-full object-cover rounded-[8px]"
+                        />
+                        {/* Border on top */}
+                        <div className="absolute border border-[#1e1709] inset-0 rounded-[8px] pointer-events-none" />
+                      </div>
+                    </div>
                   </div>
+
+                  {/* 16px spacing from image to title */}
+                  <div className="h-[16px]" />
+
+                  {/* Title - bold section header */}
+                  <h2 className="font-['Helvetica_Neue',sans-serif] text-[24px] leading-[30px] text-[#1e1709] text-center font-bold tracking-[2px] w-full max-w-[330px]">
+                    STYLE & SELL
+                  </h2>
+                  
+                  {/* 8px spacing from title to subtext - tight text block */}
+                  <div className="h-[8px]" />
+                  
+                  {/* Subtext */}
+                  <p className="font-['Helvetica_Neue',sans-serif] text-[14px] leading-[19px] tracking-[0.5px] text-[#1e1709] text-center uppercase opacity-90 w-full max-w-[330px]">
+                    ADD DEPOP OR SHOP LINKS TO YOUR STYLED LOOK
+                  </p>
+
+                  {/* 20px spacing from subtext to button - action-focused */}
+                  <div className="h-[20px]" />
+
+                  {/* Upload button */}
+                  <button
+                    onClick={handleNativeMediaPick}
+                    className="w-full max-w-[330px] py-3 bg-[#1E1709] text-white rounded-lg font-['Helvetica_Neue:Medium',sans-serif] text-[14px] tracking-[1px] uppercase hover:bg-[#1E1709]/90 transition-colors flex items-center justify-center"
+                  >
+                    UPLOAD
+                  </button>
                 </div>
 
-                {/* Headline text */}
-                <h2 className="font-['Helvetica_Neue:Medium',sans-serif] text-[20px] leading-[18px] text-[#1e1709] text-center mb-1 px-2">
-                  STYLE → SELL
-                </h2>
-                
-                {/* Subheadline text */}
-                <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[12px] leading-[26px] tracking-[1px] text-[#1e1709] text-center mb-8 max-w-[280px] px-2">
-                  Link your Edit to Depop or Shops
-                </p>
-
-                {/* Upload button */}
-                <button
-                  onClick={handleNativeMediaPick}
-                  className="w-full max-w-[280px] px-6 h-[48px] bg-[#1e1709] text-white rounded-[8px] font-['Helvetica_Neue:Medium',sans-serif] text-[16px] tracking-[2px] uppercase hover:bg-[#2a2010] active:bg-[#3e3709] transition-colors"
-                >
-                  UPLOAD
-                </button>
+                {/* Remaining space falls below button - top-anchored design */}
               </div>
             )}
 
             {/* Media Preview - Show in edit mode or after upload in create mode */}
             {(isEditMode || mainMedia) && mainMedia && (
-              <div className="relative w-full h-[471px] rounded-[8px] border border-[#1e1709] overflow-hidden mb-2">
-                {mediaType === 'image' ? (
-                  <img 
-                    alt="Upload preview"
-                    className="w-full h-full object-cover"
-                    src={mainMedia}
-                  />
-                ) : (
-                  <video 
-                    className="w-full h-full object-cover"
-                    src={mainMedia}
-                    controls
-                  />
-                )}
-              </div>
-            )}
-
-            {/* File input - only enabled in create mode */}
-            {!isEditMode && (
-              <input 
-                ref={fileInputRef}
-                type="file"
-                accept="image/*,video/*"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-            )}
-
-            {/* Shopping Links */}
-            {mainMedia && (
-              <>
-                <div className="mb-6">
-                  <div className="flex gap-2 mb-3">
-                    <input
-                      type="url"
-                      value={newShoppingLink}
-                      onChange={(e) => setNewShoppingLink(e.target.value)}
-                      placeholder="Add shopping link"
-                      className="flex-1 border border-[#1e1709] rounded-[8px] px-3 py-2 font-['Arial:Regular',sans-serif] text-[14px] bg-white"
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleAddShoppingLink();
-                        }
-                      }}
-                    />
-                    <button
-                      onClick={handleAddShoppingLink}
-                      className="bg-[#1e1709] text-white px-4 py-2 rounded-[8px] font-['Arial:Regular',sans-serif] text-[14px]"
-                    >
-                      Add
-                    </button>
+              <div className="px-5 pt-6">
+                {/* Container for image and products - centered with max-width */}
+                <div className="w-full max-w-[340px] mx-auto">
+                  {/* Media Preview - 340px x 509px with single border */}
+                  <div className="w-full h-[509px] rounded-[8px] border border-[#1e1709] overflow-hidden mb-[15px]">
+                    {mediaType === 'video' ? (
+                      <video 
+                        className="w-full h-full object-cover"
+                        src={mainMedia}
+                        muted
+                        loop
+                        playsInline
+                      />
+                    ) : (
+                      <img 
+                        alt="Upload preview"
+                        className="w-full h-full object-cover"
+                        src={mainMedia}
+                      />
+                    )}
                   </div>
 
-                  {/* Shopping link thumbnails */}
+                  {/* Shopping Links Input - full width */}
+                  <div className="mb-6">
+                    <div className="flex gap-2 mb-3">
+                      <input
+                        type="url"
+                        value={newShoppingLink}
+                        onChange={(e) => setNewShoppingLink(e.target.value)}
+                        placeholder="Add shopping link"
+                        className="flex-1 border border-[#1e1709] rounded-[12px] px-4 py-3 font-['Helvetica_Neue',sans-serif] text-[14px] bg-white"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddShoppingLink();
+                          }
+                        }}
+                      />
+                      <button
+                        onClick={handleAddShoppingLink}
+                        disabled={isFetchingMetadata}
+                        className="bg-[#1e1709] text-white px-6 h-[52px] rounded-[12px] font-['Helvetica_Neue',sans-serif] text-[14px] tracking-[1px] uppercase font-medium hover:bg-[#2a2010] active:bg-[#3e3709] transition-colors disabled:opacity-50"
+                      >
+                        {isFetchingMetadata ? (
+                          <Loader2 className="animate-spin w-5 h-5" />
+                        ) : (
+                          'ADD'
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Shopping link thumbnails - aligned with left edge of main image */}
                   {shoppingLinks.length > 0 && (
-                    <div className="flex gap-[8px] overflow-x-auto pb-2 scrollbar-hide">
+                    <div className="flex gap-[8px] overflow-x-auto pb-2 mb-6 scrollbar-hide">
                       {shoppingLinks.map((link, index) => {
                         let hostname = 'Product';
                         try {
@@ -453,7 +686,7 @@ export function CreateEditPage() {
                         });
                         
                         return (
-                          <div key={index} className="relative shrink-0 w-[100px] h-[100px] rounded-[8px] border border-[#1e1709] overflow-hidden bg-[#f5f5f5]">
+                          <div key={index} className="relative shrink-0 w-[100px] h-[100px] rounded-[12px] border border-[#1e1709] overflow-hidden bg-[#f5f5f5]">
                             {link.image ? (
                               <img 
                                 src={link.image} 
@@ -494,25 +727,36 @@ export function CreateEditPage() {
                   )}
                 </div>
 
-                {/* Edit Link */}
-                <div className="mb-6">
-                  <div className="flex gap-[4px] items-center mb-2">
-                    <svg className="w-[16px] h-[16px]" fill="none" viewBox="0 0 16 15.9959">
-                      <path d={svgPaths.p35bf1680} fill="#1E1709" />
-                      <path d={svgPaths.p5abf740} fill="#1E1709" />
-                      <path d={svgPaths.p3f6aa700} fill="#1E1709" />
+                {/* Divider */}
+                <div className="h-[1px] w-full bg-[#1e1709] mb-0" />
+
+                {/* Description Section */}
+                <div>
+                  <button 
+                    className="flex items-center w-full py-4"
+                    onClick={() => setShowDescription(!showDescription)}
+                  >
+                    <p className="font-['Arial:Regular',sans-serif] text-[16px] text-black flex-1 text-left">
+                      Description
+                    </p>
+                    <svg 
+                      className={`w-[20px] h-[20px] transition-transform ${showDescription ? 'rotate-180' : 'rotate-0'}`} 
+                      fill="none" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M6 9l6 6 6-6" stroke="#1E1709" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                    <label className="font-['Arial:Regular',sans-serif] text-[14px] text-[#1e1709]">
-                      Edit Link
-                    </label>
-                  </div>
-                  <input
-                    type="url"
-                    value={editLink}
-                    onChange={(e) => setEditLink(e.target.value)}
-                    placeholder="https://example.com"
-                    className="w-full border border-[#1e1709] rounded-[8px] px-3 py-2 font-['Helvetica_Neue:Regular',sans-serif] text-[14px] bg-white outline-none"
-                  />
+                  </button>
+                  
+                  {showDescription && (
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Describe your look..."
+                      className="w-full px-0 py-2 font-['Arial:Regular',sans-serif] text-[14px] bg-transparent border-0 outline-none mb-4 resize-none"
+                      rows={3}
+                    />
+                  )}
                 </div>
 
                 {/* Divider */}
@@ -550,45 +794,59 @@ export function CreateEditPage() {
                 {/* Divider */}
                 <div className="h-[1px] w-full bg-[#1e1709] mb-0" />
 
-                {/* Private Toggle */}
-                <div className="flex items-center justify-end gap-[8px] py-4">
-                  <p className="font-['Arial:Regular',sans-serif] text-[14px] text-black">
-                    Private
-                  </p>
-                  <button
-                    onClick={() => setIsPrivate(!isPrivate)}
-                    className={`h-[24px] w-[44px] rounded-[40px] relative transition-colors ${
-                      isPrivate ? 'bg-[#1e1709]' : 'bg-[#d0d0d0]'
-                    }`}
-                  >
-                    <div 
-                      className={`absolute bg-white rounded-full size-[20px] top-[2px] transition-all ${
-                        isPrivate ? 'left-[22px]' : 'left-[2px]'
-                      }`} 
-                    />
-                  </button>
-                </div>
+                {/* Private Toggle - Only show in edit mode */}
+                {isEditMode && (
+                  <div className="flex items-center justify-end gap-[8px] py-4 mb-20">
+                    <p className="font-['Arial:Regular',sans-serif] text-[14px] text-black">
+                      Private
+                    </p>
+                    <button
+                      onClick={() => setIsPrivate(!isPrivate)}
+                      className={`h-[24px] w-[44px] rounded-[40px] relative transition-colors ${
+                        isPrivate ? 'bg-[#1e1709]' : 'bg-[#d0d0d0]'
+                      }`}
+                    >
+                      <div 
+                        className={`absolute bg-white rounded-full size-[20px] top-[2px] transition-all ${
+                          isPrivate ? 'left-[22px]' : 'left-[2px]'
+                        }`} 
+                      />
+                    </button>
+                  </div>
+                )}
 
-                {/* Bottom Publish/Save Button */}
-                <button 
-                  className="w-full bg-[#1e1709] text-white py-3 rounded-[8px] font-['Arial:Regular',sans-serif] text-[16px] font-bold disabled:opacity-50 mt-6"
-                  onClick={handlePublish}
-                  disabled={!mainMedia || isLoading}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <Loader2 className="animate-spin" size={20} />
-                      <span>{isEditMode ? 'Saving...' : 'Publishing...'}</span>
-                    </div>
-                  ) : (
-                    isEditMode ? 'Save Changes' : 'Publish'
-                  )}
-                </button>
-              </>
+                {/* Add bottom margin when NOT in edit mode */}
+                {!isEditMode && <div className="mb-20" />}
+              </div>
             )}
-          </div>
+          </>
         )}
-      </IonContent>
-    </IonPage>
+      </div>
+
+      {/* SECTION 3 — Fixed Bottom Button (above safe area) */}
+      {!isLoadingEdit && (
+        <>
+          {/* Publish/Save button - shown after media is uploaded */}
+          {(isEditMode || mainMedia) && mainMedia && (
+            <div className="shrink-0 px-5 pb-[34px] pt-4 bg-white border-t border-gray-200">
+              <button 
+                className="w-full h-[52px] bg-[#1e1709] text-white rounded-[16px] font-['Helvetica_Neue',sans-serif] text-[14px] tracking-[1px] uppercase font-medium hover:bg-[#2a2010] active:bg-[#3e3709] transition-colors disabled:opacity-50"
+                onClick={handlePublish}
+                disabled={!mainMedia || isLoading}
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <Loader2 className="animate-spin" size={20} />
+                    <span>{isEditMode ? 'SAVING...' : 'PUBLISHING...'}</span>
+                  </div>
+                ) : (
+                  isEditMode ? 'SAVE CHANGES' : 'PUBLISH'
+                )}
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
   );
 }

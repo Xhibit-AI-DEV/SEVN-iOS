@@ -170,7 +170,7 @@ export default function HomePage() {
           {/* Vertical feed of cards - using ProfilePage design */}
           <div className="flex flex-col gap-[8px]">
             {/* CHRIS WHLY Card 2 - New Image */}
-            <div className="relative shrink-0 w-full max-w-[363px] h-[543px]">
+            <div className="relative shrink-0 w-[272px] h-[407px]">
               {/* Triple border effect with 4px spacing */}
               <div className="absolute border border-[#1e1709] inset-[4px] opacity-80 rounded-[8px]" />
               <div className="absolute border border-[#1e1709] inset-[8px_0_0_8px] rounded-[8px]" />

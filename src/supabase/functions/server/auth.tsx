@@ -22,7 +22,8 @@ const getSupabaseClient = () => {
 
 // Whitelisted stylist emails
 const STYLIST_WHITELIST = [
-  'Lissy@sevn.app',
+  'lissy@sevn.app', // Changed to lowercase for case-insensitive matching
+  'chris@sevn.app', // Chris Whly - stylist
   'dovheichemer@gmail.com', // Keep old email for backward compatibility
 ];
 
@@ -555,6 +556,94 @@ app.delete('/delete-account', async (c) => {
   } catch (error: any) {
     console.error('❌ Delete account error:', error);
     return c.json({ error: error.message || 'Failed to delete account' }, 500);
+  }
+});
+
+// Set user role (admin/stylist use only)
+app.post('/set-role', async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    
+    if (!accessToken) {
+      return c.json({ error: 'No access token provided' }, 401);
+    }
+
+    const supabaseAdmin = getSupabaseAdminClient();
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(accessToken);
+
+    if (authError || !user) {
+      return c.json({ error: 'Invalid or expired token' }, 401);
+    }
+
+    const { role } = await c.req.json();
+    
+    if (!role || !['customer', 'stylist', 'admin'].includes(role)) {
+      return c.json({ error: 'Invalid role' }, 400);
+    }
+
+    console.log('👤 Setting role for user:', user.id, 'to:', role);
+    
+    // Update customer record
+    const customerKey = `customer:${user.id}`;
+    const customer = await kv.get(customerKey) || {};
+    await kv.set(customerKey, {
+      ...customer,
+      role,
+      updated_at: new Date().toISOString(),
+    });
+    
+    // Update profile record
+    const profileKey = `profile:${user.id}`;
+    const profile = await kv.get(profileKey) || {};
+    await kv.set(profileKey, {
+      ...profile,
+      role,
+      updated_at: new Date().toISOString(),
+    });
+    
+    console.log('✅ Role updated successfully');
+    
+    return c.json({ success: true, role });
+  } catch (error: any) {
+    console.error('❌ Error setting role:', error);
+    return c.json({ error: error.message || 'Failed to set role' }, 500);
+  }
+});
+
+// Validate token and check if it's still active
+app.get('/validate-token', async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    
+    if (!accessToken) {
+      return c.json({ valid: false, error: 'No token provided' }, 401);
+    }
+
+    const supabase = getSupabaseClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+
+    if (authError || !user) {
+      console.log('❌ Token validation failed:', authError?.message);
+      return c.json({ 
+        valid: false, 
+        error: authError?.message || 'Invalid token',
+        hint: 'Token has expired or is invalid. Please sign in again.'
+      }, 401);
+    }
+
+    console.log('✅ Token is valid for user:', user.id);
+    
+    return c.json({ 
+      valid: true,
+      user_id: user.id,
+      email: user.email 
+    });
+  } catch (error: any) {
+    console.error('❌ Error validating token:', error);
+    return c.json({ 
+      valid: false, 
+      error: error.message 
+    }, 500);
   }
 });
 

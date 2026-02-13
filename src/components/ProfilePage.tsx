@@ -419,6 +419,23 @@ export function ProfilePage() {
         setLikedEdits(likedEdits.filter(edit => edit.id !== editId));
       } else {
         newLikedIds.add(editId);
+        // Find the edit in the edits array and add it to likedEdits
+        const editToAdd = edits.find(edit => edit.id === editId);
+        if (editToAdd) {
+          setLikedEdits([editToAdd, ...likedEdits]);
+        } else {
+          // If edit not in current edits array, fetch it from the server
+          fetch(`https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/edits/${editId}`, {
+            headers: { 'Authorization': `Bearer ${publicAnonKey}` },
+          })
+            .then(res => res.json())
+            .then(data => {
+              if (data.edit) {
+                setLikedEdits([data.edit, ...likedEdits]);
+              }
+            })
+            .catch(err => console.error('Error fetching edit details:', err));
+        }
       }
       setLikedEditIds(newLikedIds);
 

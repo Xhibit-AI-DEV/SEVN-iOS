@@ -89,6 +89,10 @@
 :root {
   --safe-top: env(safe-area-inset-top);
   --safe-bottom: env(safe-area-inset-bottom);
+  --safe-area-top: 0px;
+  --safe-area-bottom: 0px;
+  --safe-area-left: 0px;
+  --safe-area-right: 0px;
   --font-size: 16px;
   --background: #ffffff;
   --foreground: oklch(0.145 0 0);

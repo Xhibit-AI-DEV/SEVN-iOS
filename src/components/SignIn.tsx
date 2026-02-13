@@ -53,8 +53,8 @@ export function SignIn() {
           
           toast.success('Account created! Welcome to SEVN.');
           
-          // Redirect to home page
-          navigate('/home');
+          // Reload the page to ensure auth state is properly updated everywhere
+          window.location.href = '/home';
         } else {
           const error = await response.json();
           const errorMessage = error.error || 'Failed to create account';
@@ -96,6 +96,9 @@ export function SignIn() {
           localStorage.setItem('user_role', data.role || 'customer');
           
           toast.success('Welcome back!');
+          
+          // Dispatch auth changed event to update CustomerApp state
+          window.dispatchEvent(new Event('authChanged'));
           
           // Redirect to home page
           navigate('/home');

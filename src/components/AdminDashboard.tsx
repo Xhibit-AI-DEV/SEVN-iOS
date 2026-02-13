@@ -24,6 +24,14 @@ interface SelectedItem {
   timestamp: string;
 }
 
+interface ProductData {
+  productUrl: string;
+  productName?: string;
+  brand?: string;
+  price?: string;
+  imageUrl?: string;
+}
+
 // Helper function to get field values from Contentful
 const getFieldValue = (field: any): any => {
   if (!field) return '';
@@ -357,31 +365,68 @@ export function AdminDashboard() {
     }
   };
 
-  const addItem = (url: string, source: 'search' | 'voice' = 'search') => {
+  const addItem = (urlOrProduct: string | ProductData, source: 'search' | 'voice' = 'search') => {
     if (selectedItems.length >= 7) {
       toast.error('Maximum 7 items reached');
       return;
     }
 
+    console.log('🔵 ADD ITEM CALLED WITH:', urlOrProduct);
+    console.log('🔵 Type:', typeof urlOrProduct);
+
+    // Determine if we have preloaded product data
+    const isProductData = typeof urlOrProduct === 'object' && urlOrProduct !== null;
+    const url = isProductData ? urlOrProduct.productUrl : urlOrProduct;
+    const hasPreloadedData = isProductData && (urlOrProduct.productName || urlOrProduct.imageUrl || urlOrProduct.price);
+
+    console.log('🔵 Is product data?:', isProductData);
+    console.log('🔵 Has preloaded data?:', hasPreloadedData);
+    if (isProductData) {
+      console.log('🔵 Product data:', {
+        name: urlOrProduct.productName,
+        image: urlOrProduct.imageUrl,
+        price: urlOrProduct.price,
+        brand: urlOrProduct.brand,
+      });
+    }
+
+    // Create item with basic info first
     const newItem: SelectedItem = {
       id: `${Date.now()}-${Math.random()}`,
       url,
-      image: url,
-      title: 'Loading...',
-      price: '',
-      brand: '',
       source,
       timestamp: new Date().toISOString(),
+      // If we have preloaded data from AI/search, use it immediately
+      ...(hasPreloadedData && {
+        title: urlOrProduct.productName || undefined,
+        image: urlOrProduct.imageUrl || undefined,
+        price: urlOrProduct.price || undefined,
+        brand: urlOrProduct.brand || undefined,
+      }),
     };
 
+    console.log('🔵 NEW ITEM CREATED:', newItem);
+    console.log('🔵 Has preloaded image?:', !!newItem.image);
+
+    // Add to list immediately
     setSelectedItems([...selectedItems, newItem]);
 
-    // Fetch metadata in background
-    fetchMetadata(url, newItem.id);
+    console.log('🔵 ITEM ADDED TO STATE');
+
+    // Only fetch metadata if we don't have preloaded data
+    if (!hasPreloadedData) {
+      console.log('🔵 No preloaded data, fetching metadata for URL:', url);
+      // Fetch metadata in background
+      fetchMetadata(url, newItem.id);
+    } else {
+      console.log('🔵 ✅ Using preloaded data, skipping metadata fetch');
+    }
   };
 
   const fetchMetadata = async (url: string, itemId: string) => {
     try {
+      console.log('🔍 Fetching metadata for:', url);
+      
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/fetch-url-metadata`,
         {
@@ -394,8 +439,17 @@ export function AdminDashboard() {
         }
       );
 
+      console.log('📡 Metadata response status:', response.status);
+
       if (response.ok) {
         const metadata = await response.json();
+        console.log('✅ Metadata received:', {
+          url: metadata.url,
+          title: metadata.title,
+          hasImage: !!metadata.image,
+          imageUrl: metadata.image,
+          price: metadata.price,
+        });
         
         // Update the item with metadata
         setSelectedItems(items =>
@@ -403,16 +457,47 @@ export function AdminDashboard() {
             item.id === itemId
               ? {
                   ...item,
-                  title: metadata.title || 'Product',
-                  image: metadata.image || item.image,
+                  title: metadata.title || 'Product Link',
+                  image: metadata.image || '',  // Set to empty string if no image found
                   price: metadata.price || '',
+                }
+              : item
+          )
+        );
+      } else {
+        const errorText = await response.text();
+        console.error('❌ Failed to fetch metadata:', response.status, errorText);
+        toast.error('Failed to fetch product details');
+        
+        // Update item to show it failed
+        setSelectedItems(items =>
+          items.map(item =>
+            item.id === itemId
+              ? {
+                  ...item,
+                  title: 'Product Link',
+                  image: '',  // Clear invalid image URL
                 }
               : item
           )
         );
       }
     } catch (error) {
-      console.error('Error fetching metadata:', error);
+      console.error('❌ Error fetching metadata:', error);
+      toast.error('Failed to fetch product details');
+      
+      // Update item to show it failed
+      setSelectedItems(items =>
+        items.map(item =>
+          item.id === itemId
+            ? {
+                ...item,
+                title: 'Product Link',
+                image: '',  // Clear invalid image URL
+              }
+            : item
+        )
+      );
     }
   };
 
@@ -543,23 +628,17 @@ export function AdminDashboard() {
                         }                        
                         {/* Info */}
                         <div className="flex-1 min-w-0">
-                          <p className="font-['Helvetica_Neue:Medium',sans-serif] text-[16px] tracking-[1px] text-[#1e1709] uppercase">
-                            {name}
-                          </p>
-                          <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] text-gray-600 mt-1">
-                            {email}
-                          </p>
                           <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[12px] text-gray-400 mt-1">
                             Submitted: {createdAt}
                           </p>
                           <div className="mt-2">
-                            <span className={`inline-block px-3 py-1 rounded-full text-[11px] uppercase tracking-wide font-['Helvetica_Neue:Medium',sans-serif] ${
-                              status === 'waitlist' ? 'bg-yellow-100 text-yellow-800' :
-                              status === 'invited' ? 'bg-blue-100 text-blue-800' :
-                              status === 'paid' ? 'bg-green-100 text-green-800' :
-                              status === 'styling' ? 'bg-purple-100 text-purple-800' :
-                              status === 'completed' ? 'bg-gray-100 text-gray-800' :
-                              'bg-gray-100 text-gray-600'
+                            <span className={`inline-block px-3 py-1 rounded-full text-[11px] uppercase tracking-wide font-['Helvetica_Neue:Medium',sans-serif] border ${
+                              status === 'waitlist' ? 'bg-white text-black border-black' :
+                              status === 'invited' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                              status === 'paid' ? 'bg-green-100 text-green-800 border-green-200' :
+                              status === 'styling' ? 'bg-purple-100 text-purple-800 border-purple-200' :
+                              status === 'completed' ? 'bg-gray-100 text-gray-800 border-gray-200' :
+                              'bg-gray-100 text-gray-600 border-gray-200'
                             }`}>
                               {status}
                             </span>

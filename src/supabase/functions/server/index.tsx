@@ -1,6 +1,7 @@
 import { Hono } from "npm:hono";
 import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
+import { createClient } from 'jsr:@supabase/supabase-js@2';
 import * as kv from "./kv_store.tsx";
 import openaiRoutes from "./openai.tsx";
 import shoppingRoutes from "./shopping.tsx";
@@ -21,6 +22,7 @@ import ordersRoutes from "./orders.tsx";
 import likesRoutes from "./likes.tsx";
 import profilesRoutes from "./profiles.tsx";
 import editsRoutes from "./edits.tsx";
+import adminRoutes from "./admin.tsx";
 
 const app = new Hono();
 
@@ -96,6 +98,9 @@ app.route("/make-server-b14d984c/profiles", profilesRoutes);
 // Mount Edits routes (NEW - for managing user edits/content)
 app.route("/make-server-b14d984c/edits", editsRoutes);
 
+// Mount Admin routes (NEW - for managing admin tasks)
+app.route("/make-server-b14d984c/admin", adminRoutes);
+
 // Upload endpoint (for intake form images)
 app.post("/make-server-b14d984c/upload", async (c) => {
   try {
@@ -123,9 +128,6 @@ app.post("/make-server-b14d984c/upload", async (c) => {
         }
         
         console.log('📸 Decoded base64, size:', bytes.length, 'bytes');
-        
-        // Use the same import pattern as other files
-        const { createClient } = await import('jsr:@supabase/supabase-js@2');
         
         const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
         const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
@@ -199,9 +201,6 @@ app.post("/make-server-b14d984c/upload", async (c) => {
     }
     
     console.log('📷 File received:', file.name, 'Size:', file.size, 'Type:', file.type);
-    
-    // Use the same import pattern as other files
-    const { createClient } = await import('jsr:@supabase/supabase-js@2');
     
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
@@ -282,9 +281,6 @@ app.post("/make-server-b14d984c/upload-image", async (c) => {
     }
     
     console.log('📷 Image received:', image.name, 'Size:', image.size);
-    
-    // Use the same import pattern as other files
-    const { createClient } = await import('jsr:@supabase/supabase-js@2');
     
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
@@ -953,6 +949,145 @@ app.post("/make-server-b14d984c/seed-waitlist", async (c) => {
   }
 });
 
+// Create Chris test account (for testing)
+app.post("/make-server-b14d984c/seed-chris-account", async (c) => {
+  try {
+    console.log('🌱 Creating test accounts (Lissy + Chris)...');
+    
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+    
+    const accounts = [
+      {
+        email: 'Lissy@sevn.app',
+        password: 'Password123',
+        name: 'Lissy',
+        username: 'lissy',
+        role: 'stylist',
+        bio: 'Professional stylist at SEVN',
+      },
+      {
+        email: 'Chris@sevn.app',
+        password: 'Password123',
+        name: 'Chris Whly',
+        username: 'chris_whly',
+        role: 'stylist',
+        bio: 'Professional stylist at SEVN',
+      }
+    ];
+    
+    const results = [];
+    
+    for (const account of accounts) {
+      console.log(`\n📝 Processing ${account.email}...`);
+      
+      // Check if user already exists
+      const { data: existingUsers } = await supabase.auth.admin.listUsers();
+      const existingUser = existingUsers?.users?.find(u => u.email?.toLowerCase() === account.email.toLowerCase());
+      
+      let userId: string;
+      
+      if (existingUser) {
+        console.log(`⚠️ User ${account.email} already exists, updating password and data...`);
+        userId = existingUser.id;
+        
+        // Update password and metadata
+        await supabase.auth.admin.updateUserById(userId, {
+          password: account.password,
+          email_confirm: true,
+          user_metadata: {
+            name: account.name,
+            role: account.role,
+          }
+        });
+      } else {
+        console.log(`✅ Creating new user ${account.email}...`);
+        const { data, error } = await supabase.auth.admin.createUser({
+          email: account.email,
+          password: account.password,
+          email_confirm: true,
+          user_metadata: {
+            name: account.name,
+            role: account.role,
+          },
+        });
+        
+        if (error) {
+          console.error(`❌ Failed to create user ${account.email}:`, error);
+          results.push({
+            email: account.email,
+            success: false,
+            error: error.message,
+          });
+          continue;
+        }
+        
+        userId = data.user.id;
+      }
+      
+      // Create/update customer record
+      const customerKey = `customer:${userId}`;
+      await kv.set(customerKey, {
+        id: userId,
+        email: account.email,
+        name: account.name,
+        username: account.username,
+        role: account.role,
+        status: 'new',
+        created_at: new Date().toISOString(),
+        has_intake: false,
+      });
+      
+      // Create/update profile
+      const profileKey = `profile:${userId}`;
+      await kv.set(profileKey, {
+        user_id: userId,
+        username: account.username,
+        display_name: account.name,
+        name: account.name,
+        bio: account.bio,
+        profile_photo_url: '',
+        external_link: '',
+        location: '',
+        created_edits: [],
+        liked_edits: [],
+        followers_count: 0,
+        following_count: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+      
+      console.log(`✅ ${account.email} account created/updated successfully`);
+      
+      results.push({
+        email: account.email,
+        success: true,
+        user_id: userId,
+        username: account.username,
+        role: account.role,
+      });
+    }
+    
+    console.log('\n✅ All test accounts processed');
+    
+    return c.json({
+      success: true,
+      message: 'Test accounts created/updated',
+      accounts: results,
+      credentials: accounts.map(a => ({
+        email: a.email,
+        password: a.password,
+        role: a.role,
+      }))
+    });
+  } catch (error) {
+    console.error('❌ Error creating test accounts:', error);
+    return c.json({ error: `Failed to create accounts: ${error.message}` }, 500);
+  }
+});
+
 // Fetch URL metadata (Open Graph data, title, image)
 app.post("/make-server-b14d984c/fetch-url-metadata", async (c) => {
   let requestUrl = '';
@@ -1005,13 +1140,12 @@ app.post("/make-server-b14d984c/fetch-url-metadata", async (c) => {
       
       if (jinaResponse.ok) {
         const jinaData = await jinaResponse.json();
-        console.log('✅ Jina full response:', JSON.stringify(jinaData, null, 2));
+        console.log('✅ Jina response received');
         console.log('Jina data.title:', jinaData.data?.title);
         console.log('Jina data.image:', jinaData.data?.image);
         console.log('Jina data.ogImage:', jinaData.data?.ogImage);
-        console.log('Jina data.images:', jinaData.data?.images);
 
-        if (jinaData.data) {
+        if (jinaData.data && jinaData.data.title) {
           // Try to get image from multiple sources
           let imageUrl = jinaData.data.image || jinaData.data.ogImage;
           
@@ -1028,12 +1162,16 @@ app.post("/make-server-b14d984c/fetch-url-metadata", async (c) => {
             description: jinaData.data.description?.substring(0, 200) || '',
             price: jinaData.data.price || '',
           };
-          console.log('✅ Returning Jina metadata with image:', result.image);
+          console.log('✅ Returning Jina metadata - title:', result.title, 'hasImage:', !!result.image);
           return c.json(result);
+        } else {
+          console.log('⚠️ Jina returned data but no title');
         }
+      } else {
+        console.log('⚠️ Jina returned non-OK status:', jinaResponse.status);
       }
     } catch (jinaError) {
-      console.log('❌ Jina API failed:', jinaError.message);
+      console.log('❌ Jina API error:', jinaError.message);
     }
 
     // Fallback to HTML scraping
@@ -1045,7 +1183,15 @@ app.post("/make-server-b14d984c/fetch-url-metadata", async (c) => {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch URL: ${response.status}`);
+        console.log(`⚠️ Failed to fetch URL (${response.status}): ${url}`);
+        // Return minimal metadata instead of throwing error
+        return c.json({
+          url,
+          title: new URL(url).hostname || 'Product Link',
+          image: null,
+          description: '',
+          price: '',
+        });
       }
 
       const html = await response.text();

@@ -14,28 +14,48 @@ interface IntakeFormProps {
 const intakeQuestions = [
   {
     id: 1,
-    question: "What's your style goal?",
-    placeholder: "e.g., Elevated minimalist, Refined casual...",
+    question: "Are we styling you for anything specific, or are you in search of new styling ideas / direction?",
+    placeholder: "e.g., Specific event, Wardrobe refresh, New direction...",
   },
   {
     id: 2,
-    question: "What occasions are you styling for?",
-    placeholder: "e.g., Work events, Weekend outings, Special occasions...",
+    question: "Can you give us insight into some of your favourite brands?",
+    placeholder: "e.g., The Row, Lemaire, COS, Acne Studios...",
   },
   {
     id: 3,
-    question: "Preferred brands or aesthetic?",
-    placeholder: "e.g., Classic, Contemporary, Timeless...",
+    question: "Do you have a budget in mind?",
+    placeholder: "e.g., $500-1000, Flexible, No limit...",
   },
   {
     id: 4,
-    question: "Budget range?",
-    placeholder: "e.g., $500-1000, Flexible...",
+    question: "Is there a specific category you'd like to invest deeper within?",
+    placeholder: "e.g., Outerwear, Shoes, Accessories, Basics...",
   },
   {
     id: 5,
-    question: "Anything else Lissy should know?",
-    placeholder: "Style preferences, sizing, colors...",
+    question: "Do you have any gaps in your wardrobe?",
+    placeholder: "e.g., Need more formal wear, Missing good basics...",
+  },
+  {
+    id: 6,
+    question: "Do you have any preference around how clothes fit?",
+    placeholder: "e.g., Oversized, Tailored, Relaxed, Form-fitting...",
+  },
+  {
+    id: 7,
+    question: "Tell us more about the event or reason for this styling.",
+    placeholder: "e.g., the event will be black tie and held at... or my daily meetings require a casual but considered...",
+  },
+  {
+    id: 8,
+    question: "Let us know if we need to avoid any specific colours, brands, materials or silhouettes.",
+    placeholder: "e.g., No bright colors, Avoid polyester, No cropped items...",
+  },
+  {
+    id: 9,
+    question: "Can you provide any style references you like?",
+    placeholder: "e.g., Celebrities, brands, aesthetics, or upload images below...",
   },
 ];
 

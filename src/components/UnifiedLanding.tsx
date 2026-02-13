@@ -6,8 +6,10 @@ import { AdminDashboard } from './AdminDashboard';
 /**
  * UnifiedLanding - Smart landing page that routes based on auth and role
  * - No auth → SignIn
- * - Admin/Stylist → Admin Dashboard
- * - Customer → Customer Home (Featured Stylists)
+ * - Everyone else → Customer Home (Featured Stylists)
+ * 
+ * Note: Admins/stylists access their dashboard through /admin-dashboard directly
+ * When they click "Home" they should see the customer home view
  */
 export function UnifiedLanding() {
   const navigate = useNavigate();
@@ -24,22 +26,15 @@ export function UnifiedLanding() {
       return;
     }
 
-    // Authenticated admin/stylist → Admin Dashboard
-    if (userRole === 'admin' || userRole === 'stylist') {
-      console.log('🏠 Admin/Stylist → /admin-dashboard');
-      navigate('/admin-dashboard', { replace: true });
-      return;
-    }
-
-    // Customer stays on this page (will show HomePage below)
-    console.log('🏠 Customer → showing customer home');
+    // Everyone else (including admin/stylist) stays on customer home
+    console.log('🏠 Showing customer home view');
   }, [accessToken, userRole, navigate]);
 
-  // While checking auth, show nothing (will redirect immediately)
-  if (!accessToken || userRole === 'admin' || userRole === 'stylist') {
+  // While checking auth, show nothing (will redirect immediately if needed)
+  if (!accessToken) {
     return null;
   }
 
-  // Customer role → show customer home
+  // Show customer home for everyone (including admins when they click Home)
   return <HomePage />;
 }

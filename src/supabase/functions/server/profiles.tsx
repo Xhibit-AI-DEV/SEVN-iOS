@@ -8,7 +8,7 @@ const app = new Hono();
 const getSupabaseClient = () => {
   return createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    Deno.env.get('SUPABASE_ANON_KEY') ?? ''
   );
 };
 
@@ -42,6 +42,7 @@ app.post('/', async (c) => {
       profile_photo_url: profile_photo_url || existingProfile?.profile_photo_url || '',
       external_link: external_link || existingProfile?.external_link || '',
       location: location || existingProfile?.location || '',
+      role: existingProfile?.role || 'customer', // Default role is 'customer'
       created_edits: existingProfile?.created_edits || [],
       liked_edits: existingProfile?.liked_edits || [],
       followers_count: existingProfile?.followers_count || 0,
@@ -98,7 +99,16 @@ app.get('/me', async (c) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
 
     if (authError || !user) {
-      return c.json({ error: 'Invalid or expired token' }, 401);
+      console.log('❌ Token validation failed:', authError?.message);
+      console.log('🔍 Token preview:', accessToken.substring(0, 20) + '...');
+      
+      // Return more detailed error for debugging
+      return c.json({ 
+        error: 'Invalid or expired token', 
+        code: 401,
+        message: authError?.message || 'Token validation failed',
+        hint: 'Please sign in again to refresh your session'
+      }, 401);
     }
 
     console.log('📋 Fetching profile for current user:', user.id);
@@ -395,6 +405,56 @@ app.post('/update-username', async (c) => {
   } catch (error: any) {
     console.error('❌ Error updating username:', error);
     return c.json({ error: error.message || 'Failed to update username' }, 500);
+  }
+});
+
+// Set user role (admin/stylist use only)
+app.post('/set-role', async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    
+    if (!accessToken) {
+      return c.json({ error: 'No access token provided' }, 401);
+    }
+
+    const supabase = getSupabaseClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+
+    if (authError || !user) {
+      return c.json({ error: 'Invalid or expired token' }, 401);
+    }
+
+    const { role } = await c.req.json();
+    
+    if (!role || !['customer', 'stylist', 'admin'].includes(role)) {
+      return c.json({ error: 'Invalid role. Must be: customer, stylist, or admin' }, 400);
+    }
+
+    console.log('👤 Setting role for user:', user.id, 'to:', role);
+    
+    const profileKey = `profile:${user.id}`;
+    const existingProfile = await kv.get(profileKey);
+    
+    const updatedProfile = {
+      ...(existingProfile || {}),
+      user_id: user.id,
+      role,
+      updated_at: new Date().toISOString(),
+      created_at: existingProfile?.created_at || new Date().toISOString(),
+    };
+    
+    await kv.set(profileKey, updatedProfile);
+    
+    console.log('✅ Role updated successfully to:', role);
+    
+    return c.json({ 
+      success: true, 
+      profile: updatedProfile,
+      message: `Role set to ${role}` 
+    });
+  } catch (error: any) {
+    console.error('❌ Error setting role:', error);
+    return c.json({ error: error.message || 'Failed to set role' }, 500);
   }
 });
 

@@ -4,6 +4,9 @@ import * as kv from "./kv_store.tsx";
 
 const app = new Hono();
 
+// Get public anon key from environment
+const publicAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+
 // Get Supabase client
 const getSupabaseClient = () => {
   return createClient(
@@ -25,7 +28,23 @@ app.post('/', async (c) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
 
     if (authError || !user) {
-      return c.json({ error: 'Invalid or expired token' }, 401);
+      console.log('❌ Edit creation auth error:', authError?.message);
+      
+      // Check if it's a JWT expired error
+      if (authError?.message?.includes('JWT') || authError?.message?.includes('expired')) {
+        return c.json({ 
+          code: 401,
+          message: 'Your session has expired. Please sign in again.',
+          error: 'JWT_EXPIRED',
+          hint: 'Token has expired. Please refresh the page and sign in again.'
+        }, 401);
+      }
+      
+      return c.json({ 
+        code: 401,
+        message: 'Invalid or expired token',
+        error: authError?.message || 'Authentication failed'
+      }, 401);
     }
 
     const { 
@@ -112,6 +131,28 @@ app.get('/:editId', async (c) => {
     
     if (!edit) {
       return c.json({ error: 'Edit not found' }, 404);
+    }
+    
+    // Check if the requesting user has liked this edit (if authenticated)
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    if (accessToken && accessToken !== publicAnonKey) {
+      try {
+        const supabase = getSupabaseClient();
+        const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+        
+        if (!authError && user) {
+          // Check if this user has liked the edit
+          const likeKey = `edit_like:${user.id}:${editId}`;
+          const like = await kv.get(likeKey);
+          edit.is_liked = !!like;
+          console.log(`✅ User ${user.id} has ${like ? 'liked' : 'not liked'} this edit`);
+        }
+      } catch (err) {
+        console.log('⚠️ Could not check like status:', err);
+        edit.is_liked = false;
+      }
+    } else {
+      edit.is_liked = false;
     }
     
     return c.json({ edit });

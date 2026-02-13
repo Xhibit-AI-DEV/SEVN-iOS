@@ -57,9 +57,15 @@ app.post('/create', async (c) => {
     
     console.log('📝 Order data received:', {
       stylistId: orderData.stylistId,
+      mainImageUrl: orderData.mainImageUrl,
       hasMainImage: !!orderData.mainImageUrl,
+      mainImageUrlLength: orderData.mainImageUrl?.length,
+      referenceImages: orderData.referenceImages,
       hasReferenceImages: (orderData.referenceImages || []).length > 0,
+      referenceImagesCount: (orderData.referenceImages || []).length,
+      intakeAnswers: orderData.intakeAnswers,
       answersCount: Object.keys(orderData.intakeAnswers || {}).length,
+      answersKeys: Object.keys(orderData.intakeAnswers || {}),
     });
 
     // Generate order ID
@@ -206,7 +212,8 @@ app.get('/:orderId', async (c) => {
   try {
     const orderId = c.req.param('orderId');
     
-    console.log('📥 Fetching order:', orderId);
+    console.log('📥 ========== FETCHING ORDER BY ID ==========');
+    console.log('📥 Order ID:', orderId);
 
     const orderKey = `order:${orderId}`;
     const order = await kv.get(orderKey);
@@ -217,6 +224,22 @@ app.get('/:orderId', async (c) => {
     }
 
     console.log('✅ Order found:', orderId);
+    console.log('📦 Order data:', {
+      id: order.id,
+      customer_id: order.customer_id,
+      customer_name: order.customer_name,
+      customer_email: order.customer_email,
+      status: order.status,
+      hasMainImage: !!order.main_image_url,
+      mainImageUrl: order.main_image_url,
+      hasReferenceImages: (order.reference_images || []).length > 0,
+      referenceImagesCount: (order.reference_images || []).length,
+      referenceImages: order.reference_images,
+      hasIntakeAnswers: !!order.intake_answers && Object.keys(order.intake_answers).length > 0,
+      intakeAnswersKeys: order.intake_answers ? Object.keys(order.intake_answers) : [],
+      intakeAnswers: order.intake_answers,
+    });
+    console.log('📥 ==========================================');
 
     return c.json({ order });
 
@@ -238,7 +261,7 @@ app.get('/customer/:customerId', async (c) => {
     const accessToken = c.req.header('Authorization')?.split(' ')[1];
     if (!accessToken) {
       console.error('❌ No access token provided');
-      return c.json({ error: 'Unauthorized' }, 401);
+      return c.json({ error: 'Unauthorized - No access token' }, 401);
     }
 
     const supabase = getSupabaseClient();
@@ -246,7 +269,7 @@ app.get('/customer/:customerId', async (c) => {
 
     if (authError || !user) {
       console.error('❌ Auth error:', authError);
-      return c.json({ error: 'Invalid or expired token' }, 401);
+      return c.json({ error: 'Invalid or expired token', details: authError }, 401);
     }
 
     // ALWAYS use the authenticated user's ID (ignore URL parameter for security)
@@ -303,7 +326,10 @@ app.get('/customer/:customerId', async (c) => {
   } catch (error: any) {
     console.error('❌ Error fetching customer orders:', error);
     console.error('❌ Error stack:', error.stack);
-    return c.json({ error: error.message || 'Failed to fetch orders' }, 500);
+    return c.json({ 
+      error: error.message || 'Failed to fetch orders',
+      details: error.stack 
+    }, 500);
   }
 });
 
@@ -581,6 +607,135 @@ app.put('/:orderId', async (c) => {
   } catch (error: any) {
     console.error('❌ Error updating order details:', error);
     return c.json({ error: error.message || 'Failed to update order' }, 500);
+  }
+});
+
+// Delete an order
+app.delete('/:orderId', async (c) => {
+  try {
+    const orderId = c.req.param('orderId');
+    
+    console.log('🗑️ ========== DELETE ORDER ==========');
+    console.log('🗑️ Order ID:', orderId);
+    
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    
+    if (!accessToken) {
+      return c.json({ error: 'No access token provided. Please sign in.' }, 401);
+    }
+
+    // Verify user
+    const supabase = getSupabaseClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+
+    if (authError || !user) {
+      console.error('❌ Auth error:', authError);
+      return c.json({ error: 'Invalid or expired token. Please sign in again.' }, 401);
+    }
+
+    console.log('✅ User verified:', user.id);
+
+    // Get the order
+    const orderKey = `order:${orderId}`;
+    const order = await kv.get(orderKey);
+
+    if (!order) {
+      console.log('❌ Order not found:', orderId);
+      return c.json({ error: 'Order not found' }, 404);
+    }
+
+    console.log('📦 Order found:', {
+      id: order.id,
+      customer_id: order.customer_id,
+      stylist_id: order.stylist_id,
+      status: order.status,
+    });
+
+    // Check if user is authorized to delete
+    // Can delete if: you're the customer, you're the stylist, or you have admin/stylist role
+    const userProfileKey = `profile:${user.id}`;
+    const userProfile = await kv.get(userProfileKey);
+    
+    console.log('👤 User profile:', {
+      userId: user.id,
+      email: user.email,
+      profileExists: !!userProfile,
+      role: userProfile?.role,
+      username: userProfile?.username,
+    });
+    
+    const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'stylist';
+    const isCustomer = order.customer_id === user.id;
+    const isStylist = order.stylist_id === user.id || order.stylist_id === userProfile?.username;
+    
+    console.log('🔐 Authorization check:', {
+      isAdmin,
+      isCustomer,
+      isStylist,
+      userRole: userProfile?.role,
+      orderCustomerId: order.customer_id,
+      orderStylistId: order.stylist_id,
+      currentUserId: user.id,
+      currentUsername: userProfile?.username,
+    });
+
+    if (!isAdmin && !isCustomer && !isStylist) {
+      console.log('❌ User not authorized to delete this order');
+      console.log('💡 HINT: User needs role "admin" or "stylist", or must be the customer/stylist for this order');
+      return c.json({ 
+        error: 'Not authorized to delete this order',
+        details: {
+          yourRole: userProfile?.role || 'none',
+          yourId: user.id,
+          yourUsername: userProfile?.username,
+          requiredRole: 'admin or stylist',
+          isOrderOwner: isCustomer,
+          isOrderStylist: isStylist,
+        }
+      }, 403);
+    }
+
+    console.log('✅ User authorized to delete:', { isAdmin, isCustomer, isStylist });
+
+    // Remove order from customer's order index
+    const customerOrdersKey = `customer_orders:${order.customer_id}`;
+    const customerOrders = await kv.get(customerOrdersKey);
+    
+    if (customerOrders && Array.isArray(customerOrders)) {
+      const updatedOrders = customerOrders.filter((id: string) => id !== orderId);
+      await kv.set(customerOrdersKey, updatedOrders);
+      console.log('✅ Removed from customer order index');
+    }
+
+    // Remove order from stylist's order index if applicable
+    if (order.stylist_id) {
+      const stylistOrdersKey = `stylist_orders:${order.stylist_id}`;
+      const stylistOrders = await kv.get(stylistOrdersKey);
+      
+      if (stylistOrders && Array.isArray(stylistOrders)) {
+        const updatedOrders = stylistOrders.filter((id: string) => id !== orderId);
+        await kv.set(stylistOrdersKey, updatedOrders);
+        console.log('✅ Removed from stylist order index');
+      }
+    }
+
+    // Delete the order itself
+    await kv.del(orderKey);
+    console.log('✅ Order deleted:', orderId);
+
+    // Also delete associated selections if they exist
+    const selectionsKey = `selections:${orderId}`;
+    await kv.del(selectionsKey);
+    console.log('✅ Selections deleted (if any)');
+
+    return c.json({
+      success: true,
+      message: 'Order deleted successfully',
+    });
+
+  } catch (error: any) {
+    console.error('❌ Error deleting order:', error);
+    return c.json({ error: error.message || 'Failed to delete order' }, 500);
   }
 });
 

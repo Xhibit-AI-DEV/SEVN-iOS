@@ -317,23 +317,31 @@ function Group2() {
 
 function CardImage() {
   return (
-    <div className="h-[338px] relative rounded-[360px] shrink-0 w-[347px]" data-name="Card/Image">
-      <div className="absolute inset-0 rounded-[360px]" data-name="Screenshot 2023-11-17 at 12.52 4">
-        <div aria-hidden="true" className="absolute inset-0 pointer-events-none rounded-[360px]">
-          <img alt="" className="absolute max-w-none object-cover rounded-[360px] size-full" src={imgScreenshot20231117At12524} />
-          <img alt="" className="absolute max-w-none object-cover rounded-[360px] size-full" src={imgScreenshot20231117At12524} />
-          <img alt="" className="absolute max-w-none object-cover rounded-[360px] size-full" src={imgScreenshot20231117At12525} />
+    <div className="h-[347px] relative w-[347px]" data-name="Card/Image">
+      {/* Circular image with smaller padding - 10px larger circle */}
+      <div className="absolute inset-[12px] pointer-events-none rounded-full">
+        <img alt="" className="absolute inset-0 max-w-none object-cover rounded-full size-full" src={imgScreenshot20231117At12524} />
+        <img alt="" className="absolute inset-0 max-w-none object-cover rounded-full size-full" src={imgScreenshot20231117At12524} />
+        <img alt="" className="absolute inset-0 max-w-none object-cover rounded-full size-full" src={imgScreenshot20231117At12525} />
+        <div className="absolute inset-0 rounded-full" style={{ border: '1px solid #EAEAEA' }} />
+      </div>
+      
+      {/* Pill-shaped name badge at bottom - original design */}
+      <div className="absolute inset-[85.6%_3.32%_5.54%_3.32%]">
+        <div className="absolute bg-[#fffefd] inset-0 opacity-80 rounded-[20px]">
+          <div aria-hidden="true" className="absolute border border-[#130326] border-solid inset-[-1px] pointer-events-none rounded-[21px]" />
+        </div>
+        <div className="absolute flex flex-col font-['Helvetica_Neue:Medium',sans-serif] inset-0 justify-center items-center leading-[22px] not-italic text-[#130326] text-[18px] text-center tracking-[2px] uppercase">
+          <p className="css-ew64yg leading-[22px] whitespace-nowrap">LISSY RODDY</p>
         </div>
       </div>
-      <Group2 />
     </div>
   );
 }
 
 function Component() {
   return (
-    <div className="content-stretch flex flex-col h-[338px] items-start relative shrink-0" data-name=".">
-      <div aria-hidden="true" className="absolute border border-black border-solid inset-0 pointer-events-none" />
+    <div className="flex items-center justify-center h-[347px] w-[347px] relative shrink-0 rounded-[1px]" data-name="." style={{ border: '1px solid #1e1709' }}>
       <CardImage />
     </div>
   );
@@ -432,8 +440,8 @@ function Component3({ onButtonClick }: { onButtonClick: () => void }) {
         <Frame20 key={i} />
       ))}
       <div className="flex flex-col gap-[6px] items-center mt-[20px]">
-        <p className="css-4hzbpn leading-[normal] not-italic relative shrink-0 text-[#1e1709] text-[12px] text-center tracking-[0.1em] uppercase w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 700 }}>1:1 styling</p>
-        <p className="css-4hzbpn font-['Helvetica_Neue:Light',sans-serif] leading-[25px] not-italic relative shrink-0 text-[#1e1709] text-[14px] text-center tracking-[1px] uppercase w-[333px]">Upload a reference look</p>
+        <p className="css-4hzbpn leading-[normal] not-italic relative shrink-0 text-[#1e1709] text-[14px] text-center tracking-[0.1em] uppercase w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 700 }}>1:1 styling</p>
+        <p className="css-4hzbpn leading-[normal] not-italic relative shrink-0 text-[#1e1709] text-[12px] text-center tracking-[0.1em] w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 700 }}>Upload a reference look to get started.</p>
       </div>
       <div className="flex items-center justify-center relative shrink-0 mt-[15px]">
         <div className="flex-none scale-y-[-100%]">
@@ -563,14 +571,10 @@ export function LissyLanding({ onImageUpload }: LissyLandingProps) {
               <Group4 />
             </div>
             <div className="flex flex-col gap-[6px] items-center mt-[20px]">
-              <p className="css-4hzbpn leading-[normal] not-italic text-[#1e1709] text-[12px] text-center tracking-[0.1em] uppercase w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 700 }}>
-                1:1 styling
-              </p>
-              <p className="css-4hzbpn font-['Helvetica_Neue:Light',sans-serif] leading-[25px] not-italic text-[#1e1709] text-[14px] text-center tracking-[1px] uppercase w-[333px]">
-                Upload a reference look
-              </p>
+              <p className="css-4hzbpn leading-[normal] not-italic relative shrink-0 text-[#1e1709] text-[14px] text-center tracking-[0.1em] uppercase w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 700 }}>1:1 styling</p>
+              <p className="css-4hzbpn leading-[normal] not-italic relative shrink-0 text-[#1e1709] text-[12px] text-center tracking-[0.1em] w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 700 }}>Upload a reference look to get started.</p>
             </div>
-            <div className="mt-4">
+            <div className="mt-6">
               <ButtonDark onClick={takePhoto} />
             </div>
           </div>

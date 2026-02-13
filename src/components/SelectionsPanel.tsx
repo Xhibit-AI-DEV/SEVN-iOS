@@ -388,6 +388,7 @@ export function SelectionsPanel({ customer, selectedItems, onAddItem, onRemoveIt
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('❌ Failed to save selections:', errorData);
         throw new Error(errorData.error || 'Failed to save selections');
       }
 
@@ -396,8 +397,13 @@ export function SelectionsPanel({ customer, selectedItems, onAddItem, onRemoveIt
 
       toast.success('Complete snapshot saved to backend!');
     } catch (error: any) {
-      console.error('Error saving selections:', error);
-      toast.error(`Failed to save: ${error.message}`);
+      console.error('❌ Error saving selections:', error);
+      console.error('❌ Full error details:', {
+        message: error.message,
+        stack: error.stack,
+        error: error,
+      });
+      toast.error(`❌ Failed to save selections`);
     } finally {
       setSaving(false);
     }

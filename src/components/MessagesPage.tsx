@@ -29,6 +29,7 @@ export function MessagesPage() {
   const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState<string>('');
   const [currentUserId, setCurrentUserId] = useState<string>(''); // Add current user ID
+  const [settingRole, setSettingRole] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -67,26 +68,38 @@ export function MessagesPage() {
       console.log('🔍 Fetching orders for current user as stylist...');
       
       // First, get the current user's ID from their profile
-      const profileResponse = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/profiles/me`,
-        {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-          },
-        }
-      );
+      let profileResponse;
+      try {
+        profileResponse = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/profiles/me`,
+          {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+            },
+          }
+        );
+      } catch (fetchError: any) {
+        console.error('❌ Network error fetching profile:', fetchError);
+        console.error('❌ Error details:', {
+          name: fetchError.name,
+          message: fetchError.message,
+          stack: fetchError.stack,
+        });
+        toast.error('Network error. Please check your connection.');
+        setLoading(false);
+        return;
+      }
 
       if (!profileResponse.ok) {
         const errorText = await profileResponse.text();
         console.error('❌ Profile fetch failed:', profileResponse.status, errorText);
         
         // If auth error, clear token and redirect to signin
-        if (profileResponse.status === 401) {
+        if (profileResponse.status === 401 || profileResponse.status === 403) {
           console.error('❌ Authentication failed - clearing token and redirecting to signin');
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('auth_token');
+          localStorage.clear(); // Clear all localStorage to reset state
           toast.error('Session expired. Please sign in again.');
-          navigate('/signin');
+          setTimeout(() => navigate('/signin'), 100);
           return;
         }
         
@@ -164,10 +177,8 @@ export function MessagesPage() {
         if (!allOrders.find(o => o.id === order.id)) {
           allOrders.push(order);
         } else {
-          console.warn(`⚠️ DUPLICATE ORDER DETECTED: ${order.id} exists in both stylist and customer lists`);
-          console.warn(`   Order stylist_id: ${order.stylist_id}`);
-          console.warn(`   Current user username: ${username}`);
-          console.warn(`   Current user ID: ${userId}`);
+          // Order exists in both lists - this is expected when you're a stylist viewing your own order
+          console.log(`📋 Order ${order.id} appears in both lists (expected for self-styled orders)`);
         }
       });
       
@@ -178,7 +189,18 @@ export function MessagesPage() {
       setCurrentUserId(userId); // Store current user ID for rendering logic
     } catch (error) {
       console.error('❌ Error fetching orders:', error);
-      toast.error('Failed to load orders - check console for details');
+      console.error('❌ Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      
+      // Provide more specific error message
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        toast.error('Network error - please check your connection and try again');
+      } else {
+        toast.error('Failed to load orders - check console for details');
+      }
     } finally {
       setLoading(false);
     }

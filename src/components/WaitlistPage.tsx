@@ -122,7 +122,7 @@ export function WaitlistPage() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col items-center px-4 pb-8">
         {/* Lissy's Featured Edit Image from Landing Page - Stacked Card Effect */}
-        <div className="relative w-full max-w-[361px] h-[480px] mb-8">
+        <div className="relative w-full max-w-[270px] h-[360px] mb-8">
           {/* Back card - bottom right offset */}
           <div className="absolute top-[8px] left-[8px] right-0 bottom-0 border border-[#1e1709] rounded-[12px] bg-white" />
           
@@ -155,7 +155,7 @@ export function WaitlistPage() {
 
         {/* Price */}
         <div className="w-full max-w-[361px] mb-6">
-          <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] leading-[24px] tracking-[1px] text-[#1e1709]">
+          <p className="font-['Helvetica_Neue:Bold',sans-serif] text-[14px] leading-[24px] tracking-[1px] text-[#1e1709]">
             100£
           </p>
         </div>

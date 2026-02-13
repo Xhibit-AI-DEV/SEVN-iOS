@@ -236,8 +236,15 @@ app.post('/save', async (c) => {
     // ✅ Download and host PRODUCT images (from Google Shopping, external sources)
     const processedItems = await Promise.all(
       (items || []).map(async (item: any, index: number) => {
-        if (!item.image || item.image.trim() === '') {
-          console.log(`⚠️ Item ${index + 1} has no image`);
+        // Validate item has basic structure
+        if (!item || typeof item !== 'object') {
+          console.log(`⚠️ Item ${index + 1} is invalid (not an object)`);
+          return null; // Skip invalid items
+        }
+        
+        // If no image, return item as-is
+        if (!item.image || typeof item.image !== 'string' || item.image.trim() === '') {
+          console.log(`⚠️ Item ${index + 1} has no image or invalid image type`);
           return item;
         }
         
@@ -649,7 +656,7 @@ app.post('/fix-bucket', async (c) => {
       console.log('✅ Created new PUBLIC bucket');
     }
 
-    console.log('���� ==========================================');
+    console.log(' ==========================================');
 
     return c.json({
       success: true,

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, useNavigate } from 'react-router';
 import { Toaster, toast } from 'sonner@2.0.3';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { SafeArea } from 'capacitor-plugin-safe-area';
+import { Capacitor } from '@capacitor/core';
 
 /* CRITICAL: Import Tailwind styles */
 import './styles/globals.css';
@@ -40,6 +43,7 @@ import { HelpContactPage } from './components/HelpContactPage';
 import { DebugOrders } from './components/DebugOrders';
 import { SimpleDebug } from './components/SimpleDebug';
 import { UnifiedLanding } from './components/UnifiedLanding';
+import { AdminCleanupPage } from './components/AdminCleanupPage';
 import { projectId, publicAnonKey } from './utils/supabase/info';
 
 /**
@@ -57,7 +61,7 @@ function LoadingScreen() {
       <div className="text-center">
         <h1 className="text-[24px] font-['Helvetica_Neue:Regular',sans-serif] tracking-[3px] mb-4">SEVN</h1>
         <p className="text-sm text-gray-600">Loading...</p>
-        <p className="text-xs text-red-600 mt-4 font-bold">BUILD v2.11.2025 - UNIFIED LANDING FIX</p>
+        <p className="text-xs text-red-600 mt-4 font-bold">BUILD v2.11.2025.1 - CUSTOMER INBOX + 9Q INTAKE</p>
       </div>
     </div>
   );
@@ -115,21 +119,38 @@ function AppContent() {
 
   // Check authentication on mount
   useEffect(() => {
-    const authToken = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
-    const role = localStorage.getItem('user_role');
-    
-    console.log('🔐 Auth check:', { hasToken: !!authToken, role });
-    console.log('🔐 Full localStorage:', {
-      auth_token: !!localStorage.getItem('auth_token'),
-      access_token: !!localStorage.getItem('access_token'),
-      user_role: localStorage.getItem('user_role'),
-      user_email: localStorage.getItem('user_email'),
-      user_id: localStorage.getItem('user_id'),
-    });
-    
-    // Set auth state immediately - don't wait
-    setIsAuthenticated(!!authToken);
-    setUserRole(role || 'customer');
+    const checkAuth = () => {
+      const authToken = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
+      const role = localStorage.getItem('user_role');
+      
+      console.log('🔐 Auth check:', { hasToken: !!authToken, role });
+      console.log('🔐 Full localStorage:', {
+        auth_token: !!localStorage.getItem('auth_token'),
+        access_token: !!localStorage.getItem('access_token'),
+        user_role: localStorage.getItem('user_role'),
+        user_email: localStorage.getItem('user_email'),
+        user_id: localStorage.getItem('user_id'),
+      });
+      
+      // Set auth state immediately - don't wait
+      setIsAuthenticated(!!authToken);
+      setUserRole(role || 'customer');
+    };
+
+    // Check auth on mount
+    checkAuth();
+
+    // Listen for auth changes (triggered from SignIn component)
+    const handleAuthChange = () => {
+      console.log('🔄 Auth changed - re-checking authentication');
+      checkAuth();
+    };
+
+    window.addEventListener('authChanged', handleAuthChange);
+
+    return () => {
+      window.removeEventListener('authChanged', handleAuthChange);
+    };
   }, []);
 
   // Debug: Log current path
@@ -325,16 +346,19 @@ function AppContent() {
         <Route path="/u/:username/waitlist" element={<ProtectedRoute><GenericWaitlistPage /></ProtectedRoute>} />
         
         {/* ADMIN/STYLIST ONLY ROUTES */}
-        <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-        <Route path="/admin-dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+        <Route path="/admin" element={<AdminRoute><MessagesPage /></AdminRoute>} />
+        <Route path="/admin-dashboard" element={<AdminRoute><MessagesPage /></AdminRoute>} />
         <Route path="/admin-profile-fix" element={<AdminRoute><AdminProfileFix /></AdminRoute>} />
-        <Route path="/customer-inbox" element={<AdminRoute><CustomerInboxPage /></AdminRoute>} />
         <Route path="/blocked-accounts" element={<AdminRoute><BlockedAccountsPage /></AdminRoute>} />
         <Route path="/debug-orders" element={<AdminRoute><DebugOrders /></AdminRoute>} />
+        <Route path="/admin-cleanup" element={<AdminRoute><AdminCleanupPage /></AdminRoute>} />
         
-        {/* EDITS/POSTS - Admin can create, all can view */}
+        {/* CUSTOMER INBOX - Available to ALL authenticated users */}
+        <Route path="/customer-inbox" element={<ProtectedRoute><CustomerInboxPage /></ProtectedRoute>} />
+        
+        {/* EDITS/POSTS - All authenticated users can create and view */}
         <Route path="/edit/:editId" element={<EditDetailPage />} />
-        <Route path="/create-edit" element={<CreateEditPage />} />
+        <Route path="/create-edit" element={<ProtectedRoute><CreateEditPage /></ProtectedRoute>} />
         <Route path="/create-edit/:editId" element={<ProtectedRoute><CreateEditPage /></ProtectedRoute>} />
         <Route path="/rory-selects/:editId" element={<RorySelectsDetail />} />
         
@@ -364,6 +388,51 @@ function AppContent() {
 }
 
 export default function CustomerApp() {
+  const [safeAreaInsets, setSafeAreaInsets] = useState({
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+  });
+
+  useEffect(() => {
+    const initializeNativeFeatures = async () => {
+      // Only run on native platforms
+      if (Capacitor.isNativePlatform()) {
+        try {
+          // Configure Status Bar
+          await StatusBar.setStyle({ style: Style.Light });
+          await StatusBar.setBackgroundColor({ color: '#FFFFFF' });
+          await StatusBar.show();
+          
+          console.log('✅ Status Bar configured');
+        } catch (error) {
+          console.error('❌ Error configuring Status Bar:', error);
+        }
+
+        try {
+          // Get Safe Area insets
+          const insets = await SafeArea.getSafeAreaInsets();
+          setSafeAreaInsets(insets.insets);
+          
+          console.log('✅ Safe Area insets:', insets.insets);
+          
+          // Apply safe area insets as CSS variables
+          document.documentElement.style.setProperty('--safe-area-top', `${insets.insets.top}px`);
+          document.documentElement.style.setProperty('--safe-area-bottom', `${insets.insets.bottom}px`);
+          document.documentElement.style.setProperty('--safe-area-left', `${insets.insets.left}px`);
+          document.documentElement.style.setProperty('--safe-area-right', `${insets.insets.right}px`);
+        } catch (error) {
+          console.error('❌ Error getting Safe Area insets:', error);
+        }
+      } else {
+        console.log('ℹ️ Running in web browser - Safe Area and Status Bar plugins skipped');
+      }
+    };
+
+    initializeNativeFeatures();
+  }, []);
+
   return (
     <HashRouter>
       <ErrorBoundary>

@@ -1,15 +1,10 @@
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import react from '@vitejs/plugin-react-swc';
 import path from 'path';
 
 export default defineConfig({
   base: './', // CRITICAL: Use relative paths for Capacitor
-  plugins: [
-    react({
-      // Enable JSX in .tsx, .jsx files
-      include: /\.(jsx|tsx)$/
-    })
-  ],
+  plugins: [react()],
   resolve: {
     alias: {
       '@': '/',

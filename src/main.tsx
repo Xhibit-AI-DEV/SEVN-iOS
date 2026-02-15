@@ -1,5 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import CustomerApp from './CustomerApp.tsx';
+import './styles/globals.css'; // Import global styles
 
 const root = createRoot(document.getElementById('root')!);
 root.render(<CustomerApp />);

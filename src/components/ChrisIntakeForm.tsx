@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner@2.0.3';
 import { Loader2 } from 'lucide-react';
 import { projectId, publicAnonKey } from '../utils/supabase/info';

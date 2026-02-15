@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import { BottomNavigation } from './BottomNavigation';
 import svgPaths from "../imports/svg-2i8s6kgsq9";
 import imgScreenshot20231117At12528 from "figma:asset/4b4531903296dd337e2503bb17f59748fdc6c9ee.png";

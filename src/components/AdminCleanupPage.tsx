@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { Trash2, Eye, Loader2, AlertTriangle, X } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, AlertTriangle, Eye, Trash2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 
 export function AdminCleanupPage() {
   const navigate = useNavigate();

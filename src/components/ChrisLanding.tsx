@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import svgPaths from "../imports/svg-ixy1f48tju";
 import imgChrisProfile from "figma:asset/083df4dc1c94d586d53c3644182d81e287c70454.png";
 import imgChrisEdit from "figma:asset/d6d0374d1209d254e69a363bf2bd48de2a8fd831.png";
@@ -150,6 +150,29 @@ export function ChrisLanding({ onImageUpload }: ChrisLandingProps) {
     navigate('/');
   };
 
+  const handleShare = async () => {
+    const shareData = {
+      title: 'Chris Whly - SEVN SELECTS',
+      text: 'Bold avant-garde styling with fearless edge.',
+      url: window.location.href,
+    };
+
+    try {
+      // Check if Web Share API is available (mobile)
+      if (navigator.share) {
+        await navigator.share(shareData);
+        console.log('✅ Shared successfully');
+      } else {
+        // Fallback: Copy URL to clipboard (desktop)
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard!');
+        console.log('✅ URL copied to clipboard');
+      }
+    } catch (err) {
+      console.error('❌ Error sharing:', err);
+    }
+  };
+
   return (
     <div 
       className="relative w-full min-h-screen overflow-x-hidden bg-white"
@@ -177,7 +200,7 @@ export function ChrisLanding({ onImageUpload }: ChrisLandingProps) {
           </p>
           
           {/* Share button on right */}
-          <button className="hover:opacity-70 transition-opacity">
+          <button className="hover:opacity-70 transition-opacity" onClick={handleShare}>
             <img alt="Share" className="w-[32px] h-[32px]" src={imgShareIcon} />
           </button>
         </div>
@@ -211,10 +234,10 @@ export function ChrisLanding({ onImageUpload }: ChrisLandingProps) {
               <Group4 />
             </div>
             <div className="flex flex-col gap-[6px] items-center mt-[20px]">
-              <p className="css-4hzbpn leading-[normal] not-italic text-[#1e1709] text-[14px] text-center tracking-[0.1em] uppercase w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 700 }}>
+              <p className="css-4hzbpn leading-[normal] not-italic text-[#1e1709] text-[16px] text-center tracking-[0.1em] uppercase w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 700 }}>
                 1:1 styling
               </p>
-              <p className="css-4hzbpn leading-[normal] not-italic text-[#1e1709] text-[12px] text-center tracking-[0.1em] w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 700 }}>
+              <p className="css-4hzbpn leading-[normal] not-italic text-[#1e1709] text-[14px] text-center tracking-[0.1em] w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 700 }}>
                 Upload a reference look to get started.
               </p>
             </div>

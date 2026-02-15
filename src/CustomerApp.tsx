@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter, Routes, Route, useNavigate } from 'react-router';
+import { HashRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { Toaster, toast } from 'sonner@2.0.3';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SafeArea } from 'capacitor-plugin-safe-area';
@@ -319,11 +319,11 @@ function AppContent() {
         
         {/* INTAKE FLOWS - Public access to landing pages, protected for forms */}
         <Route path="/lissy" element={<LissyLanding onImageUpload={handleImageUpload} />} />
-        <Route path="/lissy/intake" element={<IntakeForm uploadedImage={null} onComplete={handleIntakeComplete} />} />
+        <Route path="/lissy/intake" element={<ProtectedRoute><IntakeForm uploadedImage={null} onComplete={handleIntakeComplete} /></ProtectedRoute>} />
         <Route path="/lissy/waitlist" element={<WaitlistPage customerName={customerData?.name} />} />
         <Route path="/lissy/intake/edit/:orderId" element={<ProtectedRoute><EditIntakeForm /></ProtectedRoute>} />
         
-        <Route path="/chris" element={<ProtectedRoute><ChrisLanding onImageUpload={handleChrisImageUpload} /></ProtectedRoute>} />
+        <Route path="/chris" element={<ChrisLanding onImageUpload={handleChrisImageUpload} />} />
         <Route path="/chris/intake" element={
           <ProtectedRoute>
             {chrisUploadedImage ? (

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Heart, Link, Loader2, Menu, Plus } from 'lucide-react';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { toast } from 'sonner@2.0.3';
@@ -568,13 +568,13 @@ export function ProfilePage() {
     }
   };
 
-  const renderEditCard = (edit: any, showCreatorName: boolean = true) => {
+  const renderEditCard = (edit: any, showCreatorName: boolean = true, isLast: boolean = false) => {
     const isLiked = likedEditIds.has(edit.id);
 
     return (
       <div 
         key={edit.id} 
-        className="relative shrink-0 w-[272px] h-[407px] cursor-pointer"
+        className={`relative shrink-0 w-[272px] h-[407px] cursor-pointer ${isLast ? 'mr-4' : ''}`}
         onClick={() => navigate(`/edit/${edit.id}`)}
       >
         {/* Triple border effect with 4px spacing */}
@@ -853,8 +853,14 @@ export function ProfilePage() {
         {activeTab === 'edits' && (
           <div className="mb-6">
             {edits.length > 0 ? (
-              <div className="flex gap-[8px] overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-                {edits.map(edit => renderEditCard(edit, false))}
+              <div 
+                className="flex gap-[8px] overflow-x-auto overflow-y-visible pb-2 pl-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                style={{ 
+                  scrollSnapType: 'none', 
+                  WebkitOverflowScrolling: 'touch'
+                }}
+              >
+                {edits.map((edit, index) => renderEditCard(edit, false, index === edits.length - 1))}
               </div>
             ) : (
               <div className="relative w-[300px] h-[450px]">
@@ -900,20 +906,63 @@ export function ProfilePage() {
           <div className="mb-6">
             {/* Products Column */}
             <div className="mb-6">
-              <h3 className="font-['Helvetica_Neue:Regular',sans-serif] text-[12px] tracking-[1px] text-[#1e1709] uppercase mb-3 leading-[20px]">
+              <h3 className="font-['Helvetica_Neue:Regular',sans-serif] text-[12px] tracking-[1px] text-[#1e1709] uppercase mb-3 leading-[20px] pl-4">
                 Products
               </h3>
               {likedProducts.length > 0 ? (
-                <div className="flex gap-[12px] overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-                  {likedProducts.map(like => renderProductCard(like))}
+                <div 
+                  className="flex gap-[12px] overflow-x-auto overflow-y-visible pb-2 pl-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                  style={{ 
+                    scrollSnapType: 'none', 
+                    WebkitOverflowScrolling: 'touch'
+                  }}
+                >
+                  {likedProducts.map((like, index) => (
+                    <div 
+                      key={like.productId} 
+                      className={`relative shrink-0 w-[112px] cursor-pointer border border-[#1e1709] bg-white rounded-[5px] overflow-hidden ${index === likedProducts.length - 1 ? 'mr-4' : ''}`}
+                      onClick={() => like.productData?.url && window.open(like.productData.url, '_blank')}
+                    >
+                      {/* Product Image */}
+                      <div className="relative w-full h-[150px] overflow-hidden bg-white">
+                        {like.productData?.image && (
+                          <img 
+                            alt={like.productData.title || 'Product'}
+                            className="absolute inset-0 w-full h-full object-cover"
+                            src={like.productData.image}
+                          />
+                        )}
+                      </div>
+                      
+                      {/* Product Info */}
+                      <div className="p-2">
+                        {like.productData?.title && (
+                          <p className="font-['Helvetica_Neue:Bold',sans-serif] text-[9px] text-[#1e1709] uppercase mb-1 leading-[1.3]">
+                            {like.productData.title}
+                          </p>
+                        )}
+                        {like.productData?.price && (
+                          <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[11px] text-[#1e1709]">
+                            {like.productData.price}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
-                <div className="flex gap-[12px] overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                <div 
+                  className="flex gap-[12px] overflow-x-auto overflow-y-visible pb-2 pl-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                  style={{ 
+                    scrollSnapType: 'none', 
+                    WebkitOverflowScrolling: 'touch'
+                  }}
+                >
                   {/* Empty state - outline boxes */}
                   {[1, 2, 3].map((i) => (
                     <div 
                       key={i}
-                      className="relative shrink-0 w-[112px] border border-[#1e1709] bg-[#f5f5f5]"
+                      className={`relative shrink-0 w-[112px] border border-[#1e1709] bg-[#f5f5f5] ${i === 3 ? 'mr-4' : ''}`}
                     >
                       <div className="w-full h-[150px]" />
                       <div className="p-2 h-[44px]" />
@@ -925,12 +974,18 @@ export function ProfilePage() {
 
             {/* Edits Column */}
             <div>
-              <h3 className="font-['Helvetica_Neue:Regular',sans-serif] text-[12px] tracking-[1px] text-[#1e1709] uppercase mb-3 leading-[20px]">
+              <h3 className="font-['Helvetica_Neue:Regular',sans-serif] text-[12px] tracking-[1px] text-[#1e1709] uppercase mb-3 leading-[20px] pl-4">
                 Edits
               </h3>
               {likedEdits.length > 0 ? (
-                <div className="flex gap-[8px] overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-                  {likedEdits.map(edit => renderEditCard(edit, true))}
+                <div 
+                  className="flex gap-[8px] overflow-x-auto overflow-y-visible pb-2 pl-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                  style={{ 
+                    scrollSnapType: 'none', 
+                    WebkitOverflowScrolling: 'touch'
+                  }}
+                >
+                  {likedEdits.map((edit, index) => renderEditCard(edit, true, index === likedEdits.length - 1))}
                 </div>
               ) : (
                 <div className="relative w-[300px] h-[450px]">

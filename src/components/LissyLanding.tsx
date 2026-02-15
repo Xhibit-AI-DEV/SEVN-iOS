@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import svgPaths from "../imports/svg-ixy1f48tju";
 import imgScreenshot20231117At12524 from "figma:asset/557e4ca658e2ff37cf2dda18e4534c106ec861c0.png";
 import imgScreenshot20231117At12525 from "figma:asset/e4b87ad125820c87df00cd6e705bde4e8af3e67e.png";
@@ -481,16 +481,30 @@ export function LissyLanding({ onImageUpload }: LissyLandingProps) {
 
   const handleHomeClick = () => {
     console.log('Home button clicked, navigating to /');
-    console.log('Current location:', window.location.href);
-    console.log('Current hash:', window.location.hash);
-    
-    // Try both methods
     navigate('/');
-    
-    // Also try direct hash manipulation as backup
-    setTimeout(() => {
-      window.location.hash = '/';
-    }, 100);
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: 'Lissy Roddy - SEVN SELECTS',
+      text: 'Sleek directional edits with effortless precision.',
+      url: window.location.href,
+    };
+
+    try {
+      // Check if Web Share API is available (mobile)
+      if (navigator.share) {
+        await navigator.share(shareData);
+        console.log('✅ Shared successfully');
+      } else {
+        // Fallback: Copy URL to clipboard (desktop)
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard!');
+        console.log('✅ URL copied to clipboard');
+      }
+    } catch (err) {
+      console.error('❌ Error sharing:', err);
+    }
   };
 
   const takePhoto = async () => {
@@ -537,7 +551,7 @@ export function LissyLanding({ onImageUpload }: LissyLandingProps) {
           </p>
           
           {/* Share button on right */}
-          <button className="hover:opacity-70 transition-opacity">
+          <button className="hover:opacity-70 transition-opacity" onClick={handleShare}>
             <img alt="Share" className="w-[32px] h-[32px]" src={imgShareIcon} />
           </button>
         </div>
@@ -571,8 +585,8 @@ export function LissyLanding({ onImageUpload }: LissyLandingProps) {
               <Group4 />
             </div>
             <div className="flex flex-col gap-[6px] items-center mt-[20px]">
-              <p className="css-4hzbpn leading-[normal] not-italic relative shrink-0 text-[#1e1709] text-[14px] text-center tracking-[0.1em] uppercase w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 700 }}>1:1 styling</p>
-              <p className="css-4hzbpn leading-[normal] not-italic relative shrink-0 text-[#1e1709] text-[12px] text-center tracking-[0.1em] w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 700 }}>Upload a reference look to get started.</p>
+              <p className="css-4hzbpn leading-[normal] not-italic relative shrink-0 text-[#1e1709] text-[16px] text-center tracking-[0.1em] uppercase w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 700 }}>1:1 styling</p>
+              <p className="css-4hzbpn leading-[normal] not-italic relative shrink-0 text-[#1e1709] text-[14px] text-center tracking-[0.1em] w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 700 }}>Upload a reference look to get started.</p>
             </div>
             <div className="mt-6">
               <ButtonDark onClick={takePhoto} />

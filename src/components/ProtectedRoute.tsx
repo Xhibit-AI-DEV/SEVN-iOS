@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 
@@ -51,6 +51,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
         localStorage.setItem('user_email', data.email);
         localStorage.setItem('user_name', data.name || '');
         localStorage.setItem('user_id', data.user_id);
+        localStorage.setItem('user_role', data.role || 'customer'); // Store role
         localStorage.setItem('access_token', authToken); // Ensure both tokens are set
         localStorage.setItem('auth_token', authToken);
         
@@ -66,11 +67,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
         
         // Token invalid or expired - clear everything
         console.log('🧹 Clearing auth data and redirecting to sign in...');
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('user_email');
-        localStorage.removeItem('user_name');
-        localStorage.removeItem('user_id');
+        console.log('💡 Hint: Your session has expired. Please sign in again to get a fresh token.');
+        localStorage.clear(); // Clear all data to ensure fresh start
         
         setIsVerifying(false);
         navigate('/signin');

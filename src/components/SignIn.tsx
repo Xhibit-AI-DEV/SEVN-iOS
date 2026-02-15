@@ -1,16 +1,46 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
+import viiLogo from 'figma:asset/4ec03ff54a95119f5d32d5425296f54905e0e776.png';
+
+/**
+ * SignIn Component - Handles both sign up and sign in flows
+ * 
+ * EARLY ACCESS CODE: 19xx99
+ * All users (new and existing) must enter this code to access the app
+ * 
+ * Flow:
+ * 1. User enters early access code (required)
+ * 2. User enters email and password
+ * 3. For sign up: must agree to terms
+ * 4. Code is validated client-side before API call
+ */
 
 export function SignIn() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(true); // Default to sign-up for new customers
+  const [earlyAccessCode, setEarlyAccessCode] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false); // Default to sign-in (not sign-up)
   const [loading, setLoading] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [showAuthForm, setShowAuthForm] = useState(false); // Track if user passed early access
+
+  const handleEarlyAccessSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate early access code
+    if (earlyAccessCode !== '19xx99') {
+      toast.error('Invalid early access code');
+      return;
+    }
+    
+    // Code is valid, show the auth form
+    toast.success('Access code verified!');
+    setShowAuthForm(true);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,7 +155,7 @@ export function SignIn() {
 
   return (
     <div 
-      className="fixed inset-0 w-full overflow-x-hidden overflow-y-auto bg-[#E2DFDD]" 
+      className="fixed inset-0 w-full overflow-x-hidden overflow-y-auto bg-[#EBE9E7]" 
       style={{ 
         top: 'env(safe-area-inset-top, 0)', 
         bottom: 'env(safe-area-inset-bottom, 0)',
@@ -133,97 +163,139 @@ export function SignIn() {
         right: 0,
         WebkitOverflowScrolling: 'touch',
         height: '100vh',
-        height: '-webkit-fill-available'
+        minHeight: '-webkit-fill-available'
       }}
     >
       {/* Main Content */}
-      <div className="min-h-full flex items-center justify-center px-4 py-8">
-        <div className="w-full max-w-[393px]">
+      <div className="min-h-full flex items-center justify-center py-8">
+        <div className="w-full max-w-[393px] px-6">
           {/* Logo/Header */}
           <div className="text-center mb-8">
-            <h1 className="font-['Helvetica_Neue:Bold',sans-serif] text-[32px] tracking-[4px] text-[#1E1709] uppercase mb-2">
+            {/* V22 Text Logo - Using Dirtyline font specimen image */}
+            <div className="mb-5 flex justify-center">
+              <img 
+                src={viiLogo} 
+                alt="Vii Logo" 
+                className="h-32 object-contain"
+              />
+            </div>
+            
+            {/* SEVN SELECTS - increased letter spacing for editorial feel */}
+            <h2 className="font-['Helvetica_Neue:Bold',sans-serif] text-[16px] tracking-[5.6px] text-[#1E1709]/95 uppercase">
               SEVN SELECTS
-            </h1>
+            </h2>
           </div>
+
+          {/* Early Access Form */}
+          {!showAuthForm && (
+            <form onSubmit={handleEarlyAccessSubmit} className="space-y-7">
+              {/* Early Access Code - Fashion-forward underline style */}
+              <div>
+                <input
+                  type="text"
+                  value={earlyAccessCode}
+                  onChange={(e) => setEarlyAccessCode(e.target.value)}
+                  required
+                  className="w-full px-0 py-4 border-0 border-b-[2px] border-b-[#1E1709]/30 rounded-none font-['Helvetica_Neue:Medium',sans-serif] text-[16px] text-[#1E1709] bg-transparent focus:outline-none focus:border-b-[#1E1709] transition-all placeholder:text-[#1E1709]/70"
+                  placeholder="Early Access Code"
+                  autoComplete="off"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full px-0 py-7 bg-gradient-to-b from-[#2a1a05] to-[#201303] text-white rounded-sm font-['Helvetica_Neue:Medium',sans-serif] text-[14px] tracking-[3.2px] uppercase hover:opacity-90 active:brightness-95 transition-all disabled:opacity-50 flex items-center justify-center"
+              >
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  'CONTINUE'
+                )}
+              </button>
+            </form>
+          )}
 
           {/* Sign In/Sign Up Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block font-['Helvetica_Neue:Medium',sans-serif] text-[12px] tracking-[1px] text-[#1E1709] uppercase mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-4 py-3 border border-[#1E1709]/20 rounded-lg font-['Helvetica_Neue:Regular',sans-serif] text-[16px] text-[#1E1709] bg-white focus:outline-none focus:border-[#1E1709]"
-                placeholder="you@example.com"
-              />
-            </div>
-
-            <div>
-              <label className="block font-['Helvetica_Neue:Medium',sans-serif] text-[12px] tracking-[1px] text-[#1E1709] uppercase mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="w-full px-4 py-3 border border-[#1E1709]/20 rounded-lg font-['Helvetica_Neue:Regular',sans-serif] text-[16px] text-[#1E1709] bg-white focus:outline-none focus:border-[#1E1709]"
-                placeholder="••••••••"
-              />
-            </div>
-
-            {isSignUp && (
-              <div className="flex items-center">
+          {showAuthForm && (
+            <form onSubmit={handleSubmit}>
+              {/* Email Field */}
+              <div className="mb-10">
                 <input
-                  type="checkbox"
-                  checked={agreedToTerms}
-                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="mr-2 shrink-0"
-                  id="terms-checkbox"
-                  style={{ accentColor: '#1E1709' }}
+                  className="w-full px-0 py-4 border-0 border-b-[2px] border-b-[#1E1709]/30 rounded-none font-['Helvetica_Neue:Medium',sans-serif] text-[16px] text-[#1E1709] bg-transparent focus:outline-none focus:border-b-[#1E1709] transition-all placeholder:text-[#1E1709]/70"
+                  placeholder="Email"
                 />
-                <label htmlFor="terms-checkbox" className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] text-[#1E1709]/70">
-                  I agree to the <a href="https://www.sevn.app/termsofservice" target="_blank" rel="noopener noreferrer" className="text-[#1E1709] hover:underline font-['Helvetica_Neue:Medium',sans-serif]">Terms of Service</a> and <a href="https://www.sevn.app/privacypolicy" target="_blank" rel="noopener noreferrer" className="text-[#1E1709] hover:underline font-['Helvetica_Neue:Medium',sans-serif]">Privacy Policy</a>
-                </label>
               </div>
-            )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-[#1E1709] text-white rounded-lg font-['Helvetica_Neue:Medium',sans-serif] text-[14px] tracking-[1px] uppercase hover:bg-[#1E1709]/90 transition-colors disabled:opacity-50 flex items-center justify-center"
-            >
-              {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                isSignUp ? 'Create Account' : 'Sign In'
+              {/* Password Field */}
+              <div className="mb-10">
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="w-full px-0 py-4 border-0 border-b-[2px] border-b-[#1E1709]/30 rounded-none font-['Helvetica_Neue:Medium',sans-serif] text-[16px] text-[#1E1709] bg-transparent focus:outline-none focus:border-b-[#1E1709] transition-all placeholder:text-[#1E1709]/70"
+                  placeholder="Password"
+                />
+              </div>
+
+              {/* Terms Checkbox for Sign Up */}
+              {isSignUp && (
+                <div className="flex items-start mb-10">
+                  <input
+                    type="checkbox"
+                    checked={agreedToTerms}
+                    onChange={(e) => setAgreedToTerms(e.target.checked)}
+                    required
+                    className="mt-0.5 mr-3 shrink-0"
+                    id="terms-checkbox"
+                    style={{ accentColor: '#1E1709' }}
+                  />
+                  <label htmlFor="terms-checkbox" className="font-['Helvetica_Neue:Regular',sans-serif] text-[13px] leading-[20px] text-[#1E1709]/75">
+                    I agree to the <a href="https://www.sevn.app/termsofservice" target="_blank" rel="noopener noreferrer" className="text-[#1E1709] hover:underline font-['Helvetica_Neue:Medium',sans-serif]">Terms of Service</a> and <a href="https://www.sevn.app/privacypolicy" target="_blank" rel="noopener noreferrer" className="text-[#1E1709] hover:underline font-['Helvetica_Neue:Medium',sans-serif]">Privacy Policy</a>
+                  </label>
+                </div>
               )}
-            </button>
-          </form>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full px-0 py-7 bg-gradient-to-b from-[#2a1a05] to-[#201303] text-white rounded-sm font-['Helvetica_Neue:Medium',sans-serif] text-[14px] tracking-[3.2px] uppercase hover:opacity-90 active:brightness-95 transition-all disabled:opacity-50 flex items-center justify-center"
+              >
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  isSignUp ? 'CREATE ACCOUNT' : 'SIGN IN'
+                )}
+              </button>
+            </form>
+          )}
 
           {/* Toggle Sign In/Sign Up */}
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] text-[#1E1709]/70 hover:text-[#1E1709] transition-colors"
-            >
-              {isSignUp ? (
-                <>
-                  Already have an account? <span className="font-['Helvetica_Neue:Medium',sans-serif] text-[#1E1709]">Sign In</span>
-                </>
-              ) : (
-                <>
-                  Don't have an account? <span className="font-['Helvetica_Neue:Medium',sans-serif] text-[#1E1709] underline">Sign Up</span>
-                </>
-              )}
-            </button>
-          </div>
+          {showAuthForm && (
+            <div className="mt-6 px-0 text-left">
+              <button
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="font-['Helvetica_Neue:Regular',sans-serif] text-[13px] text-[#1E1709]/70 hover:text-[#1E1709] transition-colors"
+              >
+                {isSignUp ? (
+                  <>
+                    Already have an account? <span className="font-['Helvetica_Neue:Medium',sans-serif] text-[#1E1709]\">Sign In</span>
+                  </>
+                ) : (
+                  <>
+                    Don't have an account? <span className="font-['Helvetica_Neue:Medium',sans-serif] text-[#1E1709]\">Sign Up</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

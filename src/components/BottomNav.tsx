@@ -1,5 +1,5 @@
 import { Home, Plus, User } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export function BottomNav() {
   const navigate = useNavigate();

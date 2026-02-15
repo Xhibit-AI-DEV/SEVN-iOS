@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Heart, Loader2 } from 'lucide-react';
 import svgPaths from "../imports/svg-ib8s7izy1q";

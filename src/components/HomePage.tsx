@@ -1,7 +1,9 @@
 import { Menu } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { BottomNavigation } from './BottomNavigation';
+import { MoreMenuModal } from './MoreMenuModal';
 
 // Import stylist images - must import as variables, NOT strings
 import imgLissyRoddy from "figma:asset/21ead93bac0da68ed5f33efdfb07c0bf632228cc.png";
@@ -13,6 +15,7 @@ import imgCuratedEdit from "figma:asset/d6d0374d1209d254e69a363bf2bd48de2a8fd831
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   return (
     <div className="h-full flex flex-col bg-[#fffefd] relative">
@@ -21,7 +24,10 @@ export default function HomePage() {
         <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-black">
           VII SEVN
         </p>
-        <button className="w-6 h-6 flex items-center justify-center">
+        <button 
+          onClick={() => setShowMoreMenu(true)}
+          className="w-6 h-6 flex items-center justify-center"
+        >
           <Menu className="w-6 h-6 text-[#1e1709]" strokeWidth={1.1} />
         </button>
       </div>
@@ -162,15 +168,21 @@ export default function HomePage() {
         </div>
 
         {/* CURATED EDITS Section */}
-        <div className="px-4">
-          <h2 className="font-['Helvetica_Neue:Light',sans-serif] text-[16px] tracking-[3px] text-[#1e1709] uppercase mb-4 leading-[22px]">
+        <div className="mb-4">
+          <h2 className="font-['Helvetica_Neue:Light',sans-serif] text-[16px] tracking-[3px] text-[#1e1709] uppercase mb-4 leading-[22px] px-4">
             CURATED EDITS
           </h2>
           
-          {/* Vertical feed of cards - using ProfilePage design */}
-          <div className="flex flex-col gap-[8px]">
+          {/* Horizontal scroll of edit cards - FULL BLEED */}
+          <div 
+            className="flex gap-3 overflow-x-auto overflow-y-visible pb-2 pl-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" 
+            style={{ 
+              scrollSnapType: 'none', 
+              WebkitOverflowScrolling: 'touch'
+            }}
+          >
             {/* CHRIS WHLY Card 2 - New Image */}
-            <div className="relative shrink-0 w-[272px] h-[407px]">
+            <div className="relative shrink-0 w-[272px] h-[407px] mr-4"> {/* Added mr-4 for spacing at end */}
               {/* Triple border effect with 4px spacing */}
               <div className="absolute border border-[#1e1709] inset-[4px] opacity-80 rounded-[8px]" />
               <div className="absolute border border-[#1e1709] inset-[8px_0_0_8px] rounded-[8px]" />
@@ -233,6 +245,13 @@ export default function HomePage() {
       
       {/* Fixed Bottom Navigation */}
       <BottomNavigation />
+      
+      {/* More Menu Modal */}
+      <MoreMenuModal 
+        isOpen={showMoreMenu} 
+        onClose={() => setShowMoreMenu(false)}
+        isOwnProfile={true}
+      />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { BottomNavigation } from './BottomNavigation';
 import { projectId, publicAnonKey } from '../utils/supabase/info';

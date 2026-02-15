@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 
 export function SimpleDebug() {
   const navigate = useNavigate();

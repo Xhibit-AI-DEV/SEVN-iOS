@@ -2,6 +2,39 @@
 
 A comprehensive stylist admin interface with order-based messaging, client-stylist matching, intake forms, payment processing, and curated selections delivery.
 
+## ⚠️ CRITICAL: File Structure & Workflow
+
+### **Repository Structure**
+This repository is built with **Figma Make** and has a specific file organization:
+
+```
+/ (GitHub Repository - After Push from Figma Make)
+├── src/                         ← ALL app code (auto-organized)
+│   ├── App.tsx
+│   ├── main.tsx
+│   ├── components/
+│   ├── supabase/
+│   ├── utils/
+│   ├── imports/
+│   └── styles/
+├── index.html                   ← Entry point (references /src/main.tsx)
+├── vite.config.ts              ← Already configured for /src structure
+├── capacitor.config.ts         ← Already configured for build/ output
+├── package.json
+└── README.md (this file)
+```
+
+### **Development Workflow**
+
+**⚠️ IMPORTANT:** This project is edited in **Figma Make** and uses automated git integration.
+
+1. **Edit code in Figma Make** (web interface only)
+2. **Push to GitHub** using Figma Make's "Push to GitHub" button
+3. **Pull to local machine** for building/testing
+4. **Run all commands locally** (Figma Make has no terminal)
+
+**See `WORKFLOW.md` for complete instructions.**
+
 ## 🎯 Overview
 
 SEVN is a complete order lifecycle management system that connects clients with stylists through a structured workflow. The system handles everything from initial intake submission to final curated selections delivery, with integrated payments and real-time messaging.
@@ -64,12 +97,13 @@ Three-tier ID system for user management:
 ## 🛠 Tech Stack
 
 - **Frontend:** React + TypeScript
-- **Styling:** Tailwind CSS v4
+- **Styling:** Tailwind CSS v3.4.1 (DO NOT upgrade to v4)
 - **Backend:** Supabase
   - Database: PostgreSQL with KV Store
   - Auth: Supabase Auth
   - Storage: Supabase Storage (for images/files)
   - Edge Functions: Hono web server
+- **Mobile:** Capacitor v6 (iOS + Android)
 - **Server Architecture:** Frontend → Server → Database (three-tier)
 
 ## 🗄 Database Structure

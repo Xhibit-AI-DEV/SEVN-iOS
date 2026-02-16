@@ -5,6 +5,9 @@ import path from 'path';
 export default defineConfig({
   base: './', // CRITICAL: Use relative paths for Capacitor
   plugins: [react()],
+  css: {
+    postcss: './postcss.config.cjs',
+  },
   resolve: {
     alias: {
       '@': '/',

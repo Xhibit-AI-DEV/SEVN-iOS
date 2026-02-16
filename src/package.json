@@ -1,7 +1,7 @@
 {
   "name": "sevn-stylist-admin",
-  "version": "1.0.0",
-  "description": "SEVN Stylist Admin Interface - Complete order lifecycle management system",
+  "version": "1.0.1",
+  "description": "SEVN Stylist Admin Interface - Complete order lifecycle management system (FORCED REINSTALL v3)",
   "private": true,
   "type": "module",
   "homepage": ".",
@@ -9,6 +9,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "postinstall": "echo 'Installed tailwindcss 3.4.1'",
     "cap:sync": "cap sync",
     "cap:open:ios": "cap open ios",
     "cap:open:android": "cap open android",

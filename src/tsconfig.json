@@ -27,5 +27,14 @@
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "capacitor.config.ts",
+    "vite.config.ts",
+    "postcss.config.cjs",
+    "tailwind.config.js"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

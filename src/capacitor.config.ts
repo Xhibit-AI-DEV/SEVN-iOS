@@ -3,7 +3,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.xhibits',
   appName: 'SEVN', // Clean app name for iOS/Android home screen
-  webDir: 'dist',
+  webDir: 'build', // Changed from 'dist' to match vite.config.ts outDir
   bundledWebRuntime: false,
   
   server: {

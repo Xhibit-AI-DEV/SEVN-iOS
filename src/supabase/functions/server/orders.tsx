@@ -82,7 +82,9 @@ app.post('/create', async (c) => {
       
       // Intake data
       main_image_url: orderData.mainImageUrl || '',
+      main_image_type: orderData.mainImageType || 'image', // Video support
       reference_images: orderData.referenceImages || [],
+      reference_image_types: orderData.referenceImageTypes || [], // Video support for references
       intake_answers: orderData.intakeAnswers || {},
       
       // Payment info (populated later)

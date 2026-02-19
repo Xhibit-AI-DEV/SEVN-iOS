@@ -220,7 +220,9 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
             body: JSON.stringify({
               stylistId: backendStylistId,
               mainImageUrl,
+              mainImageType, // Include media type for main image
               referenceImages: referenceImageUrls,
+              referenceImageTypes, // Include media types for reference images
               intakeAnswers,
               status: 'intake_submitted', // Initial status
             }),
@@ -375,10 +377,12 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
 
         const uploadResult = await mainImageResponse.json();
         const mainImageUrl = uploadResult.url;
-        console.log('✅ Main image uploaded:', mainImageUrl);
+        const mainImageType = uploadResult.mediaType || 'image'; // Get media type from upload response
+        console.log('✅ Main image uploaded:', mainImageUrl, 'Type:', mainImageType);
 
         // Upload reference images
         const referenceImageUrls: string[] = [];
+        const referenceImageTypes: ('image' | 'video')[] = [];
         for (const image of referenceImages) {
           console.log('📤 Uploading reference image:', image.name);
           const formData = new FormData();
@@ -396,9 +400,10 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
           );
 
           if (response.ok) {
-            const { url } = await response.json();
-            referenceImageUrls.push(url);
-            console.log('✅ Reference image uploaded:', url);
+            const result = await response.json();
+            referenceImageUrls.push(result.url);
+            referenceImageTypes.push(result.mediaType || 'image'); // Track media type for each reference
+            console.log('✅ Reference image uploaded:', result.url, 'Type:', result.mediaType);
           } else {
             const errorText = await response.text();
             console.error('❌ Reference image upload failed:', errorText);
@@ -417,7 +422,9 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
         console.log('📝 Order payload:', {
           stylistId: backendStylistId,
           mainImageUrl,
+          mainImageType,
           referenceImagesCount: referenceImageUrls.length,
+          referenceImageTypesCount: referenceImageTypes.length,
           intakeAnswersCount: Object.keys(intakeAnswers).length,
           status: 'intake_submitted',
         });
@@ -434,7 +441,9 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
             body: JSON.stringify({
               stylistId: backendStylistId,
               mainImageUrl,
+              mainImageType, // Include media type for main image
               referenceImages: referenceImageUrls,
+              referenceImageTypes, // Include media types for reference images
               intakeAnswers,
               status: 'intake_submitted', // Initial status
             }),

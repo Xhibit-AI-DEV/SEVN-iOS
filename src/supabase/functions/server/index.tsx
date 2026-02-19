@@ -187,10 +187,15 @@ app.post("/make-server-b14d984c/upload", async (c) => {
         
         console.log('✅ Image uploaded successfully:', urlData.publicUrl);
         
+        // Determine media type from file
+        const mediaType = jsonData.fileType.startsWith('video/') ? 'video' : 'image';
+        console.log('📹 Media type detected:', mediaType);
+        
         return c.json({
           success: true,
           url: urlData.publicUrl,
           fileName: fileName,
+          mediaType: mediaType, // Include media type for video support
         });
       }
     }
@@ -263,10 +268,15 @@ app.post("/make-server-b14d984c/upload", async (c) => {
     
     console.log('✅ Image uploaded successfully:', urlData.publicUrl);
     
+    // Determine media type from file
+    const mediaType = file.type.startsWith('video/') ? 'video' : 'image';
+    console.log('📹 Media type detected:', mediaType);
+    
     return c.json({
       success: true,
       url: urlData.publicUrl,
       fileName: fileName,
+      mediaType: mediaType, // Include media type for video support
     });
     
   } catch (error: any) {

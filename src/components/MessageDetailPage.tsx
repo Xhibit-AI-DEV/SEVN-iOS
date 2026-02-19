@@ -18,7 +18,9 @@ interface Order {
   stylist_id: string;
   status: 'waitlist' | 'invited' | 'paid' | 'styling' | 'completed' | 'cancelled';
   main_image_url?: string;
+  main_image_type?: 'image' | 'video'; // Track if main media is a video
   reference_images?: string[];
+  reference_image_types?: ('image' | 'video')[]; // Track type for each reference image
   intake_answers?: Record<string, string>;
   payment_status?: string;
   payment_amount?: number;
@@ -882,15 +884,29 @@ export function MessageDetailPage() {
                 Your References
               </h2>
               <div className="flex gap-4 overflow-x-auto pb-2 -mx-6 px-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                {order.reference_images.map((imgUrl, idx) => (
-                  <div key={idx} className="w-[207px] h-[368px] rounded-[8px] overflow-hidden border-[1px] border-[#1E1709] bg-white shrink-0">
-                    <img 
-                      src={imgUrl} 
-                      alt={`Reference ${idx + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
+                {order.reference_images.map((imgUrl, idx) => {
+                  const isVideo = order.reference_image_types?.[idx] === 'video';
+                  return (
+                    <div key={idx} className="w-[207px] h-[368px] rounded-[8px] overflow-hidden border-[1px] border-[#1E1709] bg-white shrink-0">
+                      {isVideo ? (
+                        <video 
+                          src={imgUrl} 
+                          className="w-full h-full object-cover"
+                          controls
+                          loop
+                          playsInline
+                          muted
+                        />
+                      ) : (
+                        <img 
+                          src={imgUrl} 
+                          alt={`Reference ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -930,11 +946,22 @@ export function MessageDetailPage() {
               <div className="absolute inset-0 border-[1px] border-[#1E1709] rounded-[8px] bg-white" style={{ transform: 'translate(4px, 4px)' }} />
               <div className="w-[286px] h-[368px] rounded-[8px] overflow-hidden border-[1px] border-[#1E1709] relative z-10 bg-white">
                 {order.main_image_url ? (
-                  <img 
-                    src={order.main_image_url} 
-                    alt="Your style"
-                    className="w-full h-full object-cover"
-                  />
+                  order.main_image_type === 'video' ? (
+                    <video 
+                      src={order.main_image_url} 
+                      className="w-full h-full object-cover"
+                      controls
+                      loop
+                      playsInline
+                      muted
+                    />
+                  ) : (
+                    <img 
+                      src={order.main_image_url} 
+                      alt="Your style"
+                      className="w-full h-full object-cover"
+                    />
+                  )
                 ) : (
                   <div className="w-full h-full bg-gray-300 flex items-center justify-center text-gray-500">
                     No Photo
@@ -1207,11 +1234,22 @@ export function MessageDetailPage() {
                 <div className="absolute inset-0 border-[1px] border-[#1E1709] rounded-[16px] bg-white" style={{ transform: 'translate(4px, 4px)' }} />
                 <div className="w-[280px] aspect-[3/4] border-[1px] border-[#1E1709] rounded-[16px] overflow-hidden bg-white relative z-10">
                   {order.main_image_url ? (
-                    <img 
-                      src={order.main_image_url} 
-                      alt={order.customer_name}
-                      className="w-full h-full object-cover"
-                    />
+                    order.main_image_type === 'video' ? (
+                      <video 
+                        src={order.main_image_url} 
+                        className="w-full h-full object-cover"
+                        controls
+                        loop
+                        playsInline
+                        muted
+                      />
+                    ) : (
+                      <img 
+                        src={order.main_image_url} 
+                        alt={order.customer_name}
+                        className="w-full h-full object-cover"
+                      />
+                    )
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300">
                       <span className="font-['Helvetica_Neue:Bold',sans-serif] text-[48px] text-gray-500">

@@ -1,10 +1,13 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import React from 'react';
 import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router';
 import { Heart, Loader2 } from 'lucide-react';
 import svgPaths from "../imports/svg-ib8s7izy1q";
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { toast } from 'sonner@2.0.3';
 import { ProductLinkModal } from './ProductLinkModal';
+import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
 
 export function EditDetailPage() {
   const navigate = useNavigate();
@@ -169,7 +172,11 @@ export function EditDetailPage() {
 
   const handleProductLinkClick = (url: string, title: string) => {
     // Open product link in new tab
-    window.open(url, '_blank', 'noopener,noreferrer');
+    if (Capacitor.isNativePlatform()) {
+      Browser.open({ url });
+    } else {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
   };
 
   const handleProductLinkClose = () => {
@@ -212,7 +219,7 @@ export function EditDetailPage() {
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       {/* Top Nav - Back button, username, more menu, and share on same line */}
-      <div className="bg-[#fffefd] h-[48px] w-full flex items-center justify-between px-4">
+      <div className="bg-[#fffefd] h-[48px] w-full flex items-center justify-between px-4 max-w-[393px] mx-auto">
         {/* Left side - Back button and creator name */}
         <div className="flex items-center gap-[12px]">
           {/* Back button */}

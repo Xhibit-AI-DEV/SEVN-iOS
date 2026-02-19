@@ -98,11 +98,11 @@ export function CustomerInboxPage() {
       console.log('🔍 Auth token (first 20 chars):', authToken.substring(0, 20));
       console.log('🔍 Access token (first 20 chars):', accessToken.substring(0, 20));
       
-      const url = `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/orders/customer/me`;
+      // Use the correct endpoint: /orders/my-orders
+      const url = `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/orders/my-orders`;
       console.log('🔍 Fetching from URL:', url);
       
       // The endpoint will use the access_token to get the REAL user ID from Supabase Auth
-      // We pass "me" as a placeholder - the backend will use the authenticated user's ID
       const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,  // Use access_token, not auth_token
@@ -118,22 +118,26 @@ export function CustomerInboxPage() {
         const data = await response.json();
         console.log('✅ ========== RAW RESPONSE DATA ==========');
         console.log('✅ Full response:', JSON.stringify(data, null, 2));
-        console.log('✅ data.orders exists:', !!data.orders);
-        console.log('✅ Number of orders:', data.orders?.length || 0);
         
-        if (data.orders && data.orders.length > 0) {
+        // /my-orders returns an array directly, not { orders: [...] }
+        const ordersArray = Array.isArray(data) ? data : (data.orders || []);
+        
+        console.log('✅ Is array:', Array.isArray(data));
+        console.log('✅ Number of orders:', ordersArray.length);
+        
+        if (ordersArray.length > 0) {
           console.log('✅ ========== ORDERS DETAILS ==========');
-          data.orders.forEach((order: any, index: number) => {
+          ordersArray.forEach((order: any, index: number) => {
             console.log(`✅ Order ${index + 1}:`, {
               id: order.id,
               status: order.status,
+              stylist_id: order.stylist_id,
               customer_id: order.customer_id,
               created_at: order.created_at,
               hasMainImage: !!order.main_image_url,
             });
           });
-          console.log('✅ Setting orders state with', data.orders.length, 'orders');
-          console.log('✅ Orders array:', data.orders);
+          console.log('✅ Setting orders state with', ordersArray.length, 'orders');
         } else {
           console.log('⚠️ ========== NO ORDERS FOUND ==========');
           console.log('⚠️ No orders found for authenticated user');
@@ -141,17 +145,17 @@ export function CustomerInboxPage() {
           console.log('   1. You haven\'t submitted any styling requests yet');
           console.log('   2. There\'s an issue with order creation');
           console.log('   3. The customer_orders index is missing');
-          console.log('💡 Try going to /chris to submit a styling request');
+          console.log('💡 Try going to /lewis or /chris to submit a styling request');
         }
         
-        console.log('🔄 About to call setOrders with:', data.orders || []);
-        setOrders(data.orders || []);
+        console.log('🔄 About to call setOrders with:', ordersArray);
+        setOrders(ordersArray);
         console.log('✅ setOrders called');
         
         // Set the real user ID from the first order if available
-        if (data.orders && data.orders.length > 0 && data.orders[0].customer_id) {
-          console.log('✅ Setting userId state to:', data.orders[0].customer_id);
-          setUserId(data.orders[0].customer_id);
+        if (ordersArray.length > 0 && ordersArray[0].customer_id) {
+          console.log('✅ Setting userId state to:', ordersArray[0].customer_id);
+          setUserId(ordersArray[0].customer_id);
         }
       } else {
         const errorText = await response.text();
@@ -281,6 +285,9 @@ export function CustomerInboxPage() {
     } else if (order.stylist_id === 'chriswhly') {
       // Chris's order
       navigate(`/chris/intake/edit/${order.id}`);
+    } else if (order.stylist_id === 'lewis_bloyce' || order.stylist_id === 'lewis') {
+      // Lewis's order
+      navigate(`/lewis/intake/edit/${order.id}`);
     } else {
       // Generic intake edit
       navigate(`/intake/edit/${order.id}`);
@@ -294,6 +301,8 @@ export function CustomerInboxPage() {
       navigate(`/lissy/intake/edit/${order.id}`);
     } else if (order.stylist_id === 'chriswhly') {
       navigate(`/chris/intake/edit/${order.id}`);
+    } else if (order.stylist_id === 'lewis_bloyce' || order.stylist_id === 'lewis') {
+      navigate(`/lewis/intake/edit/${order.id}`);
     } else {
       navigate(`/intake/edit/${order.id}`);
     }

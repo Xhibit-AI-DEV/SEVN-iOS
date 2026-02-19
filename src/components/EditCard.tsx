@@ -1,11 +1,23 @@
+import { useNavigate } from 'react-router-dom';
+
 interface EditCardProps {
   imageUrl: string;
   stylistName: string;
   stylistAvatar: string;
+  stylistId?: string;
   title: string;
 }
 
-export function EditCard({ imageUrl, stylistName, stylistAvatar, title }: EditCardProps) {
+export function EditCard({ imageUrl, stylistName, stylistAvatar, stylistId, title }: EditCardProps) {
+  const navigate = useNavigate();
+
+  const handleStylistClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (stylistId) {
+      navigate(`/profile/${stylistId}`);
+    }
+  };
+
   return (
     <div className="relative w-full max-w-[356px] h-[336px] shrink-0">
       {/* Triple border effect */}
@@ -30,7 +42,10 @@ export function EditCard({ imageUrl, stylistName, stylistAvatar, title }: EditCa
       </div>
       
       {/* Stylist badge - top left */}
-      <div className="absolute top-[18px] left-[14px] bg-[rgba(255,254,253,0.8)] border border-[#1e1709] border-solid rounded-[20px] px-3 py-1.5 flex items-center gap-2 z-10">
+      <button
+        onClick={handleStylistClick}
+        className="absolute top-[18px] left-[14px] bg-[rgba(255,254,253,0.8)] border border-[#1e1709] border-solid rounded-[20px] px-3 py-1.5 flex items-center gap-2 z-10 hover:bg-[rgba(255,254,253,0.95)] transition-colors cursor-pointer"
+      >
         <div className="w-[20px] h-[20px] rounded-full overflow-hidden bg-black flex items-center justify-center">
           <img 
             src={stylistAvatar} 
@@ -41,7 +56,7 @@ export function EditCard({ imageUrl, stylistName, stylistAvatar, title }: EditCa
         <span className="font-['Helvetica_Neue:Regular',sans-serif] text-[13px] text-[#1e1709] tracking-[1px] uppercase">
           {stylistName}
         </span>
-      </div>
+      </button>
       
       {/* Title button - bottom */}
       <div className="absolute bottom-[31px] left-[14px] right-[44px] bg-[rgba(255,254,253,0.8)] border border-[#1e1709] border-solid rounded-[20px] h-[36px] flex items-center justify-center z-10">

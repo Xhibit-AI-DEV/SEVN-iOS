@@ -194,17 +194,27 @@ app.put('/:userId', async (c) => {
 
     const { userId } = c.req.param();
     
-    // Verify user is updating their own profile
-    if (user.id !== userId) {
-      return c.json({ error: 'Unauthorized' }, 403);
+    // Allow admins and stylists to edit any profile, others can only edit their own
+    const customerKey = `customer:${user.id}`;
+    const currentUserCustomer = await kv.get(customerKey);
+    const currentUserRole = currentUserCustomer?.role || user.user_metadata?.role || 'customer';
+    
+    const isAdminOrStylist = currentUserRole === 'admin' || currentUserRole === 'stylist';
+    const isOwnProfile = user.id === userId;
+    
+    if (!isOwnProfile && !isAdminOrStylist) {
+      console.log(`❌ User ${user.id} (role: ${currentUserRole}) attempted to edit profile ${userId}`);
+      return c.json({ error: 'Unauthorized - only admins and stylists can edit other profiles' }, 403);
     }
-
+    
+    console.log(`✅ Authorization check passed - User: ${user.id}, Role: ${currentUserRole}, Editing: ${userId}`);
+    
     const { display_name, user_id, bio, website_url, avatar_url } = await c.req.json();
     
-    console.log('📝 Updating profile for user:', user.id);
+    console.log('📝 Updating profile for user:', userId); // Use userId from URL param, not current user
     console.log('📝 New username:', user_id);
     
-    const profileKey = `profile:${user.id}`;
+    const profileKey = `profile:${userId}`; // Use userId from URL param
     const existingProfile = await kv.get(profileKey);
     
     // Sanitize and validate username if provided (backend calls it user_id for legacy reasons)
@@ -240,7 +250,7 @@ app.put('/:userId', async (c) => {
     }
     
     const profile = {
-      auth_user_id: user.id, // Keep the Supabase Auth UUID for internal use (NEVER editable)
+      auth_user_id: userId, // Use the profile being edited, not the current user
       username: sanitizedUsername, // Editable username/handle
       user_id: sanitizedUsername, // DEPRECATED: Keep for backward compatibility, same as username
       display_name: display_name !== undefined ? display_name : (existingProfile?.display_name || ''),
@@ -275,8 +285,9 @@ app.post('/:userId/avatar', async (c) => {
       return c.json({ error: 'No access token provided' }, 401);
     }
 
-    const supabase = getSupabaseClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+    // Use ANON_KEY for auth check
+    const supabaseAuth = getSupabaseClient();
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(accessToken);
 
     if (authError || !user) {
       return c.json({ error: 'Invalid or expired token' }, 401);
@@ -290,59 +301,96 @@ app.post('/:userId/avatar', async (c) => {
     }
 
     const formData = await c.req.formData();
-    const avatarFile = formData.get('avatar') as File;
+    const avatarFile = formData.get('avatar');
 
     if (!avatarFile) {
+      console.error('❌ No avatar file in formData. Keys:', Array.from(formData.keys()));
       return c.json({ error: 'No avatar file provided' }, 400);
     }
 
-    console.log('📤 Uploading avatar for user:', user.id);
+    // Check if it's a File object
+    if (!(avatarFile instanceof File)) {
+      console.error('❌ Avatar is not a File object:', typeof avatarFile);
+      return c.json({ error: 'Invalid file format' }, 400);
+    }
 
-    // Create bucket if it doesn't exist
-    const bucketName = 'make-b14d984c-avatars';
-    const { data: buckets } = await supabase.storage.listBuckets();
+    console.log('📤 Uploading avatar for user:', user.id);
+    console.log('📤 File name:', avatarFile.name, 'Size:', avatarFile.size, 'Type:', avatarFile.type);
+
+    // Use SERVICE_ROLE_KEY for storage operations
+    const supabaseStorage = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Use existing customer-images bucket (we know it works!)
+    const bucketName = 'make-b14d984c-customer-images';
+    
+    console.log('📁 Checking if bucket exists...');
+    
+    // Check if bucket exists
+    const { data: buckets, error: bucketsError } = await supabaseStorage.storage.listBuckets();
+    
+    if (bucketsError) {
+      console.error('❌ Error listing buckets:', bucketsError);
+      return c.json({ error: `Bucket check failed: ${bucketsError.message}` }, 500);
+    }
+    
     const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
+    console.log('📁 Bucket exists:', bucketExists);
     
     if (!bucketExists) {
-      const { error: bucketError } = await supabase.storage.createBucket(bucketName, {
-        public: false,
-        fileSizeLimit: 5242880, // 5MB
+      console.log('📁 Creating customer-images bucket...');
+      const { error: bucketError } = await supabaseStorage.storage.createBucket(bucketName, {
+        public: true,
+        fileSizeLimit: 10485760, // 10MB
       });
       
-      if (bucketError) {
+      if (bucketError && !bucketError.message?.includes('already exists')) {
         console.error('❌ Error creating bucket:', bucketError);
-        throw new Error('Failed to create storage bucket');
+        return c.json({ error: `Failed to create bucket: ${bucketError.message}` }, 500);
       }
     }
 
-    // Upload file
-    const fileName = `${user.id}-${Date.now()}.${avatarFile.name.split('.').pop()}`;
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    // Convert File to bytes
+    const arrayBuffer = await avatarFile.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+
+    // Upload file with avatar- prefix
+    const fileExt = avatarFile.name.split('.').pop() || 'jpg';
+    const fileName = `avatar-${user.id}-${Date.now()}.${fileExt}`;
+    
+    console.log('⬆️ Uploading file:', fileName, 'to bucket:', bucketName);
+    
+    const { data: uploadData, error: uploadError } = await supabaseStorage.storage
       .from(bucketName)
-      .upload(fileName, avatarFile, {
+      .upload(fileName, bytes, {
+        contentType: avatarFile.type || 'image/jpeg',
         cacheControl: '3600',
         upsert: true,
       });
 
     if (uploadError) {
       console.error('❌ Error uploading avatar:', uploadError);
-      throw new Error('Failed to upload avatar');
+      return c.json({ error: `Upload failed: ${uploadError.message}` }, 500);
     }
 
-    // Get signed URL (valid for 1 year)
-    const { data: urlData } = await supabase.storage
+    console.log('✅ File uploaded:', uploadData.path);
+
+    // Get public URL
+    const { data: urlData } = await supabaseStorage.storage
       .from(bucketName)
-      .createSignedUrl(fileName, 31536000); // 1 year in seconds
+      .getPublicUrl(fileName);
 
-    if (!urlData?.signedUrl) {
-      throw new Error('Failed to get avatar URL');
+    if (!urlData?.publicUrl) {
+      return c.json({ error: 'Failed to get avatar URL' }, 500);
     }
 
-    console.log('✅ Avatar uploaded successfully');
+    console.log('✅ Avatar uploaded successfully:', urlData.publicUrl);
 
     return c.json({ 
       success: true, 
-      avatar_url: urlData.signedUrl 
+      avatar_url: urlData.publicUrl 
     });
   } catch (error: any) {
     console.error('❌ Error uploading avatar:', error);

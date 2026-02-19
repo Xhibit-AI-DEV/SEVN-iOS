@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { Loader2, Camera, Image as ImageIcon, X, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Loader2, Camera, Image as ImageIcon, X, MoreHorizontal, Trash2, ArrowLeft } from 'lucide-react';
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner@2.0.3';
@@ -443,7 +443,7 @@ export function CreateEditPage() {
   };
 
   return (
-    <div className="w-full h-screen bg-white overflow-hidden flex flex-col" style={{ maxWidth: '100vw' }}>
+    <div className="w-full h-screen bg-white overflow-x-hidden flex flex-col max-w-[393px] mx-auto" style={{ maxWidth: '393px' }}>
       {/* Hidden file input - always available for web fallback (only in create mode) */}
       {!isEditMode && (
         <input 
@@ -457,23 +457,13 @@ export function CreateEditPage() {
       
       {/* SECTION 1 — Fixed Header */}
       <div className="shrink-0 bg-white border-b border-gray-200">
-        {/* Safe area top padding: 47px for status bar */}
-        <div className="h-[47px]" />
-        
         {/* Header content - 16px top padding, 20px horizontal */}
         <div className="flex items-center justify-between px-5 pt-4 pb-3">
-          {/* Back button */}
-          <button 
-            onClick={() => navigate(-1)} 
-            className="w-6 h-6 flex items-center justify-center"
-          >
-            <svg className="block w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 24 24">
-              <path d={svgPaths.p13e8e2e0} stroke="#1E1709" strokeLinecap="square" strokeLinejoin="round" strokeWidth="1.1" />
-            </svg>
-          </button>
+          {/* Empty space on left to balance the close button on right */}
+          <div className="w-6 h-6" />
           
           {/* Title centered */}
-          <h1 className="font-['Helvetica_Neue',sans-serif] text-[16px] tracking-[2px] text-[#1e1709] uppercase font-medium">
+          <h1 className="font-['Helvetica_Neue',sans-serif] text-[16px] tracking-[2px] text-[#1e1709] uppercase font-normal">
             {isEditMode ? 'EDIT POST' : 'POST EDIT'}
           </h1>
           
@@ -492,7 +482,7 @@ export function CreateEditPage() {
               
               {/* More menu dropdown */}
               {showMoreMenu && (
-                <div className="absolute right-0 top-10 z-50">
+                <>
                   {/* Backdrop to close menu */}
                   <div 
                     className="fixed inset-0 z-40" 
@@ -502,30 +492,32 @@ export function CreateEditPage() {
                     }}
                   />
                   
-                  {/* Menu */}
-                  <div className="relative z-50 w-48 bg-white border border-black/10 rounded-lg shadow-lg overflow-hidden">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (confirm('Delete this edit? This cannot be undone.')) {
-                          handleDeleteEdit();
-                        }
-                        setShowMoreMenu(false);
-                      }}
-                      disabled={isDeleting}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 transition-colors text-left disabled:opacity-50"
-                    >
-                      {isDeleting ? (
-                        <Loader2 className="w-4 h-4 text-red-600 animate-spin" />
-                      ) : (
-                        <Trash2 className="w-4 h-4 text-red-600" strokeWidth={1.5} />
-                      )}
-                      <span className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] text-red-600">
-                        {isDeleting ? 'Deleting...' : 'Delete Edit'}
-                      </span>
-                    </button>
+                  {/* Menu - positioned to not overflow screen */}
+                  <div className="absolute right-0 top-10 z-50 w-[120px]">
+                    <div className="bg-white border border-black/10 rounded-lg shadow-lg overflow-hidden">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm('Delete this edit? This cannot be undone.')) {
+                            handleDeleteEdit();
+                          }
+                          setShowMoreMenu(false);
+                        }}
+                        disabled={isDeleting}
+                        className="w-full flex items-center gap-2 px-3 py-3 hover:bg-black/5 transition-colors text-left disabled:opacity-50"
+                      >
+                        {isDeleting ? (
+                          <Loader2 className="w-4 h-4 text-black animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4 text-black" strokeWidth={1.5} />
+                        )}
+                        <span className="font-['Helvetica_Neue:Regular',sans-serif] text-[13px] text-black">
+                          {isDeleting ? 'Deleting...' : 'Delete'}
+                        </span>
+                      </button>
+                    </div>
                   </div>
-                </div>
+                </>
               )}
             </div>
           ) : (
@@ -582,17 +574,17 @@ export function CreateEditPage() {
                   {/* 16px spacing from image to title */}
                   <div className="h-[16px]" />
 
-                  {/* Title - bold section header */}
-                  <h2 className="font-['Helvetica_Neue',sans-serif] text-[24px] leading-[30px] text-[#1e1709] text-center font-bold tracking-[2px] w-full max-w-[330px]">
-                    STYLE & SELL
+                  {/* Title - section header */}
+                  <h2 className="font-['Helvetica_Neue',sans-serif] text-[20px] leading-[26px] text-[#1e1709] text-center tracking-[1px] w-full max-w-[330px]">
+                    CURATE & LINK
                   </h2>
                   
                   {/* 8px spacing from title to subtext - tight text block */}
                   <div className="h-[8px]" />
                   
                   {/* Subtext */}
-                  <p className="font-['Helvetica_Neue',sans-serif] text-[14px] leading-[19px] tracking-[0.5px] text-[#1e1709] text-center uppercase opacity-90 w-full max-w-[330px]">
-                    ADD DEPOP OR SHOP LINKS TO YOUR STYLED LOOK
+                  <p className="font-['Helvetica_Neue',sans-serif] text-[12px] leading-[16px] tracking-[1px] text-[#1e1709] text-center uppercase opacity-90 w-full max-w-[330px]">
+                    ADD DEPOP OR SHOP LINKS TO YOUR POST
                   </p>
 
                   {/* 20px spacing from subtext to button - action-focused */}

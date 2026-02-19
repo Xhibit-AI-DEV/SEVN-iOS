@@ -137,7 +137,7 @@ export function RorySelectsDetail() {
 
   return (
     <div className="relative w-full min-h-screen overflow-x-hidden bg-white">
-      <div className="w-[393px] mx-auto relative pb-24">
+      <div className="w-full max-w-[393px] mx-auto relative pb-24">
         {/* Header */}
         <div className="sticky top-0 bg-white z-10 pt-5 pb-4 border-b border-black/70">
           <div className="flex items-center justify-center px-4 relative">

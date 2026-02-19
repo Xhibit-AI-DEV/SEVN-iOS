@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Heart, Link, Loader2, Menu, Plus } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router';
+import { Heart, Link, Loader2, Menu, MoreVertical, Plus } from 'lucide-react';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { supabase } from '../utils/supabase/client';
 import { toast } from 'sonner@2.0.3';
 import { EditProfileModal } from './EditProfileModal';
 import { MoreMenuModal } from './MoreMenuModal';
@@ -9,6 +10,7 @@ import { DeleteAccountModal } from './DeleteAccountModal';
 import { IonicBottomNav } from './IonicBottomNav';
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
+import imgV22Logo from "figma:asset/4ec03ff54a95119f5d32d5425296f54905e0e776.png";
 
 // Cache to prevent refetching
 const profileCache: any = {
@@ -33,6 +35,7 @@ export function ProfilePage() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [activeTab, setActiveTab] = useState<'edits' | 'likes'>('edits');
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [profileNotFound, setProfileNotFound] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [touchStart, setTouchStart] = useState(0);
@@ -45,7 +48,105 @@ export function ProfilePage() {
     const loadAllData = async () => {
       console.log('🔄 ProfilePage: Starting data load...');
       
-      // Check cache first (valid for 30 seconds)
+      // If viewing another user's profile (paramUserId exists), load that user's data
+      if (paramUserId) {
+        console.log('👤 Viewing another user profile:', paramUserId);
+        try {
+          console.log('📡 Fetching profile data for user:', paramUserId);
+          
+          // Get access token to check if following
+          const accessToken = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
+          
+          const [profileRes, editsRes, likedEditsRes, followCheckRes] = await Promise.allSettled([
+            fetch(`https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/profiles/${paramUserId}`, {
+              headers: { 'Authorization': `Bearer ${publicAnonKey}` },
+            }),
+            fetch(`https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/edits/user/${paramUserId}`, {
+              headers: { 'Authorization': `Bearer ${publicAnonKey}` },
+            }),
+            fetch(`https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/edits/liked/${paramUserId}`, {
+              headers: { 'Authorization': `Bearer ${publicAnonKey}` },
+            }),
+            accessToken ? fetch(`https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/follows/check/${paramUserId}`, {
+              headers: { 'Authorization': `Bearer ${accessToken}` },
+            }) : Promise.resolve({ ok: false }),
+          ]);
+
+          if (isCancelled) return;
+
+          let profileData = {
+            user_id: paramUserId,
+            display_name: '',
+            bio: '',
+            avatar_url: '',
+            website_url: '',
+            created_edits: [],
+            liked_edits: [],
+            followers_count: 0,
+            following_count: 0,
+          };
+
+          let editsData: any[] = [];
+          let likedEditsData: any[] = [];
+          let likedIdsSet = new Set<string>();
+          let isFollowingUser = false;
+
+          // Process profile
+          if (profileRes.status === 'fulfilled' && profileRes.value.ok) {
+            const data = await profileRes.value.json();
+            profileData = data.profile || profileData;
+            console.log('✅ Profile loaded:', profileData.display_name || '(empty)');
+          } else {
+            console.log('⚠️ No profile found, using empty profile');
+            setProfileNotFound(true);
+          }
+
+          // Process edits
+          if (editsRes.status === 'fulfilled' && editsRes.value.ok) {
+            const data = await editsRes.value.json();
+            editsData = data.edits || [];
+            console.log('✅ Edits loaded:', editsData.length);
+          }
+
+          // Process liked edits
+          if (likedEditsRes.status === 'fulfilled' && likedEditsRes.value.ok) {
+            const data = await likedEditsRes.value.json();
+            likedEditsData = data.edits || [];
+            likedIdsSet = new Set(likedEditsData.map((edit: any) => edit.id));
+            console.log('✅ Liked edits loaded:', likedEditsData.length);
+          }
+          
+          // Process follow status
+          if (followCheckRes.status === 'fulfilled' && followCheckRes.value.ok) {
+            const data = await followCheckRes.value.json();
+            isFollowingUser = data.is_following || false;
+            console.log('✅ Follow status:', isFollowingUser ? 'Following' : 'Not following');
+          }
+
+          if (isCancelled) return;
+
+          // Set all state at once
+          setProfile(profileData);
+          setEdits(editsData);
+          setLikedProducts([]);
+          setLikedEdits(likedEditsData);
+          setLikedEditIds(likedIdsSet);
+          setUserId(paramUserId);
+          setIsFollowing(isFollowingUser);
+          setIsLoading(false);
+
+          console.log('✅ Other user profile data loaded successfully');
+          return;
+        } catch (error) {
+          console.error('❌ Error loading other user profile:', error);
+          if (!isCancelled) {
+            setIsLoading(false);
+          }
+          return;
+        }
+      }
+      
+      // Check cache first (valid for 30 seconds) - only for own profile
       const now = Date.now();
       if (profileCache.data && (now - profileCache.timestamp) < 30000) {
         console.log('✅ Using cached profile data');
@@ -214,7 +315,7 @@ export function ProfilePage() {
       isCancelled = true;
       console.log('🧹 ProfilePage cleanup');
     };
-  }, []);
+  }, [paramUserId]); // Re-run when paramUserId changes
 
   const handleProfileUpdate = (updatedProfile: any) => {
     setProfile(updatedProfile);
@@ -260,7 +361,9 @@ export function ProfilePage() {
       );
 
       if (!uploadResponse.ok) {
-        throw new Error('Failed to upload avatar');
+        const errorData = await uploadResponse.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('❌ Upload failed:', errorData);
+        throw new Error(errorData.error || 'Failed to upload avatar');
       }
 
       const uploadData = await uploadResponse.json();
@@ -340,7 +443,9 @@ export function ProfilePage() {
       );
 
       if (!uploadResponse.ok) {
-        throw new Error('Failed to upload avatar');
+        const errorData = await uploadResponse.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('❌ Camera upload failed:', errorData);
+        throw new Error(errorData.error || 'Failed to upload avatar');
       }
 
       const uploadData = await uploadResponse.json();
@@ -457,36 +562,31 @@ export function ProfilePage() {
   };
 
   const handleLogout = async () => {
-    const accessToken = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
+    console.log('🚪 Logging out...');
     
-    if (accessToken) {
-      try {
-        await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/auth/signout`,
-          {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${accessToken}` },
-          }
-        );
-      } catch (error) {
-        console.error('Error signing out:', error);
-      }
+    try {
+      // Sign out from Supabase
+      await supabase.auth.signOut();
+      console.log('✅ Supabase sign out successful');
+    } catch (error) {
+      console.error('❌ Supabase sign out error:', error);
     }
-
-    // Clear local storage
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user_email');
-    localStorage.removeItem('user_name');
-    localStorage.removeItem('user_id');
-    localStorage.removeItem('user_role');
-
+    
+    // Clear everything
+    localStorage.clear();
+    sessionStorage.clear();
+    
     // Clear cache
     profileCache.data = null;
     profileCache.timestamp = 0;
-
-    toast.success('Signed out successfully');
+    
+    // Navigate to signin
     navigate('/signin');
+    
+    // Force reload to ensure clean state
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   };
 
   const handleDeleteAccount = async () => {
@@ -540,31 +640,160 @@ export function ProfilePage() {
     }
   };
 
-  const handleBlockUser = () => {
-    // TODO: Implement block user functionality
-    console.log('Block user clicked');
-    toast.success('User blocked');
+  const handleBlockUser = async () => {
+    if (!paramUserId || !userId) {
+      toast.error('Cannot block user');
+      return;
+    }
+
+    try {
+      const accessToken = localStorage.getItem('access_token');
+      
+      if (!accessToken) {
+        toast.error('You must be logged in to block users');
+        return;
+      }
+
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/blocks/block`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ blocked_user_id: paramUserId }),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        toast.error(error.error || 'Failed to block user');
+        return;
+      }
+
+      toast.success('User blocked successfully');
+      
+      // Navigate back to home after blocking
+      setTimeout(() => {
+        navigate('/home');
+      }, 500);
+    } catch (error) {
+      console.error('Error blocking user:', error);
+      toast.error('Failed to block user');
+    }
   };
 
-  const handleFollowToggle = () => {
-    // TODO: Implement follow/unfollow functionality
-    setIsFollowing(!isFollowing);
-    toast.success(isFollowing ? 'Unfollowed' : 'Followed');
-  };
-
-  const handleShare = () => {
-    // TODO: Implement share functionality
-    const profileUrl = window.location.href;
+  const handleFollowToggle = async () => {
+    if (!paramUserId) return;
     
-    if (navigator.share) {
-      navigator.share({
-        title: `${profile?.display_name || 'User'}'s Profile`,
-        url: profileUrl,
-      }).catch(err => console.log('Error sharing:', err));
-    } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard.writeText(profileUrl);
-      toast.success('Profile link copied to clipboard');
+    const accessToken = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
+    if (!accessToken) {
+      toast.error('Please sign in to follow users');
+      return;
+    }
+
+    const newFollowingState = !isFollowing;
+    const method = newFollowingState ? 'POST' : 'DELETE';
+    const endpoint = `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/follows/${paramUserId}`;
+
+    // Optimistic update
+    const previousFollowingState = isFollowing;
+    const previousFollowerCount = profile?.followers_count || 0;
+    
+    setIsFollowing(newFollowingState);
+    setProfile((prev: any) => ({
+      ...prev,
+      followers_count: newFollowingState 
+        ? (prev.followers_count || 0) + 1 
+        : Math.max(0, (prev.followers_count || 0) - 1),
+    }));
+
+    try {
+      const response = await fetch(endpoint, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('❌ Follow request failed:', errorData);
+        
+        // Handle "already following" error - sync state with backend
+        if (errorData.error === 'Already following this user') {
+          console.log('ℹ️ Already following - syncing state');
+          setIsFollowing(true);
+          // Fetch actual follower count
+          const profileRes = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/profiles/${paramUserId}`, {
+            headers: { 'Authorization': `Bearer ${publicAnonKey}` },
+          });
+          if (profileRes.ok) {
+            const profileData = await profileRes.json();
+            setProfile((prev: any) => ({
+              ...prev,
+              followers_count: profileData.profile?.followers_count || prev.followers_count,
+            }));
+          }
+          return; // Don't throw error, just sync state
+        }
+        
+        throw new Error(errorData.error || `Failed to ${newFollowingState ? 'follow' : 'unfollow'} user`);
+      }
+
+      const data = await response.json();
+      
+      // Update with actual counts from server
+      setProfile((prev: any) => ({
+        ...prev,
+        followers_count: data.follower_count || prev.followers_count,
+      }));
+
+      toast.success(newFollowingState ? 'Following' : 'Unfollowed');
+    } catch (error: any) {
+      console.error('Error toggling follow:', error);
+      
+      // Revert on error
+      setIsFollowing(previousFollowingState);
+      setProfile((prev: any) => ({
+        ...prev,
+        followers_count: previousFollowerCount,
+      }));
+      
+      toast.error(error.message || 'Failed to update follow status');
+    }
+  };
+
+  const handleShare = async () => {
+    const profileUrl = `${window.location.origin}/profile/${paramUserId || userId}`;
+    
+    try {
+      // Try to use native share API if available (mobile)
+      if (navigator.share) {
+        await navigator.share({
+          title: `${profile?.display_name || 'Profile'} on SEVN`,
+          text: `Check out ${profile?.display_name || 'this profile'} on SEVN`,
+          url: profileUrl,
+        });
+        toast.success('Shared successfully');
+      } else {
+        // Fallback to clipboard
+        await navigator.clipboard.writeText(profileUrl);
+        toast.success('Profile link copied to clipboard');
+      }
+    } catch (error: any) {
+      console.error('Error sharing:', error);
+      // If share was cancelled or failed, try clipboard as fallback
+      if (!error.toString().includes('AbortError')) {
+        try {
+          await navigator.clipboard.writeText(profileUrl);
+          toast.success('Profile link copied to clipboard');
+        } catch (clipboardError) {
+          toast.error('Failed to share profile');
+        }
+      }
     }
   };
 
@@ -605,13 +834,21 @@ export function ProfilePage() {
           
           {/* Stylist name badge - bottom left */}
           {showCreatorName && edit.creator_name && (
-            <div className="absolute bottom-[16px] left-[16px] z-10">
-              <div className="bg-[rgba(255,254,253,0.8)] border border-[#1e1709] rounded-[20px] px-[14px] h-[30px] flex items-center justify-center">
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                if (edit.creator_id) {
+                  navigate(`/profile/${edit.creator_id}`);
+                }
+              }}
+              className="absolute bottom-[16px] left-[16px] z-10"
+            >
+              <div className="bg-[rgba(255,254,253,0.8)] border border-[#1e1709] rounded-[20px] px-[14px] h-[30px] flex items-center justify-center hover:bg-[rgba(255,254,253,0.95)] transition-colors">
                 <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[13px] text-[#1e1709] tracking-[1px] uppercase leading-[22px]">
                   {edit.creator_name}
                 </p>
               </div>
-            </div>
+            </button>
           )}
         </div>
         
@@ -639,6 +876,54 @@ export function ProfilePage() {
     );
   };
 
+  const handleUnlikeProduct = async (productId: string) => {
+    if (!userId) {
+      toast.error('Please sign in to unlike products');
+      return;
+    }
+
+    const accessToken = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
+    if (!accessToken) {
+      toast.error('Please sign in to unlike products');
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/likes/unlike`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            userId: userId,
+            productId: productId,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to unlike product');
+      }
+
+      const newLikedProducts = likedProducts.filter((like) => like.productId !== productId);
+      setLikedProducts(newLikedProducts);
+
+      // Update cache
+      if (profileCache.data) {
+        profileCache.data.likedProducts = newLikedProducts;
+        profileCache.timestamp = Date.now();
+      }
+
+      toast.success('Product unliked');
+    } catch (error: any) {
+      console.error('Error unliking product:', error);
+      toast.error(error.message || 'Failed to unlike product');
+    }
+  };
+
   const renderProductCard = (like: any) => {
     const product = like.productData;
     
@@ -657,10 +942,27 @@ export function ProfilePage() {
               src={product.image}
             />
           )}
+          
+          {/* Heart button to unlike */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleUnlikeProduct(like.productId);
+            }}
+            className="absolute top-2 right-2 w-[28px] h-[28px] bg-[rgba(255,254,253,0.95)] border border-[#1e1709] rounded-full flex items-center justify-center transition-all hover:bg-white z-10"
+          >
+            <Heart 
+              className="w-3.5 h-3.5 fill-[#1e1709] text-[#1e1709]"
+              strokeWidth={1.5}
+            />
+          </button>
         </div>
         
         {/* Product Info */}
-        <div className="p-2">
+        <div 
+          className="p-2"
+          onClick={() => product?.url && window.open(product.url, '_blank')}
+        >
           {product?.title && (
             <p className="font-['Helvetica_Neue:Bold',sans-serif] text-[9px] text-[#1e1709] uppercase mb-1 leading-[1.3]">
               {product.title}
@@ -689,22 +991,52 @@ export function ProfilePage() {
       className="relative w-full min-h-screen overflow-x-hidden bg-[#fffefd]"
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
-      {/* Header */}
-      <div className="bg-white w-full h-[48px] shrink-0 flex items-center justify-between px-4 border-b border-[#1e1709] max-w-[393px] mx-auto">
-        <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-black">
-          VII SEVN
-        </p>
-        <button 
-          onClick={() => {
-            console.log('Menu button clicked');
-            setShowMoreMenu(true);
-          }}
-          className="w-8 h-8 flex items-center justify-center hover:bg-[#1e1709]/10 rounded transition-colors z-50"
-        >
-          <Menu className="w-6 h-6 text-[#1e1709]" strokeWidth={1.1} />
-        </button>
-      </div>
-
+      {/* Header - Different for own profile vs other user */}
+      {paramUserId ? (
+        // Viewing another user's profile - show back button and more menu
+        <div className="sticky top-0 bg-[#fffefd] h-[48px] w-full z-40 border-b border-[#1e1709]">
+          <div className="flex items-center justify-between h-full px-4 max-w-[393px] mx-auto">
+            <button 
+              onClick={() => navigate(-1)}
+              className="w-8 h-8 flex items-center justify-center hover:bg-[#1e1709]/10 rounded transition-colors"
+            >
+              <svg className="w-5 h-5 text-[#1e1709]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[16px] tracking-[2px] text-[#1e1709] uppercase flex-1 text-center">
+              {profile?.display_name || profile?.username || 'Profile'}
+            </p>
+            <button 
+              onClick={() => setShowMoreMenu(true)}
+              className="w-8 h-8 flex items-center justify-center hover:bg-[#1e1709]/10 rounded transition-colors"
+            >
+              <MoreVertical className="w-5 h-5 text-[#1e1709]" strokeWidth={1.5} />
+            </button>
+          </div>
+        </div>
+      ) : (
+        // Own profile - show logo and hamburger menu
+        <div className="bg-white w-full h-[48px] shrink-0 flex items-center justify-between px-4 border-b border-[#1e1709] max-w-[393px] mx-auto">
+          <div className="flex items-center gap-2">
+            <img 
+              src={imgV22Logo} 
+              alt="V22" 
+              className="h-[34px] w-auto object-contain"
+            />
+            <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-black">
+              SEVN
+            </p>
+          </div>
+          <button 
+            onClick={() => setShowMoreMenu(true)}
+            className="w-8 h-8 flex items-center justify-center hover:bg-[#1e1709]/10 rounded transition-colors"
+          >
+            <Menu className="w-6 h-6 text-[#1e1709]" strokeWidth={1.1} />
+          </button>
+        </div>
+      )}
+      
       {/* Content with bottom safe area padding */}
       <div 
         className="w-full max-w-[393px] mx-auto pt-6 px-4"
@@ -811,22 +1143,51 @@ export function ProfilePage() {
 
         {/* Action Buttons - Edit + Messages (own profile) */}
         <div className="flex gap-[10px] mb-6">
-          <button 
-            onClick={() => setShowEditModal(true)}
-            className="flex-1 bg-[#1e1709] text-white h-[36px] flex items-center justify-center hover:bg-[#3e3709] transition-colors"
-          >
-            <span className="font-['Helvetica_Neue:Medium',sans-serif] text-[14px] leading-[18px]">
-              EDIT
-            </span>
-          </button>
-          <button 
-            onClick={() => navigate('/messages')}
-            className="flex-1 bg-[#1e1709] text-white h-[36px] flex items-center justify-center hover:bg-[#3e3709] transition-colors"
-          >
-            <span className="font-['Helvetica_Neue:Medium',sans-serif] text-[14px] leading-[18px]">
-              INBOX
-            </span>
-          </button>
+          {paramUserId ? (
+            // Viewing someone else's profile - show Follow + Share
+            <>
+              <button 
+                onClick={handleFollowToggle}
+                className={`flex-1 h-[36px] flex items-center justify-center transition-colors ${
+                  isFollowing 
+                    ? 'bg-white border border-[#1e1709] text-[#1e1709] hover:bg-gray-50' 
+                    : 'bg-[#1e1709] text-white hover:bg-[#3e3709]'
+                }`}
+              >
+                <span className="font-['Helvetica_Neue:Medium',sans-serif] text-[14px] leading-[18px]">
+                  {isFollowing ? 'FOLLOWING' : 'FOLLOW'}
+                </span>
+              </button>
+              <button 
+                onClick={handleShare}
+                className="flex-1 bg-[#1e1709] text-white h-[36px] flex items-center justify-center hover:bg-[#3e3709] transition-colors"
+              >
+                <span className="font-['Helvetica_Neue:Medium',sans-serif] text-[14px] leading-[18px]">
+                  SHARE
+                </span>
+              </button>
+            </>
+          ) : (
+            // Viewing own profile - show Edit + Inbox
+            <>
+              <button 
+                onClick={() => setShowEditModal(true)}
+                className="flex-1 bg-[#1e1709] text-white h-[36px] flex items-center justify-center hover:bg-[#3e3709] transition-colors"
+              >
+                <span className="font-['Helvetica_Neue:Medium',sans-serif] text-[14px] leading-[18px]">
+                  EDIT
+                </span>
+              </button>
+              <button 
+                onClick={() => navigate('/messages')}
+                className="flex-1 bg-[#1e1709] text-white h-[36px] flex items-center justify-center hover:bg-[#3e3709] transition-colors"
+              >
+                <span className="font-['Helvetica_Neue:Medium',sans-serif] text-[14px] leading-[18px]">
+                  INBOX
+                </span>
+              </button>
+            </>
+          )}
         </div>
 
         {/* Tab Navigation */}
@@ -921,10 +1282,12 @@ export function ProfilePage() {
                     <div 
                       key={like.productId} 
                       className={`relative shrink-0 w-[112px] cursor-pointer border border-[#1e1709] bg-white rounded-[5px] overflow-hidden ${index === likedProducts.length - 1 ? 'mr-4' : ''}`}
-                      onClick={() => like.productData?.url && window.open(like.productData.url, '_blank')}
                     >
                       {/* Product Image */}
-                      <div className="relative w-full h-[150px] overflow-hidden bg-white">
+                      <div 
+                        className="relative w-full h-[150px] overflow-hidden bg-white"
+                        onClick={() => like.productData?.url && window.open(like.productData.url, '_blank')}
+                      >
                         {like.productData?.image && (
                           <img 
                             alt={like.productData.title || 'Product'}
@@ -932,10 +1295,27 @@ export function ProfilePage() {
                             src={like.productData.image}
                           />
                         )}
+                        
+                        {/* Heart button to unlike */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleUnlikeProduct(like.productId);
+                          }}
+                          className="absolute top-2 right-2 w-[28px] h-[28px] bg-[rgba(255,254,253,0.95)] border border-[#1e1709] rounded-full flex items-center justify-center transition-all hover:bg-white z-10"
+                        >
+                          <Heart 
+                            className="w-3.5 h-3.5 fill-[#1e1709] text-[#1e1709]"
+                            strokeWidth={1.5}
+                          />
+                        </button>
                       </div>
                       
                       {/* Product Info */}
-                      <div className="p-2">
+                      <div 
+                        className="p-2"
+                        onClick={() => like.productData?.url && window.open(like.productData.url, '_blank')}
+                      >
                         {like.productData?.title && (
                           <p className="font-['Helvetica_Neue:Bold',sans-serif] text-[9px] text-[#1e1709] uppercase mb-1 leading-[1.3]">
                             {like.productData.title}
@@ -1046,7 +1426,7 @@ export function ProfilePage() {
       <MoreMenuModal
         isOpen={showMoreMenu}
         onClose={() => setShowMoreMenu(false)}
-        isOwnProfile={true}
+        isOwnProfile={!paramUserId}
         onDeleteAccount={() => {
           setShowMoreMenu(false);
           setShowDeleteModal(true);

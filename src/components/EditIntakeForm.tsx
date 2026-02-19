@@ -491,7 +491,8 @@ export function EditIntakeForm() {
                 value={answers[question.id] || ''}
                 onChange={(e) => handleAnswerChange(question.id, e.target.value)}
                 placeholder={question.placeholder}
-                className="w-full min-h-[120px] p-4 border border-[#1e1709] rounded-lg font-['Helvetica_Neue:Regular',sans-serif] text-[16px] text-[#1e1709] placeholder:text-[#1e1709]/40 focus:outline-none focus:ring-1 focus:ring-[#1e1709] resize-none"
+                disabled={order.status !== 'waitlist'}
+                className="w-full min-h-[120px] p-4 border border-[#1e1709] rounded-lg font-['Helvetica_Neue:Regular',sans-serif] text-[16px] text-[#1e1709] placeholder:text-[#1e1709]/40 focus:outline-none focus:ring-1 focus:ring-[#1e1709] resize-none disabled:bg-gray-50 disabled:cursor-not-allowed"
               />
             </div>
           ))}

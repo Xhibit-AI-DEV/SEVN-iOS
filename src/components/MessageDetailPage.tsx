@@ -1,9 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2, Send, Heart, MoreHorizontal, Trash2 } from 'lucide-react';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { toast } from 'sonner@2.0.3';
 import { GPTSearchPanel } from './GPTSearchPanel';
+
+// Import stylist images
+import imgLissyRoddy from "figma:asset/21ead93bac0da68ed5f33efdfb07c0bf632228cc.png";
+import imgChrisWhyle from "figma:asset/083df4dc1c94d586d53c3644182d81e287c70454.png";
 
 interface Order {
   id: string;
@@ -64,6 +68,26 @@ export function MessageDetailPage() {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Helper function to format stylist name
+  const formatStylistName = (stylistId: string) => {
+    // Convert LISSY_RODDY to Lissy Roddy
+    return stylistId
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  };
+
+  const getStylistImage = () => {
+    if (!order) return imgLissyRoddy; // Default fallback if order is not loaded
+    if (order.stylist_id?.toLowerCase().includes('lissy')) {
+      return imgLissyRoddy;
+    } else if (order.stylist_id?.toLowerCase().includes('chris')) {
+      return imgChrisWhyle;
+    }
+    // Default fallback
+    return imgLissyRoddy;
+  };
+
   useEffect(() => {
     fetchOrder();
   }, [orderId]);
@@ -71,6 +95,10 @@ export function MessageDetailPage() {
   // Load selections and styling notes when order changes
   useEffect(() => {
     if (order && !isCustomer && (order.status === 'invited' || order.status === 'paid' || order.status === 'styling')) {
+      loadStylingData();
+    }
+    // Also load selections for customers when order is completed
+    if (order && isCustomer && order.status === 'completed') {
       loadStylingData();
     }
   }, [order, isCustomer]);
@@ -133,9 +161,38 @@ export function MessageDetailPage() {
       setIsSaving(true);
       console.log('💾 Saving selections...');
 
-      // Get stylist info
-      const stylistName = 'Lissy'; // TODO: Get from logged-in stylist
-      const stylistImage = ''; // TODO: Get from logged-in stylist
+      // Get stylist info from the order
+      const stylistName = formatStylistName(order.stylist_id);
+      const stylistImage = getStylistImage();
+      
+      console.log('🎨 Stylist data:', {
+        stylistId: order.stylist_id,
+        stylistName,
+        stylistImage,
+        stylistImageType: typeof stylistImage,
+      });
+
+      const payload = {
+        customerId: order.id,
+        clientEmail: order.customer_email,
+        clientImage: order.main_image_url,
+        clientName: order.customer_name,
+        stylistName,
+        stylistImage,
+        items: selectedItems.map(item => ({
+          id: item.id,
+          url: item.url,
+          title: item.title || '',
+          image: item.image || '',
+          price: item.price || '',
+          brand: item.brand || '',
+          source: item.source,
+          timestamp: item.timestamp,
+        })),
+        stylingNotes,
+      };
+
+      console.log('📤 Full payload being sent:', JSON.stringify(payload, null, 2));
 
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/selections/save`,
@@ -145,32 +202,15 @@ export function MessageDetailPage() {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${publicAnonKey}`,
           },
-          body: JSON.stringify({
-            customerId: order.id,
-            clientEmail: order.customer_email,
-            clientImage: order.main_image_url,
-            clientName: order.customer_name,
-            stylistName,
-            stylistImage,
-            items: selectedItems.map(item => ({
-              id: item.id,
-              url: item.url,
-              title: item.title || '',
-              image: item.image || '',
-              price: item.price || '',
-              brand: item.brand || '',
-              source: item.source,
-              timestamp: item.timestamp,
-            })),
-            stylingNotes,
-          }),
+          body: JSON.stringify(payload),
         }
       );
 
       if (response.ok) {
         console.log('✅ Selections saved');
       } else {
-        console.error('❌ Failed to save selections');
+        const errorData = await response.json();
+        console.error('❌ Failed to save selections:', errorData);
       }
     } catch (error) {
       console.error('Error saving selections:', error);
@@ -195,40 +235,39 @@ export function MessageDetailPage() {
 
     try {
       setIsSendingEmail(true);
-      console.log('📧 Sending email...');
+      console.log('📦 Sending selections to customer...');
 
       // First, ensure everything is saved
       await saveSelections();
 
-      // Send email using the /send-from-storage endpoint
+      // Update order status to "completed" (sent)
+      const accessToken = localStorage.getItem('access_token');
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/sendgrid/send-from-storage/${order.id}`,
+        `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/orders/${order.id}/status`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${publicAnonKey}`,
+            Authorization: `Bearer ${accessToken}`,
           },
+          body: JSON.stringify({
+            status: 'completed',
+          }),
         }
       );
 
       if (response.ok) {
-        const data = await response.json();
-        toast.success(`✅ Email sent to ${data.emailSentTo}!`);
+        toast.success(`✅ Selections sent to ${order.customer_name}!`);
+        // Navigate back to messages list
+        setTimeout(() => navigate('/messages'), 1000);
       } else {
         const errorData = await response.json();
-        console.error('Email error:', errorData);
-        
-        // Show specific error message
-        if (errorData.validationErrors) {
-          toast.error(`Missing: ${errorData.validationErrors.join(', ')}`);
-        } else {
-          toast.error(`Failed to send: ${errorData.error || 'Unknown error'}`);
-        }
+        console.error('Send error:', errorData);
+        toast.error('Failed to send selections');
       }
     } catch (error) {
-      console.error('Error sending email:', error);
-      toast.error('Failed to send email');
+      console.error('Error sending selections:', error);
+      toast.error('Failed to send selections');
     } finally {
       setIsSendingEmail(false);
     }
@@ -431,7 +470,7 @@ export function MessageDetailPage() {
         return;
       }
       
-      // First, get the current user's ID from their profile
+      // Get the current user's ID from their profile (this also validates the token)
       const profileResponse = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/profiles/me`,
         {
@@ -607,15 +646,452 @@ export function MessageDetailPage() {
   }
 
   const questions = [
-    'What are you looking to be styled for?',
-    'What\'s the vibe you\'re going for?',
-    'Are there any brands, styles, or references you love?',
-    'Anything you don\'t like or want to avoid?',
-    'Is this for a specific time or occasion?',
+    'What are you hoping to get styled for?',
+    'What brands do you like?',
+    'Do you have any wardrobe gaps?',
     'Any fit or sizing notes we should know?',
     'What\'s your budget range?',
     'Anything else you want us to know?',
   ];
+
+  // CUSTOMER VIEW - INVITED (Waiting for Payment)
+  if (isCustomer && order.status === 'invited') {
+    return (
+      <div 
+        className="min-h-screen bg-white w-full overflow-x-hidden"
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      >
+        <div 
+          className="w-full mx-auto px-6"
+          style={{ paddingBottom: 'calc(24px + env(safe-area-inset-bottom))' }}
+        >
+          {/* Header */}
+          <div className="sticky top-0 bg-white z-10 h-[48px] border-b border-gray-100 -mx-6 px-6 mb-6">
+            <div className="h-full flex items-center justify-center relative">
+              <button
+                onClick={() => navigate('/customer-inbox')}
+                className="absolute left-0 flex items-center gap-1 text-black hover:opacity-70 transition-opacity"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+              
+              <span className="font-['Helvetica_Neue:Medium',sans-serif] text-[15px] tracking-[0.5px] uppercase">
+                You're Invited
+              </span>
+            </div>
+          </div>
+
+          {/* Stylist Photo with Card Stack Effect */}
+          <div className="flex justify-center mb-8">
+            <div className="relative size-[225px] rounded-[1px]" style={{ border: '1px solid #1e1709' }}>
+              {/* Layered circular images */}
+              <div className="absolute inset-[5.05%_4.71%_4.69%_4.71%] pointer-events-none rounded-[147px]">
+                <img 
+                  alt={order.stylist_id}
+                  loading="lazy" 
+                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
+                  src={getStylistImage()} 
+                />
+                <img 
+                  alt={order.stylist_id}
+                  loading="lazy" 
+                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
+                  src={getStylistImage()} 
+                />
+                <img 
+                  alt={order.stylist_id}
+                  loading="lazy" 
+                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
+                  src={getStylistImage()} 
+                />
+                <div className="absolute inset-0 rounded-[147px]" style={{ border: '1px solid #EAEAEA' }} />
+              </div>
+              
+              {/* Name badge */}
+              <div className="absolute inset-[80%_5.97%_9.26%_6.11%]">
+                <div className="absolute bg-[rgba(255,254,253,0.8)] inset-0 rounded-[8px]" style={{ border: '1px solid #1e1709' }} />
+                <div className="absolute flex flex-col font-['Helvetica_Neue:Regular',sans-serif] inset-[0_0_0_0] justify-center items-center leading-[14px] text-[#1e1709] text-[12px] tracking-[0.5px] uppercase">
+                  <p>{formatStylistName(order.stylist_id)}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Payment Prompt */}
+          <div className="mb-8 text-center">
+            <p className="font-['Helvetica_Neue:Bold',sans-serif] text-[18px] leading-[24px] tracking-[1px] uppercase text-[#1e1709] mb-3">
+              Complete to Be Styled by {formatStylistName(order.stylist_id)}
+            </p>
+            <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[13px] leading-[20px] tracking-[0.5px] text-[#1e1709]/70 mb-2">
+              You can edit your intake until payment is complete.
+            </p>
+            <button
+              onClick={() => navigate(`/lissy/intake/edit/${order.id}`)}
+              className="font-['Helvetica_Neue:Regular',sans-serif] text-[13px] underline text-[#1e1709] hover:opacity-70"
+            >
+              Edit Your Intake Form
+            </button>
+          </div>
+
+          {/* Payment Button */}
+          <div className="mb-8">
+            <button
+              onClick={async () => {
+                try {
+                  setActionLoading(true);
+                  const accessToken = localStorage.getItem('access_token');
+                  
+                  // Mock payment - update status to "paid"
+                  const response = await fetch(
+                    `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/orders/${order.id}/status`,
+                    {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${accessToken}`,
+                      },
+                      body: JSON.stringify({
+                        status: 'paid',
+                      }),
+                    }
+                  );
+
+                  if (!response.ok) {
+                    throw new Error('Failed to process payment');
+                  }
+
+                  toast.success('Payment successful! Your stylist will begin curating your edit.');
+                  
+                  // Refresh order
+                  await fetchOrder();
+                } catch (error: any) {
+                  console.error('❌ Payment error:', error);
+                  toast.error(error.message || 'Payment failed. Please try again.');
+                } finally {
+                  setActionLoading(false);
+                }
+              }}
+              disabled={actionLoading}
+              className="w-full h-[52px] bg-[#1e1709] text-white rounded-[8px] font-['Helvetica_Neue:Bold',sans-serif] text-[16px] uppercase hover:bg-[#2a2010] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {actionLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Processing...</span>
+                </>
+              ) : (
+                'PURCHASE'
+              )}
+            </button>
+          </div>
+
+          {/* What's Included */}
+          <div className="mb-8 border border-[#1E1709]/10 rounded-lg p-4">
+            <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[11px] tracking-[1.5px] uppercase mb-3 text-[#1E1709]">
+              What You Get
+            </p>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="font-['Helvetica_Neue:Regular',sans-serif] text-[13px] text-[#1e1709]">
+                  7-Item Curated Edit
+                </span>
+                <span className="font-['Helvetica_Neue:Medium',sans-serif] text-[13px] text-[#1e1709]">
+                  Included
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-['Helvetica_Neue:Regular',sans-serif] text-[13px] text-[#1e1709]">
+                  Personal Styling Notes
+                </span>
+                <span className="font-['Helvetica_Neue:Medium',sans-serif] text-[13px] text-[#1e1709]">
+                  Included
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Style Intake Section (View Only) */}
+          <div className="mb-8">
+            <h2 className="font-['Helvetica_Neue:Regular',sans-serif] text-[11px] tracking-[1.5px] uppercase mb-4 text-[#1E1709]">
+              Your Style Intake
+            </h2>
+            <div className="border border-[#1E1709]/10 rounded-lg p-4">
+              <div className="space-y-6">
+                {order.intake_answers && Object.entries(order.intake_answers).map(([key, value], idx) => {
+                  if (!value) return null;
+                  return (
+                    <div key={key} className="pb-6 border-b border-[#1E1709]/10 last:border-b-0 last:pb-0">
+                      <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[12px] text-[#1E1709]/60 mb-2">
+                        {questions[idx] || key}
+                      </p>
+                      <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] text-[#1E1709]">
+                        {value}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* References Section */}
+          {order.reference_images && order.reference_images.length > 0 && (
+            <div className="mb-8">
+              <h2 className="font-['Helvetica_Neue:Regular',sans-serif] text-[11px] tracking-[1.5px] uppercase mb-4 text-[#1E1709]">
+                Your References
+              </h2>
+              <div className="flex gap-4 overflow-x-auto pb-2 -mx-6 px-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                {order.reference_images.map((imgUrl, idx) => (
+                  <div key={idx} className="w-[207px] h-[368px] rounded-[8px] overflow-hidden border-[1px] border-[#1E1709] bg-white shrink-0">
+                    <img 
+                      src={imgUrl} 
+                      alt={`Reference ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // CUSTOMER VIEW - COMPLETED (Viewing Selections from Stylist)
+  if (isCustomer && order.status === 'completed') {
+    return (
+      <div className="min-h-screen bg-white w-full overflow-x-hidden">
+        <div className="w-full max-w-[393px] mx-auto px-6 pb-8">
+          {/* Header */}
+          <div className="sticky top-0 bg-white z-10 py-6 -mx-6 px-6 mb-6">
+            <div className="flex items-center justify-center relative">
+              <button
+                onClick={() => navigate('/messages')}
+                className="absolute left-0 flex items-center gap-1 text-black hover:opacity-70 transition-opacity"
+              >
+                <ArrowLeft className="w-6 h-6" strokeWidth={1.5} />
+              </button>
+              
+              <div className="text-center">
+                <h1 className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] leading-[22px] tracking-[3px] uppercase text-black">
+                  INBOX
+                </h1>
+              </div>
+            </div>
+          </div>
+
+          {/* Client Image with Card Stack */}
+          <div className="flex justify-center mb-6">
+            <div className="relative">
+              {/* Card stack layers */}
+              <div className="absolute inset-0 border-[1px] border-[#1E1709] rounded-[8px] bg-white" style={{ transform: 'translate(8px, 8px)' }} />
+              <div className="absolute inset-0 border-[1px] border-[#1E1709] rounded-[8px] bg-white" style={{ transform: 'translate(4px, 4px)' }} />
+              <div className="w-[286px] h-[368px] rounded-[8px] overflow-hidden border-[1px] border-[#1E1709] relative z-10 bg-white">
+                {order.main_image_url ? (
+                  <img 
+                    src={order.main_image_url} 
+                    alt="Your style"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-300 flex items-center justify-center text-gray-500">
+                    No Photo
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Title */}
+          <h2 className="font-['Helvetica_Neue:Medium',sans-serif] text-[18px] leading-[normal] tracking-[2px] uppercase text-[#1e1709] text-center mb-4">
+            YOUR SEVN SELECTS
+          </h2>
+
+          {/* Subtitle */}
+          <p className="font-['Helvetica_Neue:Medium',sans-serif] text-[14px] leading-[24px] tracking-[1px] uppercase text-[#1e1709] text-center mb-6">
+            Handpicked Edit + styling tips
+          </p>
+
+          {/* Line Divider */}
+          <div className="w-full h-0 mb-6">
+            <svg className="block w-full h-[1px]" fill="none" preserveAspectRatio="none" viewBox="0 0 349 1">
+              <line stroke="#1e1709" strokeOpacity="0.15" x2="349" y1="0.5" y2="0.5" />
+            </svg>
+          </div>
+
+          {/* Stylist Card */}
+          <div className="flex justify-center mt-8 mb-6">
+            <div className="relative w-[184px] h-[184px]">
+              <img 
+                alt={formatStylistName(order.stylist_id)}
+                className="absolute inset-0 w-full h-full object-cover rounded-full" 
+                src={getStylistImage()} 
+              />
+              
+              {/* Name badge */}
+              <div className="absolute bottom-[6px] left-[6px] right-[6px] h-[24px]">
+                <div className="absolute bg-[rgba(255,254,253,0.8)] inset-0 rounded-[20px]" style={{ border: '1px solid #130326' }} />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <p className="font-['Helvetica_Neue:Medium',sans-serif] text-[12px] leading-[22px] tracking-[2px] uppercase text-[#130326]">
+                    {formatStylistName(order.stylist_id)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Styling Notes Section */}
+          <h3 className="font-['Helvetica_Neue:Regular',sans-serif] text-[18px] leading-[normal] tracking-[2px] uppercase text-[#1e1709] text-center mb-4">
+            STYLING NOTES
+          </h3>
+
+          <div className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] leading-[1.8] tracking-[1px] text-[#1e1709] mb-8 whitespace-pre-wrap max-w-[86%] mx-auto">
+            {stylingNotes || 'Your stylist is preparing your personalized styling notes...'}
+          </div>
+
+          {/* Line Divider */}
+          <div className="w-full h-0 mb-8">
+            <svg className="block w-full h-[1px]" fill="none" preserveAspectRatio="none" viewBox="0 0 349 1">
+              <line stroke="#1e1709" strokeOpacity="0.15" x2="349" y1="0.5" y2="0.5" />
+            </svg>
+          </div>
+
+          {/* Sevn Selects Products Section */}
+          <h3 className="font-['Helvetica_Neue:Regular',sans-serif] text-[18px] leading-[normal] tracking-[2px] uppercase text-[#1e1709] text-center mb-6">
+            SEVN SELECTS
+          </h3>
+
+          {/* Product Grid */}
+          {selectedItems.length > 0 ? (
+            <div className="space-y-8 mb-8">
+              {/* First large product */}
+              {selectedItems[0] && (
+                <a
+                  key={selectedItems[0].id}
+                  href={selectedItems[0].url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block group"
+                >
+                  <div className="border border-black rounded-[5px] overflow-hidden bg-white">
+                    {/* Product Image */}
+                    <div className="h-[559px] bg-gray-100">
+                      {selectedItems[0].image ? (
+                        <img 
+                          src={selectedItems[0].image} 
+                          alt={selectedItems[0].title || 'Product 1'}
+                          className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                          <span className="text-gray-400 text-xs">No Image</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Product Metadata - Inside the border */}
+                    <div className="p-4 h-[90px] flex flex-col">
+                      <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[10px] text-[#1e1709]/60 uppercase mb-1 truncate">
+                        {selectedItems[0].brand || '\u00A0'}
+                      </p>
+                      <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[12px] text-[#1e1709] mb-1 line-clamp-1">
+                        {selectedItems[0].title || '\u00A0'}
+                      </p>
+                      <p className="font-['Helvetica_Neue:Medium',sans-serif] text-[12px] text-[#1e1709] mt-auto">
+                        {selectedItems[0].price || '\u00A0'}
+                      </p>
+                    </div>
+                  </div>
+                </a>
+              )}
+              
+              {/* Remaining 6 products in 2-column grid */}
+              {selectedItems.length > 1 && (
+                <div className="grid grid-cols-2 gap-4">
+                  {selectedItems.slice(1, 7).map((item, idx) => (
+                    <a
+                      key={item.id}
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block group"
+                    >
+                      <div className="border border-black rounded-[5px] overflow-hidden bg-white">
+                        {/* Product Image */}
+                        <div className="h-[245px] bg-gray-100">
+                          {item.image ? (
+                            <img 
+                              src={item.image} 
+                              alt={item.title || `Product ${idx + 2}`}
+                              className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                              <span className="text-gray-400 text-xs">No Image</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Product Metadata - Inside the border */}
+                        <div className="p-4 h-[90px] flex flex-col">
+                          <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[10px] text-[#1e1709]/60 uppercase mb-1 truncate">
+                            {item.brand || '\u00A0'}
+                          </p>
+                          <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[12px] text-[#1e1709] mb-1 line-clamp-1">
+                            {item.title || '\u00A0'}
+                          </p>
+                          <p className="font-['Helvetica_Neue:Medium',sans-serif] text-[12px] text-[#1e1709] mt-auto">
+                            {item.price || '\u00A0'}
+                          </p>
+                        </div>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-gray-400">
+              <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px]">
+                Loading your selections...
+              </p>
+            </div>
+          )}
+
+          {/* Line Divider */}
+          <div className="w-full h-0 mb-8">
+            <svg className="block w-full h-[1px]" fill="none" preserveAspectRatio="none" viewBox="0 0 349 1">
+              <line stroke="#1e1709" strokeOpacity="0.15" x2="349" y1="0.5" y2="0.5" />
+            </svg>
+          </div>
+
+          {/* Save Edit Button */}
+          <button
+            onClick={async () => {
+              try {
+                // Save all selected items to liked products
+                const savePromises = selectedItems.map(item => 
+                  handleLike(item)
+                );
+                
+                await Promise.all(savePromises);
+                toast.success('Edit saved to your likes!');
+              } catch (error) {
+                console.error('Error saving edit:', error);
+                toast.error('Failed to save edit');
+              }
+            }}
+            className="w-full h-[52px] bg-[#1e1709] text-white rounded-[8px] font-['IBM_Plex_Mono:Regular',sans-serif] text-[14px] hover:bg-[#2a2010] transition-colors flex items-center justify-center"
+          >
+            SAVE EDIT
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // STYLIST VIEW - READY TO STYLE (paid or styling status)
   if (!isCustomer && (order.status === 'invited' || order.status === 'paid' || order.status === 'styling')) {
@@ -801,31 +1277,6 @@ export function MessageDetailPage() {
             </div>
           </div>
 
-          {/* Curate Section */}
-          <div className="mt-8 px-4">
-            <h2 className="font-['Helvetica_Neue:Medium',sans-serif] text-[20px] tracking-[2px] text-[#1e1709] uppercase mb-4">
-              Curate
-            </h2>
-            
-            <div className="border border-black/20 rounded-lg overflow-hidden">
-              <GPTSearchPanel 
-                onAddItem={addItem}
-                selectedCustomer={{ sys: { id: order.id }, fields: { email: order.customer_email, name: order.customer_name } }}
-                selectedItems={selectedItems}
-                onRemoveItem={removeItem}
-              />
-            </div>
-          </div>
-
-          {/* Line Divider */}
-          <div className="mt-8 px-4 flex justify-center">
-            <div className="h-0 w-full">
-              <svg className="block w-full h-[1px]" fill="none" preserveAspectRatio="none" viewBox="0 0 349 1">
-                <line stroke="black" x2="349" y1="0.5" y2="0.5" />
-              </svg>
-            </div>
-          </div>
-
           {/* Your Picks Section */}
           <div className="mt-8 px-4">
             <div className="flex items-center justify-between mb-4">
@@ -900,6 +1351,31 @@ export function MessageDetailPage() {
                 })}
               </div>
             )}
+          </div>
+
+          {/* Line Divider */}
+          <div className="mt-8 px-4 flex justify-center">
+            <div className="h-0 w-full">
+              <svg className="block w-full h-[1px]" fill="none" preserveAspectRatio="none" viewBox="0 0 349 1">
+                <line stroke="black" x2="349" y1="0.5" y2="0.5" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Curate Section */}
+          <div className="mt-8 px-4">
+            <h2 className="font-['Helvetica_Neue:Medium',sans-serif] text-[20px] tracking-[2px] text-[#1e1709] uppercase mb-4">
+              Curate
+            </h2>
+            
+            <div className="border border-black/20 rounded-lg overflow-hidden">
+              <GPTSearchPanel 
+                onAddItem={addItem}
+                selectedCustomer={{ sys: { id: order.id }, fields: { email: order.customer_email, name: order.customer_name } }}
+                selectedItems={selectedItems}
+                onRemoveItem={removeItem}
+              />
+            </div>
           </div>
         </div>
       </div>

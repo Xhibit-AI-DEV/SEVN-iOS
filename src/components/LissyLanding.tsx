@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import svgPaths from "../imports/svg-ixy1f48tju";
 import imgScreenshot20231117At12524 from "figma:asset/557e4ca658e2ff37cf2dda18e4534c106ec861c0.png";
 import imgScreenshot20231117At12525 from "figma:asset/e4b87ad125820c87df00cd6e705bde4e8af3e67e.png";
@@ -440,8 +440,8 @@ function Component3({ onButtonClick }: { onButtonClick: () => void }) {
         <Frame20 key={i} />
       ))}
       <div className="flex flex-col gap-[6px] items-center mt-[20px]">
-        <p className="css-4hzbpn leading-[normal] not-italic relative shrink-0 text-[#1e1709] text-[14px] text-center tracking-[0.1em] uppercase w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 700 }}>1:1 styling</p>
-        <p className="css-4hzbpn leading-[normal] not-italic relative shrink-0 text-[#1e1709] text-[12px] text-center tracking-[0.1em] w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 700 }}>Upload a reference look to get started.</p>
+        <p className="css-4hzbpn leading-[normal] not-italic relative shrink-0 text-[#1e1709] text-[16px] text-center tracking-[0.1em] uppercase w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 400 }}>1:1 styling</p>
+        <p className="css-4hzbpn leading-[normal] not-italic relative shrink-0 text-[#1e1709] text-[14px] text-center tracking-[0.1em] w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 400 }}>Upload a reference look to get started.</p>
       </div>
       <div className="flex items-center justify-center relative shrink-0 mt-[15px]">
         <div className="flex-none scale-y-[-100%]">
@@ -492,18 +492,32 @@ export function LissyLanding({ onImageUpload }: LissyLandingProps) {
     };
 
     try {
-      // Check if Web Share API is available (mobile)
-      if (navigator.share) {
+      // Check if Web Share API is available
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
         await navigator.share(shareData);
         console.log('✅ Shared successfully');
       } else {
-        // Fallback: Copy URL to clipboard (desktop)
+        // Fallback: Copy URL to clipboard
         await navigator.clipboard.writeText(window.location.href);
         alert('Link copied to clipboard!');
         console.log('✅ URL copied to clipboard');
       }
-    } catch (err) {
-      console.error('❌ Error sharing:', err);
+    } catch (err: any) {
+      // Only log errors that aren't user cancellations
+      if (err.name !== 'AbortError' && err.name !== 'NotAllowedError') {
+        console.error('❌ Error sharing:', err);
+      }
+      
+      // Fallback to clipboard on any error (except user cancellation)
+      if (err.name !== 'AbortError') {
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          alert('Link copied to clipboard!');
+          console.log('✅ URL copied to clipboard as fallback');
+        } catch (clipboardErr) {
+          console.error('❌ Failed to copy to clipboard:', clipboardErr);
+        }
+      }
     }
   };
 
@@ -585,8 +599,8 @@ export function LissyLanding({ onImageUpload }: LissyLandingProps) {
               <Group4 />
             </div>
             <div className="flex flex-col gap-[6px] items-center mt-[20px]">
-              <p className="css-4hzbpn leading-[normal] not-italic relative shrink-0 text-[#1e1709] text-[16px] text-center tracking-[0.1em] uppercase w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 700 }}>1:1 styling</p>
-              <p className="css-4hzbpn leading-[normal] not-italic relative shrink-0 text-[#1e1709] text-[14px] text-center tracking-[0.1em] w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 700 }}>Upload a reference look to get started.</p>
+              <p className="css-4hzbpn leading-[normal] not-italic relative shrink-0 text-[#1e1709] text-[16px] text-center tracking-[0.1em] uppercase w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 400 }}>1:1 styling</p>
+              <p className="css-4hzbpn leading-[normal] not-italic relative shrink-0 text-[#1e1709] text-[14px] text-center tracking-[0.1em] w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 400 }}>Upload a reference look to get started.</p>
             </div>
             <div className="mt-6">
               <ButtonDark onClick={takePhoto} />

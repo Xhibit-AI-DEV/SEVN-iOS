@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
@@ -277,22 +277,37 @@ export function SignIn() {
             </form>
           )}
 
-          {/* Toggle Sign In/Sign Up */}
-          {showAuthForm && (
+          {/* Toggle Sign In/Sign Up and Forgot Password - Same Line */}
+          {showAuthForm && !isSignUp && (
+            <div className="mt-6 px-0 text-left">
+              <span className="font-['Helvetica_Neue:Regular',sans-serif] text-[13px] text-[#1E1709]/70">
+                Don't have an account?{' '}
+                <button
+                  onClick={() => setIsSignUp(!isSignUp)}
+                  className="font-['Helvetica_Neue:Medium',sans-serif] text-[#1E1709] hover:text-[#1E1709]/70 transition-colors underline"
+                >
+                  Sign Up
+                </button>
+                {' '}
+                <button
+                  type="button"
+                  onClick={() => navigate('/forgot-password')}
+                  className="font-['Helvetica_Neue:Medium',sans-serif] text-[#1E1709] hover:text-[#1E1709]/70 transition-colors underline"
+                >
+                  Forgot Password?
+                </button>
+              </span>
+            </div>
+          )}
+
+          {/* Toggle to Sign In - Only show in sign up mode */}
+          {showAuthForm && isSignUp && (
             <div className="mt-6 px-0 text-left">
               <button
                 onClick={() => setIsSignUp(!isSignUp)}
                 className="font-['Helvetica_Neue:Regular',sans-serif] text-[13px] text-[#1E1709]/70 hover:text-[#1E1709] transition-colors"
               >
-                {isSignUp ? (
-                  <>
-                    Already have an account? <span className="font-['Helvetica_Neue:Medium',sans-serif] text-[#1E1709]\">Sign In</span>
-                  </>
-                ) : (
-                  <>
-                    Don't have an account? <span className="font-['Helvetica_Neue:Medium',sans-serif] text-[#1E1709]\">Sign Up</span>
-                  </>
-                )}
+                Already have an account? <span className="font-['Helvetica_Neue:Medium',sans-serif] text-[#1E1709]\">Sign In</span>
               </button>
             </div>
           )}

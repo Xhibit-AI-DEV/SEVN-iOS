@@ -1,6 +1,8 @@
-import { useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router';
+import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { toast } from 'sonner';
 
 interface BlockedUser {
   id: string;
@@ -14,15 +16,76 @@ export function BlockedAccountsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // TODO: Fetch blocked users from backend
-    // For now, show empty state
-    setIsLoading(false);
+    const fetchBlockedUsers = async () => {
+      try {
+        const accessToken = localStorage.getItem('access_token');
+        
+        if (!accessToken) {
+          console.error('No access token found');
+          setIsLoading(false);
+          return;
+        }
+
+        const response = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/blocks`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        if (!response.ok) {
+          console.error('Failed to fetch blocked users:', response.status);
+          setIsLoading(false);
+          return;
+        }
+
+        const data = await response.json();
+        setBlockedUsers(data.blocked_users || []);
+      } catch (error) {
+        console.error('Error fetching blocked users:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBlockedUsers();
   }, []);
 
   const handleUnblock = async (userId: string) => {
-    // TODO: Implement unblock functionality
-    console.log('Unblock user:', userId);
-    setBlockedUsers(prev => prev.filter(user => user.id !== userId));
+    try {
+      const accessToken = localStorage.getItem('access_token');
+      
+      if (!accessToken) {
+        toast.error('You must be logged in to unblock users');
+        return;
+      }
+
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/blocks/unblock`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ blocked_user_id: userId }),
+        }
+      );
+
+      if (!response.ok) {
+        toast.error('Failed to unblock user');
+        return;
+      }
+
+      setBlockedUsers(prev => prev.filter(user => user.id !== userId));
+      toast.success('User unblocked successfully');
+    } catch (error) {
+      console.error('Error unblocking user:', error);
+      toast.error('Failed to unblock user');
+    }
   };
 
   return (
@@ -50,9 +113,7 @@ export function BlockedAccountsPage() {
       <div className="w-full max-w-[393px] mx-auto px-4 pt-8 pb-24">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] text-[#1e1709]/60">
-              Loading...
-            </p>
+            <Loader2 className="w-5 h-5 text-[#1e1709]/60 animate-spin" />
           </div>
         ) : blockedUsers.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 gap-4">

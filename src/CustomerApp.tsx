@@ -15,11 +15,13 @@ import { MessageDetailPage } from './components/MessageDetailPage';
 import { CustomerOrderView } from './components/CustomerOrderView';
 import { ProfilePage } from './components/ProfilePage';
 import { LissyLanding } from './components/LissyLanding';
+import { LewisLanding } from './components/LewisLanding';
 import { IntakeForm } from './components/IntakeForm';
 import { WaitlistPage } from './components/WaitlistPage';
 import { ChrisLanding } from './components/ChrisLanding';
 import { ChrisIntakeForm } from './components/ChrisIntakeForm';
 import { ChrisWaitlistPage } from './components/ChrisWaitlistPage';
+import { LewisWaitlistPage } from './components/LewisWaitlistPage';
 import { GenericWaitlistPage } from './components/GenericWaitlistPage';
 import { EditIntakeForm } from './components/EditIntakeForm';
 import { EditDetailPage } from './components/EditDetailPage';
@@ -35,6 +37,7 @@ import { DebugAuth } from './components/DebugAuth';
 import { PasswordReset } from './components/PasswordReset';
 import { ChangePasswordPage } from './components/ChangePasswordPage';
 import { ChangeEmailPage } from './components/ChangeEmailPage';
+import { ForgotPasswordPage } from './components/ForgotPasswordPage';
 import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
 import { TermsOfServicePage } from './components/TermsOfServicePage';
 import { BlockedAccountsPage } from './components/BlockedAccountsPage';
@@ -46,6 +49,8 @@ import { UnifiedLanding } from './components/UnifiedLanding';
 import { AdminCleanupPage } from './components/AdminCleanupPage';
 import { IOSLayoutTest } from './components/IOSLayoutTest';
 import { SimpleHeightTest } from './components/SimpleHeightTest';
+import { DebugOrderCreation } from './components/DebugOrderCreation';
+import CreateChrisAccount from './components/CreateChrisAccount';
 import { projectId, publicAnonKey } from './utils/supabase/info';
 
 /**
@@ -109,8 +114,9 @@ class ErrorBoundary extends React.Component<
 
 function AppContent() {
   const navigate = useNavigate();
-  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
+  const [lissyUploadedImage, setLissyUploadedImage] = useState<File | null>(null);
   const [chrisUploadedImage, setChrisUploadedImage] = useState<File | null>(null);
+  const [lewisUploadedImage, setLewisUploadedImage] = useState<File | null>(null);
   const [customerData, setCustomerData] = useState<{
     name: string;
     email: string;
@@ -198,16 +204,8 @@ function AppContent() {
   };
 
   const handleImageUpload = async (file: File) => {
-    console.log('📸 [App] handleImageUpload called');
-    console.log('📸 [App] File received:', file);
-    console.log('📸 [App] File details:', {
-      name: file.name,
-      type: file.type,
-      size: file.size,
-      lastModified: file.lastModified
-    });
-    
-    setUploadedImage(file);
+    setLissyUploadedImage(file);
+    console.log('📸 [App] Lissy image uploaded:', file.name, file.type, file.size);
     
     // Save to sessionStorage for persistence
     console.log('📸 [App] Creating FileReader...');
@@ -222,15 +220,9 @@ function AppContent() {
       sessionStorage.setItem('lissy_uploaded_image_name', file.name);
       sessionStorage.setItem('lissy_uploaded_image_type', file.type);
       
-      console.log('✅ [App] Image saved to sessionStorage:', file.name);
-      console.log('✅ [App] Verification - sessionStorage has:', {
-        hasBase64: !!sessionStorage.getItem('lissy_uploaded_image'),
-        name: sessionStorage.getItem('lissy_uploaded_image_name'),
-        type: sessionStorage.getItem('lissy_uploaded_image_type')
-      });
+      console.log('✅ [App] Lissy image saved to sessionStorage:', file.name);
       
       // Navigate AFTER sessionStorage is written
-      console.log('🚀 [App] Navigating to /lissy/intake...');
       navigate('/lissy/intake');
     };
     
@@ -270,6 +262,30 @@ function AppContent() {
     reader.readAsDataURL(file);
   };
 
+  const handleLewisImageUpload = (file: File) => {
+    setLewisUploadedImage(file);
+    console.log('📸 Lewis image uploaded:', file.name, file.type, file.size);
+    
+    // Save to sessionStorage for persistence
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      sessionStorage.setItem('lewis_uploaded_image', base64);
+      sessionStorage.setItem('lewis_uploaded_image_name', file.name);
+      sessionStorage.setItem('lewis_uploaded_image_type', file.type);
+      console.log('✅ Lewis image saved to sessionStorage:', file.name);
+      
+      // Navigate AFTER sessionStorage is written
+      navigate('/lewis/intake');
+    };
+    reader.onerror = (error) => {
+      console.error('❌ Failed to save Lewis image to sessionStorage:', error);
+      // Still navigate even if sessionStorage fails
+      navigate('/lewis/intake');
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleIntakeComplete = () => {
     // IntakeForm handles its own navigation with state - no need to navigate here
     console.log('✅ Intake complete - form will handle navigation');
@@ -280,6 +296,11 @@ function AppContent() {
     console.log('✅ Chris intake complete - form will handle navigation');
   };
 
+  const handleLewisIntakeComplete = () => {
+    // LewisIntakeForm handles its own navigation with state - no need to navigate here
+    console.log('✅ Lewis intake complete - form will handle navigation');
+  };
+
   return (
     <>
       <Routes>
@@ -288,6 +309,8 @@ function AppContent() {
         <Route path="/password-reset" element={<PasswordReset />} />
         <Route path="/debug" element={<DebugApiTest />} />
         <Route path="/debug-auth" element={<DebugAuth />} />
+        <Route path="/debug-orders" element={<AdminRoute><DebugOrders /></AdminRoute>} />
+        <Route path="/debug-order-creation" element={<ProtectedRoute><DebugOrderCreation /></ProtectedRoute>} />
         <Route path="/simple-debug" element={<SimpleDebug />} />
         <Route path="/ios-test" element={<IOSLayoutTest />} />
         <Route path="/height-test" element={<SimpleHeightTest />} />
@@ -304,8 +327,10 @@ function AppContent() {
           </ErrorBoundary>
         } />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/profile/:userId" element={<ProfilePage />} />
         <Route path="/change-password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
         <Route path="/change-email" element={<ProtectedRoute><ChangeEmailPage /></ProtectedRoute>} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/privacy-policy" element={<ProtectedRoute><PrivacyPolicyPage /></ProtectedRoute>} />
         <Route path="/terms-of-service" element={<ProtectedRoute><TermsOfServicePage /></ProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
@@ -318,9 +343,27 @@ function AppContent() {
         <Route path="/order/:orderId" element={<ProtectedRoute><CustomerOrderView /></ProtectedRoute>} />
         
         {/* INTAKE FLOWS - Public access to landing pages, protected for forms */}
-        <Route path="/lissy" element={<LissyLanding onImageUpload={handleImageUpload} />} />
-        <Route path="/lissy/intake" element={<ProtectedRoute><IntakeForm uploadedImage={null} onComplete={handleIntakeComplete} /></ProtectedRoute>} />
-        <Route path="/lissy/waitlist" element={<WaitlistPage customerName={customerData?.name} />} />
+        <Route path="/lissy" element={<ProtectedRoute><LissyLanding onImageUpload={handleImageUpload} /></ProtectedRoute>} />
+        <Route path="/lissy/intake" element={
+          <ProtectedRoute>
+            {lissyUploadedImage ? (
+              <ChrisIntakeForm uploadedImage={lissyUploadedImage} onComplete={handleIntakeComplete} stylistId="lissy" />
+            ) : (
+              <div className="w-full min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                  <p className="text-gray-600 mb-4">No image uploaded</p>
+                  <button 
+                    onClick={() => navigate('/lissy')}
+                    className="px-4 py-2 bg-black text-white rounded"
+                  >
+                    Go Back
+                  </button>
+                </div>
+              </div>
+            )}
+          </ProtectedRoute>
+        } />
+        <Route path="/lissy/waitlist" element={<ProtectedRoute><WaitlistPage /></ProtectedRoute>} />
         <Route path="/lissy/intake/edit/:orderId" element={<ProtectedRoute><EditIntakeForm /></ProtectedRoute>} />
         
         <Route path="/chris" element={<ChrisLanding onImageUpload={handleChrisImageUpload} />} />
@@ -344,6 +387,30 @@ function AppContent() {
           </ProtectedRoute>
         } />
         <Route path="/chris/waitlist" element={<ProtectedRoute><ChrisWaitlistPage /></ProtectedRoute>} />
+        <Route path="/chris/intake/edit/:orderId" element={<ProtectedRoute><EditIntakeForm /></ProtectedRoute>} />
+        
+        <Route path="/lewis" element={<LewisLanding onImageUpload={handleLewisImageUpload} />} />
+        <Route path="/lewis/intake" element={
+          <ProtectedRoute>
+            {lewisUploadedImage ? (
+              <ChrisIntakeForm uploadedImage={lewisUploadedImage} onComplete={handleLewisIntakeComplete} stylistId="lewis" />
+            ) : (
+              <div className="w-full min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                  <p className="text-gray-600 mb-4">No image uploaded</p>
+                  <button 
+                    onClick={() => navigate('/lewis')}
+                    className="px-4 py-2 bg-black text-white rounded"
+                  >
+                    Go Back
+                  </button>
+                </div>
+              </div>
+            )}
+          </ProtectedRoute>
+        } />
+        <Route path="/lewis/waitlist" element={<ProtectedRoute><LewisWaitlistPage /></ProtectedRoute>} />
+        <Route path="/lewis/intake/edit/:orderId" element={<ProtectedRoute><EditIntakeForm /></ProtectedRoute>} />
         
         {/* UNIVERSAL INTAKE FORMS - By username */}
         <Route path="/intake/:username" element={<ProtectedRoute><IntakeFormPage /></ProtectedRoute>} />
@@ -354,7 +421,6 @@ function AppContent() {
         <Route path="/admin-dashboard" element={<AdminRoute><MessagesPage /></AdminRoute>} />
         <Route path="/admin-profile-fix" element={<AdminRoute><AdminProfileFix /></AdminRoute>} />
         <Route path="/blocked-accounts" element={<AdminRoute><BlockedAccountsPage /></AdminRoute>} />
-        <Route path="/debug-orders" element={<AdminRoute><DebugOrders /></AdminRoute>} />
         <Route path="/admin-cleanup" element={<AdminRoute><AdminCleanupPage /></AdminRoute>} />
         
         {/* CUSTOMER INBOX - Available to ALL authenticated users */}

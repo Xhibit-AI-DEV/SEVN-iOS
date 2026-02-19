@@ -399,7 +399,19 @@ export function IntakeFormPage() {
       // Navigate based on stylist
       // Lissy uses the special waitlist page, others go to customer inbox
       if (stylistData.username?.toLowerCase() === 'lissy_roddy' || stylistData.username?.toLowerCase() === 'lissy') {
-        navigate('/lissy/waitlist');
+        // Navigate to waitlist page with order data
+        const navigationState = {
+          orderId: order.order_id,
+          uploadedImageUrl: mainImageUrl,
+          stylistId: stylistData.auth_user_id || stylistData.user_id,
+        };
+        
+        console.log('🚀 Navigating to waitlist with state:', navigationState);
+        
+        // Persist to localStorage as backup in case of page refresh
+        localStorage.setItem('pendingIntakeData', JSON.stringify(navigationState));
+        
+        navigate('/lissy/waitlist', { state: navigationState });
       } else {
         navigate('/customer-inbox');
       }

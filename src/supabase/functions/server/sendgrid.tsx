@@ -158,16 +158,37 @@ app.post('/send-draft', async (c) => {
       console.error('❌ SendGrid API error response:', response.status, errorText);
       
       let errorDetails = errorText;
+      let userFriendlyMessage = 'Failed to send email';
+      
       try {
         const errorJson = JSON.parse(errorText);
         errorDetails = JSON.stringify(errorJson, null, 2);
         console.error('❌ SendGrid error details:', errorJson);
+        
+        // Check for common SendGrid errors and provide helpful messages
+        if (errorJson.errors && Array.isArray(errorJson.errors)) {
+          const firstError = errorJson.errors[0];
+          
+          if (firstError.message?.includes('Maximum credits exceeded')) {
+            userFriendlyMessage = 'SendGrid account has exceeded its email credits limit';
+            errorDetails = 'Your SendGrid account has run out of email credits. Please:\n' +
+                          '1. Check your SendGrid dashboard at https://app.sendgrid.com/\n' +
+                          '2. Upgrade your plan or wait for your credits to reset\n' +
+                          '3. Or add a different SendGrid API key with available credits';
+          } else if (firstError.message?.includes('authorization')) {
+            userFriendlyMessage = 'SendGrid API key is invalid or unauthorized';
+            errorDetails = 'The SendGrid API key may be incorrect or doesn\'t have permission to send emails.';
+          } else if (firstError.message?.includes('does not contain a valid address')) {
+            userFriendlyMessage = 'Invalid email address';
+            errorDetails = firstError.message;
+          }
+        }
       } catch (e) {
         // Not JSON, use text as-is
       }
       
       return c.json({
-        error: 'Failed to send email',
+        error: userFriendlyMessage,
         details: errorDetails,
         status: response.status,
       }, response.status);
@@ -225,25 +246,28 @@ app.post('/send-from-storage/:customerId', async (c) => {
     
     // STEP 2: Validate ALL required fields for email
     const validationErrors: string[] = [];
+    const validationWarnings: string[] = [];
     
     // 1. Client Email (required)
     if (!savedData.clientEmail || !savedData.clientEmail.includes('@')) {
       validationErrors.push('Client email is missing or invalid');
     }
     
-    // 2. Client Image (required)
+    // 2. Client Image (optional - will use empty string if missing)
     if (!savedData.clientImage) {
-      validationErrors.push('Client image is missing');
+      validationWarnings.push('Client image is missing - email will not include customer photo');
     }
     
-    // 3. Stylist Image (required)
+    // 3. Stylist Image (optional - will use empty string if missing)
     if (!savedData.stylistImage) {
-      validationErrors.push('Stylist image is missing');
+      validationWarnings.push('Stylist image is missing - email will not include stylist photo');
+      console.warn('⚠️ Stylist image is missing, continuing anyway...');
     }
     
-    // 4. Stylist Name (required)
+    // 4. Stylist Name (optional - will use default if missing)
     if (!savedData.stylistName) {
-      validationErrors.push('Stylist name is missing');
+      validationWarnings.push('Stylist name is missing - will use default');
+      console.warn('⚠️ Stylist name is missing, continuing anyway...');
     }
     
     // 5. Style Notes (required)
@@ -256,6 +280,11 @@ app.post('/send-from-storage/:customerId', async (c) => {
       validationErrors.push(`Exactly 7 products required (found ${savedData.items?.length || 0})`);
     }
     
+    // Log warnings (non-blocking)
+    if (validationWarnings.length > 0) {
+      console.warn('⚠️ Validation warnings:', validationWarnings);
+    }
+    
     // If any validation errors, return them
     if (validationErrors.length > 0) {
       console.error('❌ Validation failed:', validationErrors);
@@ -263,6 +292,7 @@ app.post('/send-from-storage/:customerId', async (c) => {
         error: 'Missing required fields',
         details: validationErrors.join(', '),
         validationErrors,
+        validationWarnings, // Include warnings for debugging
       }, 400);
     }
     
@@ -386,16 +416,37 @@ app.post('/send-from-storage/:customerId', async (c) => {
       console.error('❌ SendGrid API error response:', response.status, errorText);
       
       let errorDetails = errorText;
+      let userFriendlyMessage = 'Failed to send email';
+      
       try {
         const errorJson = JSON.parse(errorText);
         errorDetails = JSON.stringify(errorJson, null, 2);
         console.error('❌ SendGrid error details:', errorJson);
+        
+        // Check for common SendGrid errors and provide helpful messages
+        if (errorJson.errors && Array.isArray(errorJson.errors)) {
+          const firstError = errorJson.errors[0];
+          
+          if (firstError.message?.includes('Maximum credits exceeded')) {
+            userFriendlyMessage = 'SendGrid account has exceeded its email credits limit';
+            errorDetails = 'Your SendGrid account has run out of email credits. Please:\n' +
+                          '1. Check your SendGrid dashboard at https://app.sendgrid.com/\n' +
+                          '2. Upgrade your plan or wait for your credits to reset\n' +
+                          '3. Or add a different SendGrid API key with available credits';
+          } else if (firstError.message?.includes('authorization')) {
+            userFriendlyMessage = 'SendGrid API key is invalid or unauthorized';
+            errorDetails = 'The SendGrid API key may be incorrect or doesn\'t have permission to send emails.';
+          } else if (firstError.message?.includes('does not contain a valid address')) {
+            userFriendlyMessage = 'Invalid email address';
+            errorDetails = firstError.message;
+          }
+        }
       } catch (e) {
         // Not JSON, use text as-is
       }
       
       return c.json({
-        error: 'Failed to send email',
+        error: userFriendlyMessage,
         details: errorDetails,
         status: response.status,
       }, response.status);

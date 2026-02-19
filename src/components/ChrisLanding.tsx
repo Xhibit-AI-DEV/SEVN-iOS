@@ -158,18 +158,32 @@ export function ChrisLanding({ onImageUpload }: ChrisLandingProps) {
     };
 
     try {
-      // Check if Web Share API is available (mobile)
-      if (navigator.share) {
+      // Check if Web Share API is available
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
         await navigator.share(shareData);
         console.log('✅ Shared successfully');
       } else {
-        // Fallback: Copy URL to clipboard (desktop)
+        // Fallback: Copy URL to clipboard
         await navigator.clipboard.writeText(window.location.href);
         alert('Link copied to clipboard!');
         console.log('✅ URL copied to clipboard');
       }
-    } catch (err) {
-      console.error('❌ Error sharing:', err);
+    } catch (err: any) {
+      // Only log errors that aren't user cancellations
+      if (err.name !== 'AbortError' && err.name !== 'NotAllowedError') {
+        console.error('❌ Error sharing:', err);
+      }
+      
+      // Fallback to clipboard on any error (except user cancellation)
+      if (err.name !== 'AbortError') {
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          alert('Link copied to clipboard!');
+          console.log('✅ URL copied to clipboard as fallback');
+        } catch (clipboardErr) {
+          console.error('❌ Failed to copy to clipboard:', clipboardErr);
+        }
+      }
     }
   };
 
@@ -234,10 +248,10 @@ export function ChrisLanding({ onImageUpload }: ChrisLandingProps) {
               <Group4 />
             </div>
             <div className="flex flex-col gap-[6px] items-center mt-[20px]">
-              <p className="css-4hzbpn leading-[normal] not-italic text-[#1e1709] text-[16px] text-center tracking-[0.1em] uppercase w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 700 }}>
+              <p className="css-4hzbpn leading-[normal] not-italic text-[#1e1709] text-[16px] text-center tracking-[0.1em] uppercase w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 400 }}>
                 1:1 styling
               </p>
-              <p className="css-4hzbpn leading-[normal] not-italic text-[#1e1709] text-[14px] text-center tracking-[0.1em] w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 700 }}>
+              <p className="css-4hzbpn leading-[normal] not-italic text-[#1e1709] text-[14px] text-center tracking-[0.1em] w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 400 }}>
                 Upload a reference look to get started.
               </p>
             </div>

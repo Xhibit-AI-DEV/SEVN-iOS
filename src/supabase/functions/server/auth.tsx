@@ -23,6 +23,7 @@ const getSupabaseClient = () => {
 // Whitelisted stylist emails
 const STYLIST_WHITELIST = [
   'lissy@sevn.app', // Changed to lowercase for case-insensitive matching
+  'lewis@sevn.app', // Lewis Bloyce - stylist
   'chris@sevn.app', // Chris Whly - stylist
   'dovheichemer@gmail.com', // Keep old email for backward compatibility
 ];
@@ -109,16 +110,21 @@ app.post('/signup', async (c) => {
     // Create empty user profile
     const profileKey = `profile:${data.user.id}`;
     await kv.set(profileKey, {
-      user_id: data.user.id,
-      username, // Add username to profile
+      auth_user_id: data.user.id, // The Supabase Auth UUID (matches the key)
+      user_id: username, // DEPRECATED: Keep for backward compatibility
+      username, // The editable username/handle
       display_name: name || '',
       name: name || '',
       bio: '',
+      avatar_url: '',
       profile_photo_url: '',
       external_link: '',
+      website_url: '',
       location: '',
       created_edits: [],
       liked_edits: [],
+      followers: [], // Array of user IDs who follow this user
+      following: [], // Array of user IDs this user follows
       followers_count: 0,
       following_count: 0,
       created_at: new Date().toISOString(),
@@ -335,6 +341,7 @@ app.get('/me', async (c) => {
     const accessToken = c.req.header('Authorization')?.split(' ')[1];
     
     if (!accessToken) {
+      console.log('ℹ️  /me called without access token');
       return c.json({ error: 'No access token provided' }, 401);
     }
 
@@ -343,7 +350,7 @@ app.get('/me', async (c) => {
     const { data: { user }, error } = await supabase.auth.getUser(accessToken);
 
     if (error || !user) {
-      console.error('❌ Auth error:', error);
+      console.log('ℹ️  /me called with invalid/expired token:', error?.message);
       return c.json({ error: 'Invalid or expired token' }, 401);
     }
 
@@ -362,6 +369,11 @@ app.get('/me', async (c) => {
 
   } catch (error: any) {
     console.error('❌ Get user error:', error);
+    // Don't log full error details for auth errors - they're expected when tokens expire
+    if (error.name === 'AuthSessionMissingError' || error.__isAuthError) {
+      console.log('ℹ️  Auth session missing - token likely expired or invalid');
+      return c.json({ error: 'Session expired. Please sign in again.' }, 401);
+    }
     return c.json({ error: error.message || 'Failed to get user' }, 500);
   }
 });
@@ -402,8 +414,98 @@ app.get('/check-user/:email', async (c) => {
   }
 });
 
+// List all users (for debugging - ADMIN ONLY)
+app.get('/list-all-users', async (c) => {
+  try {
+    const supabase = getSupabaseAdminClient();
+
+    // List all users
+    const { data, error } = await supabase.auth.admin.listUsers();
+
+    if (error) {
+      console.error('❌ List users error:', error);
+      return c.json({ error: error.message }, 500);
+    }
+
+    console.log(`📋 Total users in Supabase Auth: ${data.users.length}`);
+
+    // Format user data for easy viewing
+    const formattedUsers = data.users.map(user => ({
+      id: user.id,
+      email: user.email,
+      created_at: user.created_at,
+      last_sign_in_at: user.last_sign_in_at,
+      user_metadata: user.user_metadata,
+    }));
+
+    // Group by email to find duplicates
+    const emailMap: Record<string, any[]> = {};
+    formattedUsers.forEach(user => {
+      if (!user.email) return;
+      if (!emailMap[user.email]) {
+        emailMap[user.email] = [];
+      }
+      emailMap[user.email].push(user);
+    });
+
+    // Find duplicates
+    const duplicates = Object.entries(emailMap).filter(([email, users]) => users.length > 1);
+
+    console.log(`🔍 Found ${duplicates.length} duplicate emails`);
+    duplicates.forEach(([email, users]) => {
+      console.log(`  - ${email}: ${users.length} accounts`);
+    });
+
+    return c.json({
+      total_users: data.users.length,
+      users: formattedUsers,
+      duplicates: duplicates.map(([email, users]) => ({ email, count: users.length, users })),
+    });
+
+  } catch (error: any) {
+    console.error('❌ List users error:', error);
+    return c.json({ error: error.message || 'Failed to list users' }, 500);
+  }
+});
+
 // Reset password for existing user (admin only - for debugging)
 app.post('/reset-password', async (c) => {
+  try {
+    const { email } = await c.req.json();
+    
+    console.log('🔄 Password reset email request:', { email });
+
+    if (!email) {
+      return c.json({ error: 'Email is required' }, 400);
+    }
+
+    const supabase = getSupabaseClient();
+
+    // Send password reset email using Supabase Auth
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${Deno.env.get('SUPABASE_URL')}/auth/v1/verify`,
+    });
+
+    if (error) {
+      console.error('❌ Reset password email error:', error);
+      return c.json({ error: error.message }, 500);
+    }
+
+    console.log('✅ Password reset email sent to:', email);
+
+    return c.json({
+      success: true,
+      message: 'Password reset email sent. Please check your inbox.',
+    });
+
+  } catch (error: any) {
+    console.error('❌ Reset password error:', error);
+    return c.json({ error: error.message || 'Failed to send reset email' }, 500);
+  }
+});
+
+// Reset password with admin credentials (admin only - for debugging)
+app.post('/admin-reset-password', async (c) => {
   try {
     const { email, new_password } = await c.req.json();
     

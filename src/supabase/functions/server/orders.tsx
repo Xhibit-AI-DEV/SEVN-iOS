@@ -1,4 +1,4 @@
-import { Hono } from 'npm:hono@4.0.2';
+import { Hono } from 'npm:hono';
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import * as kv from './kv_store.tsx';
 
@@ -207,7 +207,184 @@ app.get('/stylist/:stylistId', async (c) => {
   }
 });
 
+// Get orders for the authenticated user (convenience endpoint)
+// NOTE: This MUST come BEFORE /:orderId route to avoid matching "my-orders" as an orderId
+app.get('/my-orders', async (c) => {
+  try {
+    console.log('📋 ========== FETCHING MY ORDERS ==========');
+
+    // SECURITY: Verify the access token and get the authenticated user ID
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    if (!accessToken) {
+      console.error('❌ No access token provided');
+      return c.json({ error: 'Unauthorized - No access token' }, 401);
+    }
+
+    const supabase = getSupabaseClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+
+    if (authError || !user) {
+      console.error('❌ Auth error:', authError);
+      return c.json({ error: 'Invalid or expired token', details: authError }, 401);
+    }
+
+    const authenticatedUserId = user.id;
+    console.log('✅ Authenticated user ID from token:', authenticatedUserId);
+
+    // Get all order IDs for this customer
+    const customerOrdersKey = `customer_orders:${authenticatedUserId}`;
+    console.log('🔍 Looking up key:', customerOrdersKey);
+    const orderIds = await kv.get(customerOrdersKey) || [];
+    console.log('🔍 Order IDs from index:', orderIds);
+    console.log('🔍 Number of order IDs:', orderIds.length);
+
+    if (orderIds.length === 0) {
+      console.log('📭 No orders found in customer index');
+      console.log('📋 ==========================================');
+      return c.json([]);
+    }
+
+    // Fetch all orders
+    console.log('📥 Fetching individual orders...');
+    const orders = await Promise.all(
+      orderIds.map(async (orderId: string) => {
+        const orderKey = `order:${orderId}`;
+        console.log('  🔍 Fetching:', orderKey);
+        const order = await kv.get(orderKey);
+        console.log('  ✅ Result:', order ? 'found' : 'null');
+        return order;
+      })
+    );
+
+    // Filter out null values and sort by created_at (newest first)
+    const validOrders = orders.filter(order => order !== null);
+    const sortedOrders = validOrders.sort((a, b) => {
+      const dateA = new Date(a.created_at || 0).getTime();
+      const dateB = new Date(b.created_at || 0).getTime();
+      return dateB - dateA;
+    });
+
+    console.log(`✅ Found ${sortedOrders.length} valid orders for user ${authenticatedUserId}`);
+    console.log(`   (${orderIds.length} total IDs, ${orders.length - sortedOrders.length} null)`);
+    console.log('📋 ==========================================');
+
+    return c.json(sortedOrders);
+
+  } catch (error: any) {
+    console.error('❌ Error fetching my orders:', error);
+    console.error('❌ Error stack:', error.stack);
+    return c.json({ 
+      error: error.message || 'Failed to fetch orders',
+      details: error.stack 
+    }, 500);
+  }
+});
+
+// DEBUG endpoint - list ALL keys in KV store
+// NOTE: This MUST come BEFORE /:orderId route
+app.get('/debug/keys', async (c) => {
+  try {
+    console.log('🐛 DEBUG: Fetching ALL keys from KV store...');
+    
+    // Get all keys that start with common prefixes
+    const orderKeys = await kv.getByPrefix('order:');
+    const customerIndexKeys = await kv.getByPrefix('customer_orders:');
+    const stylistIndexKeys = await kv.getByPrefix('stylist_orders:');
+    
+    console.log('🐛 Order keys found:', orderKeys.length);
+    console.log('🐛 Customer index keys found:', customerIndexKeys.length);
+    console.log('🐛 Stylist index keys found:', stylistIndexKeys.length);
+    
+    return c.json({
+      total_order_keys: orderKeys.length,
+      total_customer_indexes: customerIndexKeys.length,
+      total_stylist_indexes: stylistIndexKeys.length,
+      order_keys: orderKeys.map((o: any) => ({ key: `order:${o}`, id: o })),
+      customer_indexes: customerIndexKeys,
+      stylist_indexes: stylistIndexKeys,
+    });
+  } catch (error: any) {
+    console.error('❌ Debug error:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Debug endpoint - get ALL orders
+// NOTE: This MUST come BEFORE /:orderId route
+app.get('/debug/all', async (c) => {
+  try {
+    console.log('🐛 DEBUG: Fetching ALL orders from KV store...');
+    
+    // Get all keys with prefix "order:"
+    const allOrders = await kv.getByPrefix('order:');
+    console.log('🐛 Found orders:', allOrders.length);
+    
+    // Get all customer_orders indexes
+    const customerOrdersKeys = await kv.getByPrefix('customer_orders:');
+    console.log('🐛 Found customer_orders indexes:', customerOrdersKeys.length);
+    
+    // Get all stylist_orders indexes
+    const stylistOrdersKeys = await kv.getByPrefix('stylist_orders:');
+    console.log('🐛 Found stylist_orders indexes:', stylistOrdersKeys.length);
+    
+    return c.json({
+      total_orders: allOrders.length,
+      orders: allOrders,
+      customer_indexes: customerOrdersKeys,
+      stylist_indexes: stylistOrdersKeys,
+    });
+  } catch (error: any) {
+    console.error('❌ Debug error:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Debug endpoint - get current user info from token
+// NOTE: This MUST come BEFORE /:orderId route
+app.get('/debug/whoami', async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    
+    if (!accessToken) {
+      return c.json({ error: 'No access token provided' }, 401);
+    }
+
+    const supabase = getSupabaseClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+
+    if (authError || !user) {
+      return c.json({ error: 'Invalid token', details: authError }, 401);
+    }
+
+    // Get profile info
+    const profileKey = `profile:${user.id}`;
+    const profile = await kv.get(profileKey);
+    
+    // Get customer info
+    const customerKey = `customer:${user.id}`;
+    const customer = await kv.get(customerKey);
+    
+    // Get order index
+    const customerOrdersKey = `customer_orders:${user.id}`;
+    const orderIds = await kv.get(customerOrdersKey) || [];
+
+    return c.json({
+      auth_user_id: user.id,
+      auth_email: user.email,
+      profile: profile,
+      customer: customer,
+      order_index_key: customerOrdersKey,
+      order_ids: orderIds,
+      total_orders: orderIds.length,
+    });
+  } catch (error: any) {
+    console.error('❌ Debug error:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // Get a specific order by ID
+// NOTE: This MUST come AFTER all specific routes like /my-orders, /debug/*, etc.
 app.get('/:orderId', async (c) => {
   try {
     const orderId = c.req.param('orderId');
@@ -246,90 +423,6 @@ app.get('/:orderId', async (c) => {
   } catch (error: any) {
     console.error('❌ Error fetching order:', error);
     return c.json({ error: error.message || 'Failed to fetch order' }, 500);
-  }
-});
-
-// Get orders for a specific customer
-app.get('/customer/:customerId', async (c) => {
-  try {
-    const customerIdParam = c.req.param('customerId');
-    
-    console.log('📋 ========== FETCHING CUSTOMER ORDERS ==========');
-    console.log('📋 Customer ID param from URL:', customerIdParam);
-
-    // SECURITY: Verify the access token and get the authenticated user ID
-    const accessToken = c.req.header('Authorization')?.split(' ')[1];
-    if (!accessToken) {
-      console.error('❌ No access token provided');
-      return c.json({ error: 'Unauthorized - No access token' }, 401);
-    }
-
-    const supabase = getSupabaseClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
-
-    if (authError || !user) {
-      console.error('❌ Auth error:', authError);
-      return c.json({ error: 'Invalid or expired token', details: authError }, 401);
-    }
-
-    // ALWAYS use the authenticated user's ID (ignore URL parameter for security)
-    const authenticatedUserId = user.id;
-    console.log('✅ Authenticated user ID from token:', authenticatedUserId);
-    
-    // Optional: Log if there's a mismatch (for debugging)
-    if (customerIdParam !== 'me' && authenticatedUserId !== customerIdParam) {
-      console.warn('⚠️ WARNING: URL customer ID does not match authenticated user ID!');
-      console.warn('   URL param:', customerIdParam);
-      console.warn('   Auth user ID:', authenticatedUserId);
-      console.warn('   Using authenticated ID for security');
-    }
-
-    // Get all order IDs for this customer (using authenticated user ID)
-    const customerOrdersKey = `customer_orders:${authenticatedUserId}`;
-    console.log('🔍 Looking up key:', customerOrdersKey);
-    const orderIds = await kv.get(customerOrdersKey) || [];
-    console.log('🔍 Order IDs from index:', orderIds);
-    console.log('🔍 Number of order IDs:', orderIds.length);
-
-    if (orderIds.length === 0) {
-      console.log('📭 No orders found in customer index');
-      console.log('📋 ==========================================');
-      return c.json({ orders: [] });
-    }
-
-    // Fetch all orders
-    console.log('📥 Fetching individual orders...');
-    const orders = await Promise.all(
-      orderIds.map(async (orderId: string) => {
-        const orderKey = `order:${orderId}`;
-        console.log('  🔍 Fetching:', orderKey);
-        const order = await kv.get(orderKey);
-        console.log('  ✅ Result:', order ? 'found' : 'null');
-        return order;
-      })
-    );
-
-    // Filter out null values and sort by created_at (newest first)
-    const validOrders = orders.filter(order => order !== null);
-    const sortedOrders = validOrders.sort((a, b) => {
-      const dateA = new Date(a.created_at || 0).getTime();
-      const dateB = new Date(b.created_at || 0).getTime();
-      return dateB - dateA;
-    });
-
-    console.log(`✅ Found ${sortedOrders.length} valid orders for customer ${customerIdParam}`);
-    console.log(`   (${orderIds.length} total IDs, ${orders.length - sortedOrders.length} null)`);
-    console.log('📋 ==========================================');
-
-    return c.json({ orders: sortedOrders });
-
-  } catch (error: any) {
-    console.error('❌ Error fetching customer orders:', error);
-    console.error('❌ Error stack:', error.stack);
-    return c.json({ 
-      error: error.message || 'Failed to fetch orders',
-      details: error.stack 
-    }, 500);
   }
 });
 
@@ -525,7 +618,48 @@ app.post('/:orderId/status', async (c) => {
     }
 
     // Update status
+    const oldStatus = order.status;
     order.status = status;
+    
+    // If status is changing to "completed", create a message for the customer
+    if (status === 'completed' && oldStatus !== 'completed') {
+      console.log('📧 Creating message for completed order:', orderId);
+      
+      // Get selections data
+      const selectionsKey = `selections:${orderId}`;
+      const selectionsData = await kv.get(selectionsKey);
+      
+      // Create message for customer
+      const messageId = `message_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      const message = {
+        id: messageId,
+        order_id: orderId,
+        customer_id: order.customer_id,
+        stylist_id: order.stylist_id,
+        type: 'selects_sent',
+        subject: 'YOUR SELECTS',
+        preview: selectionsData?.stylingNotes?.substring(0, 100) || 'Your stylist has sent you curated selections.',
+        selections: selectionsData?.items || [],
+        styling_notes: selectionsData?.stylingNotes || '',
+        created_at: new Date().toISOString(),
+        read: false,
+      };
+      
+      const messageKey = `message:${messageId}`;
+      await kv.set(messageKey, message);
+      
+      // Add to customer's messages list
+      const customerMessagesKey = `customer_messages:${order.customer_id}`;
+      const customerMessages = await kv.get(customerMessagesKey) || [];
+      customerMessages.unshift(messageId); // Add to beginning
+      await kv.set(customerMessagesKey, customerMessages);
+      
+      console.log('✅ Message created for customer:', message.id);
+      
+      // Update order completed timestamp
+      order.completed_at = new Date().toISOString();
+    }
+    
     await kv.set(orderKey, order);
 
     console.log('✅ Order status updated:', { orderId, status });
@@ -736,106 +870,6 @@ app.delete('/:orderId', async (c) => {
   } catch (error: any) {
     console.error('❌ Error deleting order:', error);
     return c.json({ error: error.message || 'Failed to delete order' }, 500);
-  }
-});
-
-// DEBUG endpoint - list ALL keys in KV store
-app.get('/debug/keys', async (c) => {
-  try {
-    console.log('🐛 DEBUG: Fetching ALL keys from KV store...');
-    
-    // Get all keys that start with common prefixes
-    const orderKeys = await kv.getByPrefix('order:');
-    const customerIndexKeys = await kv.getByPrefix('customer_orders:');
-    const stylistIndexKeys = await kv.getByPrefix('stylist_orders:');
-    
-    console.log('🐛 Order keys found:', orderKeys.length);
-    console.log('🐛 Customer index keys found:', customerIndexKeys.length);
-    console.log('🐛 Stylist index keys found:', stylistIndexKeys.length);
-    
-    return c.json({
-      total_order_keys: orderKeys.length,
-      total_customer_indexes: customerIndexKeys.length,
-      total_stylist_indexes: stylistIndexKeys.length,
-      order_keys: orderKeys.map((o: any) => ({ key: `order:${o}`, id: o })),
-      customer_indexes: customerIndexKeys,
-      stylist_indexes: stylistIndexKeys,
-    });
-  } catch (error: any) {
-    console.error('❌ Debug error:', error);
-    return c.json({ error: error.message }, 500);
-  }
-});
-
-// Debug endpoint - get ALL orders
-app.get('/debug/all', async (c) => {
-  try {
-    console.log('🐛 DEBUG: Fetching ALL orders from KV store...');
-    
-    // Get all keys with prefix "order:"
-    const allOrders = await kv.getByPrefix('order:');
-    console.log('🐛 Found orders:', allOrders.length);
-    
-    // Get all customer_orders indexes
-    const customerOrdersKeys = await kv.getByPrefix('customer_orders:');
-    console.log('🐛 Found customer_orders indexes:', customerOrdersKeys.length);
-    
-    // Get all stylist_orders indexes
-    const stylistOrdersKeys = await kv.getByPrefix('stylist_orders:');
-    console.log('🐛 Found stylist_orders indexes:', stylistOrdersKeys.length);
-    
-    return c.json({
-      total_orders: allOrders.length,
-      orders: allOrders,
-      customer_indexes: customerOrdersKeys,
-      stylist_indexes: stylistOrdersKeys,
-    });
-  } catch (error: any) {
-    console.error('❌ Debug error:', error);
-    return c.json({ error: error.message }, 500);
-  }
-});
-
-// Debug endpoint - get current user info from token
-app.get('/debug/whoami', async (c) => {
-  try {
-    const accessToken = c.req.header('Authorization')?.split(' ')[1];
-    
-    if (!accessToken) {
-      return c.json({ error: 'No access token provided' }, 401);
-    }
-
-    const supabase = getSupabaseClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
-
-    if (authError || !user) {
-      return c.json({ error: 'Invalid token', details: authError }, 401);
-    }
-
-    // Get profile info
-    const profileKey = `profile:${user.id}`;
-    const profile = await kv.get(profileKey);
-    
-    // Get customer info
-    const customerKey = `customer:${user.id}`;
-    const customer = await kv.get(customerKey);
-    
-    // Get order index
-    const customerOrdersKey = `customer_orders:${user.id}`;
-    const orderIds = await kv.get(customerOrdersKey) || [];
-
-    return c.json({
-      auth_user_id: user.id,
-      auth_email: user.email,
-      profile: profile,
-      customer: customer,
-      order_index_key: customerOrdersKey,
-      order_ids: orderIds,
-      total_orders: orderIds.length,
-    });
-  } catch (error: any) {
-    console.error('❌ Debug error:', error);
-    return c.json({ error: error.message }, 500);
   }
 });
 

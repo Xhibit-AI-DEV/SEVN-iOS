@@ -218,6 +218,8 @@ app.post('/save', async (c) => {
     console.log('💾 Client Name:', clientName);
     console.log('💾 Assigned Stylist ID:', assignedStylistId || stylistId);
     console.log('💾 Stylist Name:', stylistName);
+    console.log('💾 Stylist Image:', stylistImage);
+    console.log('💾 Stylist Image Type:', typeof stylistImage);
     console.log('💾 Styling Notes:', stylingNotes);
     console.log('💾 Styling Notes Type:', typeof stylingNotes);
     console.log('💾 Styling Notes Length:', stylingNotes?.length);

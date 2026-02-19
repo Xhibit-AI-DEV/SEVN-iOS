@@ -1,9 +1,13 @@
 import { Menu } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useNavigate } from 'react-router';
+import { useState, useEffect } from 'react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { BottomNavigation } from './BottomNavigation';
 import { MoreMenuModal } from './MoreMenuModal';
+import { HomePageBanner } from './HomePageBanner';
+import { Heart } from 'lucide-react';
+import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { supabase } from '../utils/supabase/client';
 
 // Import stylist images - must import as variables, NOT strings
 import imgLissyRoddy from "figma:asset/21ead93bac0da68ed5f33efdfb07c0bf632228cc.png";
@@ -11,19 +15,117 @@ import imgValDrozg1 from "figma:asset/4b4531903296dd337e2503bb17f59748fdc6c9ee.p
 import imgValDrozg2 from "figma:asset/20128333cc3dc0dc5a9ed76f88c9c981a3185bd7.png";
 import imgValDrozg3 from "figma:asset/e0a9d1b58aed482da9011bb5f685dc39e3501d17.png";
 import imgChrisWhyle from "figma:asset/083df4dc1c94d586d53c3644182d81e287c70454.png";
-import imgCuratedEdit from "figma:asset/d6d0374d1209d254e69a363bf2bd48de2a8fd831.png";
+import imgLewisBloyce from "figma:asset/9cffcde461e169a56491d6b656c1a87f1cc6898f.png";
+import imgV22Logo from "figma:asset/4ec03ff54a95119f5d32d5425296f54905e0e776.png";
+import imgChrisEdit from "figma:asset/d6d0374d1209d254e69a363bf2bd48de2a8fd831.png";
+import imgLissyEdit from "figma:asset/5301c6e1e005f08fe75d30911849e67eca98064e.png";
 
 export default function HomePage() {
   const navigate = useNavigate();
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [profilesSeeded, setProfilesSeeded] = useState(false);
+
+  // Auto-seed Chris and Lissy's profiles on mount
+  useEffect(() => {
+    const seedStylistProfiles = async () => {
+      try {
+        console.log('🌱 Auto-seeding stylist profiles...');
+        const response = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/seed-chris-account`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${publicAnonKey}`,
+            },
+          }
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('✅ Stylist profiles seeded:', data);
+          setProfilesSeeded(true);
+        } else {
+          const errorText = await response.text();
+          console.error('❌ Failed to seed profiles:', response.status, errorText);
+        }
+      } catch (error) {
+        console.error('❌ Error seeding profiles:', error);
+        console.error('❌ Error details:', {
+          name: error instanceof Error ? error.name : 'Unknown',
+          message: error instanceof Error ? error.message : String(error),
+        });
+      }
+    };
+    
+    seedStylistProfiles();
+  }, [profilesSeeded]);
+
+  // Navigate to profile by username - fetches userId first
+  const navigateToProfile = async (username: string) => {
+    try {
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/profiles/username/${username}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${publicAnonKey}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const userId = data.profile?.auth_user_id || data.profile?.user_id;
+        if (userId) {
+          navigate(`/profile/${userId}`);
+        } else {
+          console.error('❌ No user_id found in profile');
+        }
+      } else {
+        console.error('❌ Profile not found for username:', username);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching profile:', error);
+    }
+  };
+
+  const handleLogout = async () => {
+    console.log('🚪 Logging out...');
+    
+    try {
+      // Sign out from Supabase
+      await supabase.auth.signOut();
+      console.log('✅ Supabase sign out successful');
+    } catch (error) {
+      console.error('❌ Supabase sign out error:', error);
+    }
+    
+    // Clear everything
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    // Navigate to signin
+    navigate('/signin');
+    
+    // Force reload to ensure clean state
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
+  };
 
   return (
     <div className="h-full flex flex-col bg-[#fffefd] relative">
-      {/* Fixed Header - 48px */}
-      <div className="w-full h-[48px] flex items-center justify-between px-4 bg-white border-b border-[#1e1709] shrink-0">
-        <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-black">
-          VII SEVN
-        </p>
+      {/* Fixed Header - 48px - Mobile Constrained */}
+      <div className="w-full h-[48px] flex items-center justify-between px-4 bg-white border-b border-[#1e1709] shrink-0 max-w-[393px] mx-auto">
+        <div className="flex items-center gap-2">
+          <img 
+            src={imgV22Logo} 
+            alt="V22" 
+            className="h-[34px] w-auto object-contain"
+          />
+          <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[24px] tracking-[3px] text-black">
+            SEVN
+          </p>
+        </div>
         <button 
           onClick={() => setShowMoreMenu(true)}
           className="w-6 h-6 flex items-center justify-center"
@@ -32,9 +134,12 @@ export default function HomePage() {
         </button>
       </div>
 
-      {/* Scrollable Content - flex: 1 */}
+      {/* Homepage Banner - Shows for invited/completed orders */}
+      <HomePageBanner />
+
+      {/* Scrollable Content - flex: 1 - Mobile Constrained */}
       <div 
-        className="flex-1 overflow-y-auto overflow-x-hidden relative"
+        className="flex-1 overflow-y-auto overflow-x-hidden relative max-w-[393px] mx-auto w-full"
         style={{
           WebkitOverflowScrolling: 'touch',
           paddingBottom: 'calc(50px + var(--safe-bottom))',
@@ -129,7 +234,7 @@ export default function HomePage() {
 
             {/* Third Featured Stylist - CHRIS WHYLE */}
             <button 
-              className="relative shrink-0 size-[225px] rounded-[1px] mr-4"
+              className="relative shrink-0 size-[225px] rounded-[1px]"
               onClick={() => navigate('/chris')}
               style={{ border: '1px solid #1e1709' }}
             >
@@ -164,6 +269,44 @@ export default function HomePage() {
                 </div>
               </div>
             </button>
+
+            {/* Fourth Featured Stylist - LEWIS BLOYCE */}
+            <button 
+              className="relative shrink-0 size-[225px] rounded-[1px] mr-4"
+              onClick={() => navigate('/lewis')}
+              style={{ border: '1px solid #1e1709' }}
+            >
+              {/* Layered circular images */}
+              <div className="absolute inset-[5.05%_4.71%_4.69%_4.71%] pointer-events-none rounded-[147px]">
+                <ImageWithFallback 
+                  alt="Lewis Bloyce" 
+                  loading="lazy" 
+                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
+                  src={imgLewisBloyce} 
+                />
+                <ImageWithFallback 
+                  alt="Lewis Bloyce" 
+                  loading="lazy" 
+                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
+                  src={imgLewisBloyce} 
+                />
+                <ImageWithFallback 
+                  alt="Lewis Bloyce" 
+                  loading="lazy" 
+                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
+                  src={imgLewisBloyce} 
+                />
+                <div className="absolute inset-0 rounded-[147px]" style={{ border: '1px solid #EAEAEA' }} />
+              </div>
+              
+              {/* Name badge */}
+              <div className="absolute inset-[80%_5.97%_9.26%_6.11%]">
+                <div className="absolute bg-[rgba(255,254,253,0.8)] inset-0 rounded-[8px]" style={{ border: '1px solid #1e1709' }} />
+                <div className="absolute flex flex-col font-['Helvetica_Neue:Regular',sans-serif] inset-[0_0_0_0] justify-center items-center leading-[14px] text-[#1e1709] text-[12px] tracking-[0.5px] uppercase">
+                  <p>LEWIS BLOYCE</p>
+                </div>
+              </div>
+            </button>
           </div>
         </div>
 
@@ -181,63 +324,90 @@ export default function HomePage() {
               WebkitOverflowScrolling: 'touch'
             }}
           >
-            {/* CHRIS WHLY Card 2 - New Image */}
-            <div className="relative shrink-0 w-[272px] h-[407px] mr-4"> {/* Added mr-4 for spacing at end */}
-              {/* Triple border effect with 4px spacing */}
-              <div className="absolute border border-[#1e1709] inset-[4px] opacity-80 rounded-[8px]" />
-              <div className="absolute border border-[#1e1709] inset-[8px_0_0_8px] rounded-[8px]" />
+            {/* Chris Whyle Edit Card */}
+            <div 
+              className="relative shrink-0 w-[361px] h-[543px]"
+              data-name="Card/Lookbook/Big"
+            >
+              {/* Triple border layers */}
+              <div className="absolute border border-[#1e1709] inset-[3px] opacity-80 rounded-[8px]" />
+              <div className="absolute border border-[#1e1709] inset-[6px_0_0_6px] rounded-[8px]" />
               
-              {/* Main image container with border */}
-              <div className="absolute inset-[0_8px_8px_0] rounded-[8px]">
-                {/* Main image */}
-                <div className="absolute inset-0 rounded-[8px]">
-                  <ImageWithFallback 
-                    alt="Chris Edit" 
-                    loading="lazy" 
-                    className="absolute inset-0 w-full h-full object-cover rounded-[8px]"
-                    src={imgCuratedEdit}
-                  />
-                </div>
-                
-                {/* Black gradient overlay - bottom 30% */}
-                <div className="absolute bottom-0 left-0 right-0 h-[30%] rounded-b-[8px]" style={{ background: 'linear-gradient(to top, rgba(0, 0, 0, 0.35), transparent)' }} />
-                
-                {/* Border on top */}
-                <div className="absolute border border-[#1e1709] inset-0 rounded-[8px] pointer-events-none" />
-                
-                {/* Name label with pill background */}
-                <button 
-                  className="absolute bottom-[16px] left-[16px] z-10"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate('/u/chris_whly');
-                  }}
-                >
-                  <div className="px-3 py-1.5 rounded-full border border-[#1e1709] hover:bg-white/95 transition-colors" style={{ backgroundColor: 'rgba(255,254,253,0.85)' }}>
-                    <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[12px] text-[#1e1709] tracking-[0.5px] leading-[16px] uppercase">
-                      CHRIS WHLY
-                    </p>
-                  </div>
-                </button>
+              {/* Main image */}
+              <div className="absolute inset-[0_6px_6px_0] overflow-hidden rounded-[8px]">
+                <img alt="" className="absolute inset-0 w-full h-full object-cover rounded-[8px]" src={imgChrisEdit} />
+                <div className="absolute border border-[#1e1709] inset-0 rounded-[8px]" />
               </div>
               
-              {/* Heart icon */}
-              <div className="absolute top-[12px] right-[18px] z-10">
-                <div className="relative w-[36px] h-[36px]">
-                  <div className="absolute rounded-full inset-0" style={{ backgroundColor: 'rgba(255,254,253,0.85)' }} />
+              {/* Name badge - bottom left */}
+              <button 
+                onClick={() => navigateToProfile('chris_whly')}
+                className="absolute bottom-[16px] left-[16px] z-10"
+              >
+                <div className="bg-[rgba(255,254,253,0.8)] border border-[#1e1709] rounded-[20px] px-[14px] h-[30px] flex items-center justify-center">
+                  <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[13px] text-[#1e1709] tracking-[1px] uppercase leading-[22px]">
+                    CHRIS WHLY
+                  </p>
+                </div>
+              </button>
+              
+              {/* Heart icon - top right */}
+              <button className="absolute top-[12px] right-[16px] z-10">
+                <div className="relative w-[36.3px] h-[33.871px]">
+                  <div className="absolute bg-[rgba(255,254,253,0.8)] border border-[#1e1709] rounded-[20px] inset-0" />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <svg className="w-[16px] h-[16px]" fill="none" viewBox="0 0 24 24">
-                      <path 
-                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" 
-                        stroke="#1E1709" 
-                        strokeWidth="1.5" 
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+                    <Heart 
+                      className="w-[16px] h-[16px]" 
+                      fill="none"
+                      stroke="#1E1709"
+                      strokeWidth={1.5}
+                    />
                   </div>
                 </div>
+              </button>
+            </div>
+
+            {/* Lissy Roddy Edit Card */}
+            <div 
+              className="relative shrink-0 w-[361px] h-[543px] mr-4"
+              data-name="Card/Lookbook/Big"
+            >
+              {/* Triple border layers */}
+              <div className="absolute border border-[#1e1709] inset-[3px] opacity-80 rounded-[8px]" />
+              <div className="absolute border border-[#1e1709] inset-[6px_0_0_6px] rounded-[8px]" />
+              
+              {/* Main image */}
+              <div className="absolute inset-[0_6px_6px_0] overflow-hidden rounded-[8px]">
+                <img alt="" className="absolute inset-0 w-full h-full object-cover rounded-[8px]" src={imgLissyEdit} />
+                <div className="absolute border border-[#1e1709] inset-0 rounded-[8px]" />
               </div>
+              
+              {/* Name badge - bottom left */}
+              <button 
+                onClick={() => navigateToProfile('lissy')}
+                className="absolute bottom-[16px] left-[16px] z-10"
+              >
+                <div className="bg-[rgba(255,254,253,0.8)] border border-[#1e1709] rounded-[20px] px-[14px] h-[30px] flex items-center justify-center">
+                  <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[13px] text-[#1e1709] tracking-[1px] uppercase leading-[22px]">
+                    LISSY RODDY
+                  </p>
+                </div>
+              </button>
+              
+              {/* Heart icon - top right */}
+              <button className="absolute top-[12px] right-[16px] z-10">
+                <div className="relative w-[36.3px] h-[33.871px]">
+                  <div className="absolute bg-[rgba(255,254,253,0.8)] border border-[#1e1709] rounded-[20px] inset-0" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Heart 
+                      className="w-[16px] h-[16px]" 
+                      fill="none"
+                      stroke="#1E1709"
+                      strokeWidth={1.5}
+                    />
+                  </div>
+                </div>
+              </button>
             </div>
           </div>
         </div>
@@ -251,6 +421,7 @@ export default function HomePage() {
         isOpen={showMoreMenu} 
         onClose={() => setShowMoreMenu(false)}
         isOwnProfile={true}
+        onLogout={handleLogout}
       />
     </div>
   );

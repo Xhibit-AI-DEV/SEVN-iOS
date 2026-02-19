@@ -259,7 +259,12 @@ export function AdminDashboard() {
         if (errorData.validationErrors) {
           toast.error(`Missing: ${errorData.validationErrors.join(', ')}`);
         } else {
-          toast.error(`Failed to send: ${errorData.error || 'Unknown error'}`);
+          toast.error(errorData.error || 'Failed to send email');
+        }
+        
+        // Log full details for debugging
+        if (errorData.details) {
+          console.error('Error details:', errorData.details);
         }
       }
     } catch (error) {
@@ -284,6 +289,27 @@ export function AdminDashboard() {
 
       console.log('👨‍💼 Fetching orders for stylist...');
 
+      // Validate token first
+      console.log('🔐 Validating access token...');
+      const validateResponse = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/auth/validate-token`,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (!validateResponse.ok) {
+        console.error('❌ Token validation failed - clearing session and redirecting');
+        localStorage.clear();
+        toast.error('Your session has expired. Please sign in again.');
+        setTimeout(() => navigate('/signin'), 100);
+        return;
+      }
+
+      console.log('✅ Token is valid');
+
       // Get current user profile to determine stylist ID
       const profileResponse = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/profiles/me`,
@@ -299,8 +325,7 @@ export function AdminDashboard() {
         // If auth error, clear token and redirect to signin
         if (profileResponse.status === 401) {
           console.error('❌ Authentication failed - clearing token and redirecting to signin');
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('auth_token');
+          localStorage.clear();
           toast.error('Session expired. Please sign in again.');
           navigate('/signin');
           return;

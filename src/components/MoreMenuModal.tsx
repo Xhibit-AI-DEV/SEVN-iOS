@@ -1,5 +1,5 @@
 import { X, ChevronRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useState, useEffect } from 'react';
 
 interface MoreMenuModalProps {
@@ -37,6 +37,11 @@ export function MoreMenuModal({
 
   const handleChangeEmail = () => {
     navigate('/change-email');
+    onClose();
+  };
+
+  const handleResetPassword = () => {
+    navigate('/forgot-password');
     onClose();
   };
 
@@ -91,16 +96,18 @@ export function MoreMenuModal({
       className="fixed inset-0 bg-[#FFFEFD] z-50 flex flex-col"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 h-[48px] border-b border-[#1e1709] shrink-0">
-        <h2 className="font-['Helvetica_Neue:Medium',sans-serif] text-[16px] tracking-[2px] text-[#1e1709] uppercase">
-          More
-        </h2>
-        <button 
-          onClick={onClose} 
-          className="w-8 h-8 flex items-center justify-center hover:bg-[#1e1709]/10 rounded transition-colors"
-        >
-          <X className="w-5 h-5 text-[#1e1709]" strokeWidth={1.5} />
-        </button>
+      <div className="flex items-center justify-between h-[48px] border-b border-[#1e1709] shrink-0">
+        <div className="w-full max-w-[393px] mx-auto px-4 flex items-center justify-between">
+          <h2 className="font-['Helvetica_Neue:Medium',sans-serif] text-[16px] tracking-[2px] text-[#1e1709] uppercase">
+            {isOwnProfile ? 'More' : 'Options'}
+          </h2>
+          <button 
+            onClick={onClose} 
+            className="w-8 h-8 flex items-center justify-center hover:bg-[#1e1709]/10 rounded transition-colors"
+          >
+            <X className="w-5 h-5 text-[#1e1709]" strokeWidth={1.5} />
+          </button>
+        </div>
       </div>
 
       {/* Menu Items */}
@@ -133,13 +140,13 @@ export function MoreMenuModal({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  console.log('Change password clicked');
+                  console.log('Password clicked');
                   handleChangePassword();
                 }}
                 className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#1e1709]/5 transition-colors border-b border-[#1e1709]/10 cursor-pointer"
               >
                 <span className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] tracking-[2px] text-[#1e1709] uppercase">
-                  Change Password
+                  Password
                 </span>
                 <ChevronRight className="w-4 h-4 text-[#1e1709]" strokeWidth={1.5} />
               </button>
@@ -154,7 +161,7 @@ export function MoreMenuModal({
                 className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#1e1709]/5 transition-colors border-b border-[#1e1709]/10 cursor-pointer"
               >
                 <span className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] tracking-[2px] text-[#1e1709] uppercase">
-                  Change Email
+                  Email
                 </span>
                 <ChevronRight className="w-4 h-4 text-[#1e1709]" strokeWidth={1.5} />
               </button>
@@ -222,92 +229,92 @@ export function MoreMenuModal({
             </>
           )}
 
-          {/* Legal Section */}
-          <div className="px-4 pt-5 pb-2">
-            <p className="font-['Helvetica_Neue:Medium',sans-serif] text-[11px] tracking-[1.5px] text-[#1e1709]/60 uppercase">
-              Legal
-            </p>
-          </div>
-
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              console.log('Help & Contact clicked');
-              handleHelpContact();
-            }}
-            className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#1e1709]/5 transition-colors border-b border-[#1e1709]/10 cursor-pointer"
-          >
-            <span className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] tracking-[2px] text-[#1e1709] uppercase">
-              Help & Contact
-            </span>
-            <ChevronRight className="w-4 h-4 text-[#1e1709]" strokeWidth={1.5} />
-          </button>
-
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              console.log('Privacy policy clicked');
-              handlePrivacyPolicy();
-            }}
-            className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#1e1709]/5 transition-colors border-b border-[#1e1709]/10 cursor-pointer"
-          >
-            <span className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] tracking-[2px] text-[#1e1709] uppercase">
-              Privacy Policy
-            </span>
-            <ChevronRight className="w-4 h-4 text-[#1e1709]" strokeWidth={1.5} />
-          </button>
-
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              console.log('Terms of service clicked');
-              handleTermsOfService();
-            }}
-            className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#1e1709]/5 transition-colors border-b border-[#1e1709]/10 cursor-pointer"
-          >
-            <span className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] tracking-[2px] text-[#1e1709] uppercase">
-              Terms of Service
-            </span>
-            <ChevronRight className="w-4 h-4 text-[#1e1709]" strokeWidth={1.5} />
-          </button>
-
-          {/* Logout - Only show on own profile */}
+          {/* Legal Section - Only show on own profile */}
           {isOwnProfile && (
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('Logout clicked');
-                handleLogout();
-              }}
-              className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#1e1709]/5 transition-colors border-b border-[#1e1709]/10 cursor-pointer"
-            >
-              <span className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] tracking-[2px] text-[#1e1709] uppercase">
-                Logout
-              </span>
-              <ChevronRight className="w-4 h-4 text-[#1e1709]" strokeWidth={1.5} />
-            </button>
-          )}
+            <>
+              <div className="px-4 pt-5 pb-2">
+                <p className="font-['Helvetica_Neue:Medium',sans-serif] text-[11px] tracking-[1.5px] text-[#1e1709]/60 uppercase">
+                  Legal
+                </p>
+              </div>
 
-          {/* Destructive Action - Delete Account - Only show on own profile */}
-          {isOwnProfile && (
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('Delete account clicked');
-                handleDeleteAccount();
-              }}
-              className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#1e1709]/5 transition-colors border-b border-[#1e1709]/10 cursor-pointer"
-            >
-              <span className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] tracking-[2px] text-[#1e1709] uppercase">
-                Delete Account
-              </span>
-              <ChevronRight className="w-4 h-4 text-[#1e1709]" strokeWidth={1.5} />
-            </button>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Help & Contact clicked');
+                  handleHelpContact();
+                }}
+                className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#1e1709]/5 transition-colors border-b border-[#1e1709]/10 cursor-pointer"
+              >
+                <span className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] tracking-[2px] text-[#1e1709] uppercase">
+                  Help & Contact
+                </span>
+                <ChevronRight className="w-4 h-4 text-[#1e1709]" strokeWidth={1.5} />
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Privacy policy clicked');
+                  handlePrivacyPolicy();
+                }}
+                className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#1e1709]/5 transition-colors border-b border-[#1e1709]/10 cursor-pointer"
+              >
+                <span className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] tracking-[2px] text-[#1e1709] uppercase">
+                  Privacy Policy
+                </span>
+                <ChevronRight className="w-4 h-4 text-[#1e1709]" strokeWidth={1.5} />
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Terms of service clicked');
+                  handleTermsOfService();
+                }}
+                className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#1e1709]/5 transition-colors border-b border-[#1e1709]/10 cursor-pointer"
+              >
+                <span className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] tracking-[2px] text-[#1e1709] uppercase">
+                  Terms of Service
+                </span>
+                <ChevronRight className="w-4 h-4 text-[#1e1709]" strokeWidth={1.5} />
+              </button>
+
+              {/* Logout */}
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Logout clicked');
+                  handleLogout();
+                }}
+                className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#1e1709]/5 transition-colors border-b border-[#1e1709]/10 cursor-pointer"
+              >
+                <span className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] tracking-[2px] text-[#1e1709] uppercase">
+                  Logout
+                </span>
+                <ChevronRight className="w-4 h-4 text-[#1e1709]" strokeWidth={1.5} />
+              </button>
+
+              {/* Destructive Action - Delete Account */}
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Delete account clicked');
+                  handleDeleteAccount();
+                }}
+                className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#1e1709]/5 transition-colors border-b border-[#1e1709]/10 cursor-pointer"
+              >
+                <span className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] tracking-[2px] text-[#1e1709] uppercase">
+                  Delete Account
+                </span>
+                <ChevronRight className="w-4 h-4 text-[#1e1709]" strokeWidth={1.5} />
+              </button>
+            </>
           )}
 
           {/* Bottom padding for safe area */}

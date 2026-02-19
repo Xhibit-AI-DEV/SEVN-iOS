@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner@2.0.3';
 import { Loader2 } from 'lucide-react';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { supabase } from '../utils/supabase/client';
 import svgPaths from "../imports/svg-ixy1f48tju";
+import { createClient } from '@supabase/supabase-js';
 
 interface ChrisIntakeFormProps {
   uploadedImage: File | null;
@@ -11,7 +13,7 @@ interface ChrisIntakeFormProps {
   stylistId?: string; // Make it optional for backwards compatibility
 }
 
-const intakeQuestions = [
+const getIntakeQuestions = (stylistName: string) => [
   {
     id: 1,
     question: "What's your style goal?",
@@ -34,12 +36,12 @@ const intakeQuestions = [
   },
   {
     id: 5,
-    question: "Anything else Chris should know?",
+    question: `Anything else ${stylistName} should know?`,
     placeholder: "Style preferences, sizing, colors...",
   },
 ];
 
-export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId }: ChrisIntakeFormProps) {
+export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris' }: ChrisIntakeFormProps) {
   const navigate = useNavigate();
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -47,15 +49,30 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId }: ChrisI
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mainImage, setMainImage] = useState<File | null>(uploadedImage);
 
+  // Get stylist name from stylistId
+  const stylistName = stylistId === 'lewis' ? 'Lewis' : 
+                      stylistId === 'lissy' ? 'Lissy' : 'Chris';
+  
+  // Map stylistId to actual backend stylist IDs
+  const backendStylistId = stylistId === 'lewis' ? 'lewis_bloyce' :
+                           stylistId === 'lissy' ? 'lissy_roddy' : 'chris_whly';
+  
+  // Get questions with dynamic stylist name
+  const intakeQuestions = getIntakeQuestions(stylistName);
+
   // Restore image from sessionStorage if not provided
   useEffect(() => {
     if (!mainImage && !uploadedImage) {
-      const base64 = sessionStorage.getItem('chris_uploaded_image');
-      const name = sessionStorage.getItem('chris_uploaded_image_name');
-      const type = sessionStorage.getItem('chris_uploaded_image_type');
+      // Check for stylist-specific sessionStorage keys
+      const storagePrefix = stylistId === 'lewis' ? 'lewis' : 
+                           stylistId === 'lissy' ? 'lissy' : 'chris';
+      
+      const base64 = sessionStorage.getItem(`${storagePrefix}_uploaded_image`);
+      const name = sessionStorage.getItem(`${storagePrefix}_uploaded_image_name`);
+      const type = sessionStorage.getItem(`${storagePrefix}_uploaded_image_type`);
       
       if (base64 && name && type) {
-        console.log('📦 Retrieving image from sessionStorage:', name);
+        console.log(`📦 Retrieving ${stylistName}'s image from sessionStorage:`, name);
         // Convert base64 back to File
         fetch(base64)
           .then(res => res.blob())
@@ -71,7 +88,7 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId }: ChrisI
     } else if (uploadedImage) {
       setMainImage(uploadedImage);
     }
-  }, [uploadedImage, mainImage]);
+  }, [uploadedImage, mainImage, stylistId, stylistName]);
 
   // Safety check: ensure currentQuestion is within bounds
   useEffect(() => {
@@ -109,14 +126,19 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId }: ChrisI
       setIsSubmitting(true);
       
       try {
-        const accessToken = localStorage.getItem('access_token');
+        // Get access token from localStorage (set by SignIn.tsx)
+        const accessToken = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
         
         if (!accessToken) {
-          toast.error('Please sign in to continue');
+          console.error('❌ No access token in localStorage');
+          toast.error('Session expired. Please sign in again.');
           navigate('/signin');
           return;
         }
-
+        
+        console.log('✅ Using access token from localStorage');
+        console.log('🔐 Token preview:', accessToken.substring(0, 20) + '...');
+        
         // Validate main image exists
         if (!mainImage) {
           toast.error('Please upload a photo to continue');
@@ -124,7 +146,7 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId }: ChrisI
           return;
         }
 
-        console.log('💾 Saving Chris intake form to backend...');
+        console.log('💾 Saving intake form to backend...');
         console.log('📸 Main image:', mainImage.name, mainImage.type);
 
         // Upload main image
@@ -196,7 +218,7 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId }: ChrisI
               Authorization: `Bearer ${accessToken}`,
             },
             body: JSON.stringify({
-              stylistId: stylistId || 'chris_whly',
+              stylistId: backendStylistId,
               mainImageUrl,
               referenceImages: referenceImageUrls,
               intakeAnswers,
@@ -212,18 +234,34 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId }: ChrisI
         }
 
         const order = await orderResponse.json();
-        console.log('✅ Order created:', order);
+        console.log('✅ Order created successfully:', order);
+        
+        // Validate that we received an order_id
+        if (!order || !order.order_id) {
+          console.error('❌ Order response missing order_id:', order);
+          throw new Error('Order created but no order ID returned');
+        }
 
         const navigationState = {
           orderId: order.order_id,
           uploadedImageUrl: mainImageUrl,
-          stylistId: stylistId || 'chris_whly',
+          stylistId: backendStylistId,
         };
 
         console.log('🚀 Navigating to waitlist with state:', navigationState);
 
+        // Persist to localStorage as backup in case of page refresh
+        localStorage.setItem('pendingIntakeData', JSON.stringify(navigationState));
+
         // Navigate to waitlist page with order ID and image URL
-        navigate('/chris/waitlist', { 
+        // Use the correct waitlist route based on stylist
+        const waitlistRoute = stylistId === 'lewis' ? '/lewis/waitlist' :
+                             stylistId === 'lissy' ? '/lissy/waitlist' : '/chris/waitlist';
+        
+        console.log('🚀 Navigating to:', waitlistRoute);
+        toast.success(`Request submitted! ${stylistName} will review your style request.`);
+        
+        navigate(waitlistRoute, { 
           state: navigationState
         });
       } catch (error: any) {
@@ -251,133 +289,209 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId }: ChrisI
   };
 
   const handleSubmit = async () => {
-    setIsSubmitting(true);
-
-    try {
-      // Get auth token
-      const authToken = localStorage.getItem('auth_token');
-      const accessToken = localStorage.getItem('access_token');
+    if (currentQuestion < intakeQuestions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+    } else {
+      // Submit all answers
+      setIsSubmitting(true);
       
-      if (!authToken || !accessToken) {
-        toast.error('Please sign in to continue');
-        navigate('/signin');
-        return;
-      }
-
-      // Validate that we have an uploaded image
-      if (!mainImage) {
-        toast.error('Please upload a photo to continue');
-        setIsSubmitting(false);
-        return;
-      }
-
-      console.log('📸 Starting upload process...');
-      console.log('📸 Uploaded image:', mainImage.name, mainImage.type, mainImage.size);
-
-      // Upload main image
-      const mainImageFormData = new FormData();
-      mainImageFormData.append('file', mainImage);
-
-      console.log('📤 Sending main image to server...');
-
-      const mainImageResponse = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/upload`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${publicAnonKey}`,
-          },
-          body: mainImageFormData,
+      try {
+        console.log('🚀 ========== SUBMITTING INTAKE FORM ==========');
+        console.log('📋 Stylist:', stylistName, '(', backendStylistId, ')');
+        console.log('📸 Main image:', mainImage?.name, mainImage?.type, mainImage?.size, 'bytes');
+        console.log('📸 Reference images:', referenceImages.length);
+        console.log('📝 Answers:', answers);
+        
+        // Get access token
+        let accessToken: string | null = null;
+        
+        try {
+          const supabase = createClient(projectId, publicAnonKey);
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+          
+          if (session?.access_token) {
+            accessToken = session.access_token;
+            console.log('✅ Using access token from Supabase session');
+          } else {
+            console.log('⚠️ No Supabase session found');
+          }
+          
+          if (sessionError) {
+            console.log('⚠️ Session error, falling back to localStorage:', sessionError);
+          }
+        } catch (err) {
+          console.error('❌ Error getting Supabase session:', err);
         }
-      );
+        
+        // Fall back to localStorage if no Supabase session
+        if (!accessToken) {
+          accessToken = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
+          if (accessToken) {
+            console.log('✅ Using access token from localStorage');
+          }
+        }
+        
+        if (!accessToken) {
+          console.error('❌ No access token available');
+          toast.error('Please sign in to continue');
+          navigate('/signin');
+          return;
+        }
 
-      if (!mainImageResponse.ok) {
-        const errorText = await mainImageResponse.text();
-        console.error('Main image upload failed:', mainImageResponse.status, errorText);
-        throw new Error(`Failed to upload main image: ${errorText}`);
-      }
+        // Validate main image exists
+        if (!mainImage) {
+          toast.error('Please upload a photo to continue');
+          setIsSubmitting(false);
+          return;
+        }
 
-      const { url: mainImageUrl } = await mainImageResponse.json();
-      console.log('Main image uploaded:', mainImageUrl);
+        console.log('💾 Saving intake form to backend...');
+        console.log('📸 Main image:', mainImage.name, mainImage.type);
 
-      // Upload reference images
-      const referenceImageUrls: string[] = [];
-      for (const image of referenceImages) {
-        const formData = new FormData();
-        formData.append('file', image);
+        // Upload main image
+        const mainImageFormData = new FormData();
+        mainImageFormData.append('file', mainImage);
 
-        const response = await fetch(
+        console.log('📤 Uploading main image to /upload...');
+
+        const mainImageResponse = await fetch(
           `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/upload`,
           {
             method: 'POST',
             headers: {
-              Authorization: `Bearer ${accessToken}`,
+              Authorization: `Bearer ${publicAnonKey}`,
             },
-            body: formData,
+            body: mainImageFormData,
           }
         );
 
-        if (response.ok) {
-          const { url } = await response.json();
-          referenceImageUrls.push(url);
-          console.log('Reference image uploaded:', url);
+        console.log('📥 Upload response status:', mainImageResponse.status, mainImageResponse.statusText);
+
+        if (!mainImageResponse.ok) {
+          const errorText = await mainImageResponse.text();
+          console.error('❌ Upload failed:', errorText);
+          throw new Error('Failed to upload main image: ' + errorText);
         }
-      }
 
-      // Prepare intake answers
-      const intakeAnswers = intakeQuestions.reduce((acc, q) => {
-        acc[q.question] = answers[q.id] || '';
-        return acc;
-      }, {} as Record<string, string>);
+        const uploadResult = await mainImageResponse.json();
+        const mainImageUrl = uploadResult.url;
+        console.log('✅ Main image uploaded:', mainImageUrl);
 
-      console.log('📝 Submitting order with:', {
-        stylistId: stylistId || 'chris_whly',
-        mainImageUrl,
-        referenceImagesCount: referenceImageUrls.length,
-        intakeAnswers,
-      });
+        // Upload reference images
+        const referenceImageUrls: string[] = [];
+        for (const image of referenceImages) {
+          console.log('📤 Uploading reference image:', image.name);
+          const formData = new FormData();
+          formData.append('file', image);
 
-      // Create order
-      const orderResponse = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/orders/create`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({
-            stylistId: stylistId || 'chris_whly', // Chris Whly's stylist ID
-            mainImageUrl,
-            referenceImages: referenceImageUrls,
-            intakeAnswers: intakeAnswers,
-          }),
+          const response = await fetch(
+            `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/upload`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${publicAnonKey}`,
+              },
+              body: formData,
+            }
+          );
+
+          if (response.ok) {
+            const { url } = await response.json();
+            referenceImageUrls.push(url);
+            console.log('✅ Reference image uploaded:', url);
+          } else {
+            const errorText = await response.text();
+            console.error('❌ Reference image upload failed:', errorText);
+          }
         }
-      );
 
-      if (!orderResponse.ok) {
-        const errorData = await orderResponse.json();
-        throw new Error(errorData.error || 'Failed to create order');
-      }
+        console.log('✅ All reference images uploaded:', referenceImageUrls.length);
 
-      const order = await orderResponse.json();
-      console.log('✅ Order created:', order);
-      console.log('📸 Main image URL being passed to waitlist:', mainImageUrl);
+        // Create intake answers object
+        const intakeAnswers: Record<string, string> = {};
+        intakeQuestions.forEach((question) => {
+          intakeAnswers[`q${question.id}`] = answers[question.id] || '';
+        });
 
-      toast.success('Request submitted! Chris will review your style request.');
-      
-      // Navigate with the uploaded image URL and order ID in state
-      navigate('/chris/waitlist', { 
-        state: { 
+        console.log('📝 Creating order...');
+        console.log('📝 Order payload:', {
+          stylistId: backendStylistId,
+          mainImageUrl,
+          referenceImagesCount: referenceImageUrls.length,
+          intakeAnswersCount: Object.keys(intakeAnswers).length,
+          status: 'intake_submitted',
+        });
+
+        // Save to backend with status "intake_submitted"
+        const orderResponse = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/orders/create`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+              stylistId: backendStylistId,
+              mainImageUrl,
+              referenceImages: referenceImageUrls,
+              intakeAnswers,
+              status: 'intake_submitted', // Initial status
+            }),
+          }
+        );
+
+        console.log('📥 Order response status:', orderResponse.status, orderResponse.statusText);
+
+        if (!orderResponse.ok) {
+          const errorData = await orderResponse.json().catch(() => ({ error: 'Unknown error' }));
+          console.error('❌ Order creation failed:', errorData);
+          throw new Error(errorData.error || 'Failed to create order');
+        }
+
+        const order = await orderResponse.json();
+        console.log('✅ Order created successfully:', order);
+        
+        // Validate that we received an order_id
+        if (!order || !order.order_id) {
+          console.error('❌ Order response missing order_id:', order);
+          throw new Error('Order created but no order ID returned. Response: ' + JSON.stringify(order));
+        }
+
+        const navigationState = {
+          orderId: order.order_id,
           uploadedImageUrl: mainImageUrl,
-          orderId: order.order_id 
-        } 
-      });
-    } catch (error: any) {
-      console.error('Error submitting intake:', error);
-      toast.error(error.message || 'Failed to submit request. Please try again.');
-    } finally {
-      setIsSubmitting(false);
+          stylistId: backendStylistId,
+        };
+
+        console.log('🚀 Navigating to waitlist with state:', navigationState);
+
+        // Persist to localStorage as backup in case of page refresh
+        localStorage.setItem('pendingIntakeData', JSON.stringify(navigationState));
+        console.log('💾 Saved to localStorage:', navigationState);
+
+        // Navigate to waitlist page with order ID and image URL
+        // Use the correct waitlist route based on stylist
+        const waitlistRoute = stylistId === 'lewis' ? '/lewis/waitlist' :
+                             stylistId === 'lissy' ? '/lissy/waitlist' : '/chris/waitlist';
+        
+        console.log('🚀 Navigating to:', waitlistRoute);
+        toast.success(`Request submitted! ${stylistName} will review your style request.`);
+        
+        navigate(waitlistRoute, { 
+          state: navigationState
+        });
+        console.log('🚀 ========== INTAKE FORM SUBMISSION COMPLETE ==========');
+      } catch (error: any) {
+        console.error('❌ ========== ERROR SUBMITTING INTAKE ==========');
+        console.error('❌ Error:', error);
+        console.error('❌ Error message:', error.message);
+        console.error('❌ Error stack:', error.stack);
+        console.error('❌ ==========================================');
+        toast.error(error.message || 'Failed to save. Please try again.');
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -451,7 +565,7 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId }: ChrisI
               Additional Reference Images (Optional)
             </h3>
             <p className="font-['Helvetica_Neue:Light',sans-serif] text-[12px] text-[#1e1709]/60 mb-3">
-              Upload additional images to help Chris understand your style better.
+              Upload additional images to help {stylistName} understand your style better.
             </p>
             
             <div className="flex gap-3 flex-wrap">

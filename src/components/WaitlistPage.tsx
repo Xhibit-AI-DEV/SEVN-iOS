@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router';
 import { Loader2, X } from 'lucide-react';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { toast } from 'sonner@2.0.3';
 import svgPaths from "../imports/svg-ib8s7izy1q";
-import img021 from "figma:asset/e848b14a74d352089a614d152282f09191ed8fc0.png"; // Lissy's featured edit image from landing page
+import img021 from "figma:asset/e72a0bbadee5488647fef8721e8949abb9815c1d.png"; // Lissy's correct featured edit image from landing page
 import img22 from "figma:asset/9f1f3c2c66a18611ca3dc256be40c92f256300b5.png";
 import img23 from "figma:asset/dee233baf3a56cb7abc1b3ff6012d7e6797aeecf.png";
 
@@ -16,27 +16,118 @@ export function WaitlistPage() {
   const [stylistId, setStylistId] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const hasProcessedState = useRef(false);
 
   useEffect(() => {
-    const intakeData = location.state as any;
-    
-    console.log('📦 Received intake data:', intakeData);
-    
-    if (!intakeData || !intakeData.uploadedImageUrl || !intakeData.orderId) {
-      console.log('⚠️ No intake data found in location.state, redirecting to /lissy');
-      navigate('/lissy', { replace: true });
+    // Only process state once to avoid double-render issues
+    if (hasProcessedState.current) {
+      console.log('🔍 WaitlistPage - Already processed state, skipping');
       return;
     }
+
+    const loadIntakeData = async () => {
+      console.log('🔄 WaitlistPage: Loading intake data...');
+      
+      // Try navigation state first
+      let intakeData = location.state as any;
+      console.log('📦 Navigation state:', intakeData);
+      
+      // Fallback: Try localStorage
+      if (!intakeData || !intakeData.uploadedImageUrl || !intakeData.orderId) {
+        console.log('⚠️ No navigation state found, checking localStorage...');
+        const stored = localStorage.getItem('pendingIntakeData');
+        if (stored) {
+          intakeData = JSON.parse(stored);
+          console.log('📦 Loaded from localStorage:', intakeData);
+        }
+      }
+      
+      // If still no data, try to fetch user's most recent order from backend
+      if (!intakeData || !intakeData.uploadedImageUrl || !intakeData.orderId) {
+        console.log('⚠️ No localStorage data found, fetching most recent order from backend...');
+        
+        const accessToken = localStorage.getItem('access_token');
+        console.log('   access_token exists:', !!accessToken);
+        
+        if (accessToken) {
+          try {
+            console.log('📤 Fetching from: /orders/my-orders');
+            const response = await fetch(
+              `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/orders/my-orders`,
+              {
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                },
+              }
+            );
+            
+            console.log('📥 Response status:', response.status, response.statusText);
+            
+            if (response.ok) {
+              const orders = await response.json();
+              console.log('📦 Fetched orders:', orders);
+              console.log('📦 Number of orders:', Array.isArray(orders) ? orders.length : 'not an array');
+              
+              // Find the most recent Lissy order
+              const lissyOrders = orders.filter((o: any) => 
+                o.stylist_id === 'lissy_roddy' && 
+                (o.status === 'intake_submitted' || o.status === 'waitlist')
+              );
+              
+              console.log('📦 Lissy orders found:', lissyOrders.length);
+              if (lissyOrders.length > 0) {
+                console.log('📦 Most recent Lissy order:', lissyOrders[0]);
+              }
+              
+              if (lissyOrders.length > 0) {
+                const mostRecentOrder = lissyOrders[0];
+                intakeData = {
+                  orderId: mostRecentOrder.id,
+                  uploadedImageUrl: mostRecentOrder.main_image_url,
+                  stylistId: mostRecentOrder.stylist_id,
+                };
+                console.log('✅ Restored order from backend:', intakeData);
+              }
+            } else {
+              const errorText = await response.text();
+              console.error('❌ Backend error:', errorText);
+            }
+          } catch (error) {
+            console.error('❌ Failed to fetch orders:', error);
+          }
+        }
+      }
+      
+      // If we still don't have data, redirect back
+      if (!intakeData || !intakeData.uploadedImageUrl || !intakeData.orderId) {
+        console.log('⚠️ No intake data found, redirecting to /lissy');
+        toast.error('Please complete the intake form first');
+        
+        // Redirect after a brief delay so user sees the toast
+        setTimeout(() => {
+          navigate('/lissy', { replace: true });
+        }, 1500);
+        return;
+      }
+      
+      // Mark as processed
+      hasProcessedState.current = true;
+      
+      // Store the data
+      setUserImageUrl(intakeData.uploadedImageUrl);
+      setOrderId(intakeData.orderId);
+      setStylistId(intakeData.stylistId || 'lissy_roddy');
+      
+      // Clear localStorage since we've successfully loaded it
+      localStorage.removeItem('pendingIntakeData');
+      
+      console.log('✅ Waitlist page initialized with order:', intakeData.orderId);
+    };
     
-    // Store all the data in state immediately
-    setUserImageUrl(intakeData.uploadedImageUrl);
-    setOrderId(intakeData.orderId);
-    setStylistId(intakeData.stylistId || 'lissy_roddy');
-    
-    console.log('✅ Waitlist page initialized with order:', intakeData.orderId);
+    loadIntakeData();
     
     // DO NOT auto-show modal - only show after user clicks JOIN WAITLIST
-  }, []); // Run only once on mount
+  }, [navigate, location.state]); // Add location.state to dependencies
 
   const handleJoinWaitlist = async () => {
     setIsSaving(true);
@@ -81,7 +172,7 @@ export function WaitlistPage() {
       console.log('✅ Successfully joined waitlist');
       toast.success('You\'re on the waitlist!');
       
-      // Keep modal open to show success
+      // Show success modal
       setShowModal(true);
     } catch (error: any) {
       console.error('❌ Error joining waitlist:', error);
@@ -195,25 +286,23 @@ export function WaitlistPage() {
 
           {/* Main Content */}
           <div className="flex-1 flex flex-col items-center px-4 pb-8">
-            {/* User's uploaded image with stacked card effect */}
-            {userImageUrl && (
-              <div className="relative w-full max-w-[361px] h-[360px] mb-8">
-                {/* Back card - bottom right offset */}
-                <div className="absolute top-[8px] left-[8px] right-0 bottom-0 border border-[#1e1709] rounded-[12px] bg-white" />
-                
-                {/* Middle card */}
-                <div className="absolute top-[4px] left-[4px] right-[4px] bottom-[4px] border border-[#1e1709] rounded-[12px] bg-white" />
-                
-                {/* Front card with actual image */}
-                <div className="absolute top-0 left-0 right-[8px] bottom-[8px] rounded-[12px] border border-[#1e1709] overflow-hidden">
-                  <img
-                    src={userImageUrl}
-                    alt="Your style"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+            {/* User's uploaded image with stacked card effect - ALWAYS show */}
+            <div className="relative w-full max-w-[361px] h-[360px] mb-8">
+              {/* Back card - bottom right offset */}
+              <div className="absolute top-[8px] left-[8px] right-0 bottom-0 border border-[#1e1709] rounded-[12px] bg-white" />
+              
+              {/* Middle card */}
+              <div className="absolute top-[4px] left-[4px] right-[4px] bottom-[4px] border border-[#1e1709] rounded-[12px] bg-white" />
+              
+              {/* Front card with user's actual uploaded image */}
+              <div className="absolute top-0 left-0 right-[8px] bottom-[8px] rounded-[12px] border border-[#1e1709] overflow-hidden">
+                <img
+                  src={userImageUrl || ''}
+                  alt="Your style"
+                  className="w-full h-full object-cover"
+                />
               </div>
-            )}
+            </div>
 
             {/* Success message */}
             <div className="w-full max-w-[361px] mb-16 text-center">

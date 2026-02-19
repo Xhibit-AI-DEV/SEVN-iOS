@@ -25,38 +25,133 @@ export function ChrisWaitlistPage({ uploadedImageUrl }: ChrisWaitlistPageProps) 
       return;
     }
 
-    // Get user's uploaded image from navigation state
-    const intakeData = location.state as any;
-    
-    console.log('🔍 ChrisWaitlistPage - Received state:', intakeData);
-    
-    // Now we expect uploadedImageUrl (string) and orderId from the saved order
-    if (!intakeData || !intakeData.uploadedImageUrl || !intakeData.orderId) {
-      console.warn('⚠️ No intake data found - redirecting to Chris landing page');
-      console.warn('Missing fields:', {
-        hasState: !!intakeData,
-        hasImageUrl: !!intakeData?.uploadedImageUrl,
-        hasOrderId: !!intakeData?.orderId,
+    const loadIntakeData = async () => {
+      // Get user's uploaded image from navigation state or localStorage fallback
+      let intakeData = location.state as any;
+      
+      console.log('🔍 Step 1: Checking navigation state...');
+      console.log('   location.state:', location.state);
+      console.log('   intakeData:', intakeData);
+      
+      // If no navigation state, try localStorage
+      if (!intakeData || !intakeData.uploadedImageUrl || !intakeData.orderId) {
+        console.log('⚠️ No navigation state found, checking localStorage...');
+        const storedData = localStorage.getItem('pendingIntakeData');
+        console.log('   localStorage.pendingIntakeData:', storedData);
+        
+        if (storedData) {
+          try {
+            intakeData = JSON.parse(storedData);
+            console.log('✅ Retrieved intake data from localStorage:', intakeData);
+          } catch (error) {
+            console.error('❌ Failed to parse stored intake data:', error);
+          }
+        }
+      } else {
+        console.log('✅ Found navigation state:', intakeData);
+      }
+      
+      // If still no data, try to fetch user's most recent order from backend
+      if (!intakeData || !intakeData.uploadedImageUrl || !intakeData.orderId) {
+        console.log('⚠️ No localStorage data found, fetching most recent order from backend...');
+        
+        const accessToken = localStorage.getItem('access_token');
+        console.log('   access_token exists:', !!accessToken);
+        
+        if (accessToken) {
+          try {
+            console.log('📤 Fetching from: /orders/my-orders');
+            const response = await fetch(
+              `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/orders/my-orders`,
+              {
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                },
+              }
+            );
+            
+            console.log('📥 Response status:', response.status, response.statusText);
+            
+            if (response.ok) {
+              const orders = await response.json();
+              console.log('📦 Fetched orders:', orders);
+              console.log('📦 Number of orders:', Array.isArray(orders) ? orders.length : 'not an array');
+              
+              // Find the most recent Chris order
+              const chrisOrders = orders.filter((o: any) => 
+                o.stylist_id === 'chris_whly' && 
+                (o.status === 'intake_submitted' || o.status === 'waitlist')
+              );
+              
+              console.log('📦 Chris orders found:', chrisOrders.length);
+              if (chrisOrders.length > 0) {
+                console.log('📦 Most recent Chris order:', chrisOrders[0]);
+              }
+              
+              if (chrisOrders.length > 0) {
+                const mostRecentOrder = chrisOrders[0];
+                intakeData = {
+                  orderId: mostRecentOrder.id,
+                  uploadedImageUrl: mostRecentOrder.main_image_url,
+                  stylistId: mostRecentOrder.stylist_id,
+                };
+                console.log('✅ Restored order from backend:', intakeData);
+              }
+            } else {
+              const errorText = await response.text();
+              console.error('❌ Backend error:', errorText);
+            }
+          } catch (error) {
+            console.error('❌ Failed to fetch orders:', error);
+          }
+        }
+      }
+      
+      console.log('🔍 ChrisWaitlistPage - Final intake data:', intakeData);
+      
+      // Now we expect uploadedImageUrl (string) and orderId from the saved order
+      if (!intakeData || !intakeData.uploadedImageUrl || !intakeData.orderId) {
+        console.warn('⚠️ No intake data found - redirecting to Chris landing page');
+        console.warn('Missing fields:', {
+          hasState: !!intakeData,
+          hasImageUrl: !!intakeData?.uploadedImageUrl,
+          hasOrderId: !!intakeData?.orderId,
+          intakeDataKeys: intakeData ? Object.keys(intakeData) : [],
+          intakeDataValues: intakeData,
+        });
+        
+        console.log('💡 User likely needs to complete intake form first');
+        console.log('💡 Or they refreshed the page before backend could save');
+        
+        toast.error('Please complete the intake form first');
+        
+        // Redirect after a brief delay so user sees the toast
+        setTimeout(() => {
+          navigate('/chris');
+        }, 1500);
+        return;
+      }
+      
+      // Mark as processed
+      hasProcessedState.current = true;
+      
+      // Store the data in component state
+      setUserImageUrl(intakeData.uploadedImageUrl);
+      setOrderId(intakeData.orderId);
+      
+      // Clear localStorage since we've successfully loaded it
+      localStorage.removeItem('pendingIntakeData');
+      
+      console.log('✅ State processed and stored:', {
+        userImageUrl: intakeData.uploadedImageUrl,
+        orderId: intakeData.orderId,
       });
-      toast.error('Please complete the intake form first');
-      navigate('/chris');
-      return;
-    }
+    };
     
-    // Mark as processed
-    hasProcessedState.current = true;
-    
-    // Store the data in component state
-    setUserImageUrl(intakeData.uploadedImageUrl);
-    setOrderId(intakeData.orderId);
-    
-    console.log('✅ State processed and stored:', {
-      userImageUrl: intakeData.uploadedImageUrl,
-      orderId: intakeData.orderId,
-    });
+    loadIntakeData();
     
     // DON'T show the popup yet - wait for user to click "JOIN WAITLIST"
-  }, [navigate]); // Remove location.state from dependencies
+  }, [navigate, location.state]); // Add location.state to dependencies
 
   const handleJoinWaitlist = async () => {
     setIsSaving(true);

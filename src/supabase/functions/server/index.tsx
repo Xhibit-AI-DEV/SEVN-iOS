@@ -23,6 +23,8 @@ import likesRoutes from "./likes.tsx";
 import profilesRoutes from "./profiles.tsx";
 import editsRoutes from "./edits.tsx";
 import adminRoutes from "./admin.tsx";
+import followsRoutes from "./follows.tsx";
+import blocksRoutes from "./blocks.tsx";
 
 const app = new Hono();
 
@@ -100,6 +102,12 @@ app.route("/make-server-b14d984c/edits", editsRoutes);
 
 // Mount Admin routes (NEW - for managing admin tasks)
 app.route("/make-server-b14d984c/admin", adminRoutes);
+
+// Mount Follows routes (NEW - for managing user follows)
+app.route("/make-server-b14d984c/follows", followsRoutes);
+
+// Mount Blocks routes (NEW - for managing user blocks)
+app.route("/make-server-b14d984c/blocks", blocksRoutes);
 
 // Upload endpoint (for intake form images)
 app.post("/make-server-b14d984c/upload", async (c) => {
@@ -419,7 +427,7 @@ app.get("/make-server-b14d984c/test-bucket", async (c) => {
     
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    const bucketName = 'make-b14d984c-product-images';
+    const bucketName = 'make-b14d984c-avatars';
     
     // Check bucket status
     const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
@@ -435,65 +443,56 @@ app.get("/make-server-b14d984c/test-bucket", async (c) => {
     const bucket = buckets?.find(b => b.name === bucketName);
     
     if (!bucket) {
+      console.log('📁 Avatar bucket does not exist, attempting to create...');
+      const { error: createError } = await supabase.storage.createBucket(bucketName, {
+        public: true,
+        fileSizeLimit: 5242880, // 5MB
+      });
+      
+      if (createError) {
+        return c.json({
+          error: 'Avatar bucket does not exist and failed to create',
+          bucketName,
+          createError: createError.message,
+          availableBuckets: buckets?.map(b => b.name) || [],
+        }, 500);
+      }
+      
       return c.json({
-        error: 'Bucket does not exist',
+        success: true,
+        message: 'Avatar bucket created successfully',
         bucketName,
-        availableBuckets: buckets?.map(b => b.name) || [],
-      }, 404);
+      });
     }
     
     console.log('📁 Bucket found:', bucket);
     
-    // List files in bucket
-    const { data: files, error: listError } = await supabase.storage
-      .from(bucketName)
-      .list('', { limit: 10, sortBy: { column: 'created_at', order: 'desc' } });
+    // Try to upload a test file
+    const testFileName = `test-${Date.now()}.txt`;
+    const testContent = new TextEncoder().encode('Test upload');
     
-    if (listError) {
-      console.error('❌ Error listing files:', listError);
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from(bucketName)
+      .upload(testFileName, testContent, {
+        contentType: 'text/plain',
+        upsert: true,
+      });
+    
+    if (uploadError) {
       return c.json({
         bucket: {
           name: bucket.name,
           public: bucket.public,
           id: bucket.id,
         },
-        error: 'Failed to list files',
-        details: listError.message,
+        testUpload: 'FAILED',
+        uploadError: uploadError.message,
+        suggestion: 'Check Supabase Storage policies and permissions',
       }, 500);
     }
     
-    // Test a few image URLs
-    const testResults = [];
-    if (files && files.length > 0) {
-      for (const file of files.slice(0, 3)) {
-        const { data: urlData } = supabase.storage
-          .from(bucketName)
-          .getPublicUrl(file.name);
-        
-        const testUrl = urlData?.publicUrl;
-        
-        // Test accessibility
-        let accessible = false;
-        let status = 0;
-        let errorMsg = null;
-        try {
-          const response = await fetch(testUrl, { method: 'HEAD' });
-          status = response.status;
-          accessible = response.ok;
-        } catch (e: any) {
-          errorMsg = e.message;
-          console.error('Failed to test URL:', e);
-        }
-        
-        testResults.push({
-          fileName: file.name,
-          url: testUrl,
-          accessible,
-          status,
-          error: errorMsg,
-        });
-      }
-    }
+    // Delete test file
+    await supabase.storage.from(bucketName).remove([testFileName]);
     
     return c.json({
       success: true,
@@ -502,16 +501,8 @@ app.get("/make-server-b14d984c/test-bucket", async (c) => {
         public: bucket.public,
         id: bucket.id,
       },
-      filesCount: files?.length || 0,
-      sampleFiles: files?.slice(0, 10).map(f => ({ 
-        name: f.name, 
-        size: f.metadata?.size,
-        createdAt: f.created_at,
-      })) || [],
-      urlTests: testResults,
-      instructions: bucket.public 
-        ? '✅ Bucket is PUBLIC - images should work in emails!' 
-        : '⚠️ Bucket is PRIVATE - images will NOT work in emails. Make it public in Supabase Dashboard.',
+      testUpload: 'SUCCESS',
+      message: '✅ Avatar bucket is configured correctly and uploads work!',
     });
     
   } catch (error: any) {
@@ -952,7 +943,7 @@ app.post("/make-server-b14d984c/seed-waitlist", async (c) => {
 // Create Chris test account (for testing)
 app.post("/make-server-b14d984c/seed-chris-account", async (c) => {
   try {
-    console.log('🌱 Creating test accounts (Lissy + Chris)...');
+    console.log('🌱 Creating test accounts (Lissy + Chris + Lewis)...');
     
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -961,18 +952,26 @@ app.post("/make-server-b14d984c/seed-chris-account", async (c) => {
     
     const accounts = [
       {
-        email: 'Lissy@sevn.app',
+        email: 'lissy@sevn.app',
         password: 'Password123',
-        name: 'Lissy',
+        name: 'Lissy Roddy',
         username: 'lissy',
         role: 'stylist',
         bio: 'Professional stylist at SEVN',
       },
       {
-        email: 'Chris@sevn.app',
+        email: 'chris@sevn.app',
         password: 'Password123',
         name: 'Chris Whly',
         username: 'chris_whly',
+        role: 'stylist',
+        bio: 'Professional stylist at SEVN',
+      },
+      {
+        email: 'lewis@sevn.app',
+        password: 'Password123',
+        name: 'Lewis Bloyce',
+        username: 'lewis',
         role: 'stylist',
         bio: 'Professional stylist at SEVN',
       }
@@ -990,18 +989,10 @@ app.post("/make-server-b14d984c/seed-chris-account", async (c) => {
       let userId: string;
       
       if (existingUser) {
-        console.log(`⚠️ User ${account.email} already exists, updating password and data...`);
+        console.log(`⚠️ User ${account.email} already exists, using existing profile...`);
         userId = existingUser.id;
         
-        // Update password and metadata
-        await supabase.auth.admin.updateUserById(userId, {
-          password: account.password,
-          email_confirm: true,
-          user_metadata: {
-            name: account.name,
-            role: account.role,
-          }
-        });
+        // Don't update existing user data - just ensure they exist
       } else {
         console.log(`✅ Creating new user ${account.email}...`);
         const { data, error } = await supabase.auth.admin.createUser({
@@ -1027,37 +1018,48 @@ app.post("/make-server-b14d984c/seed-chris-account", async (c) => {
         userId = data.user.id;
       }
       
-      // Create/update customer record
+      // Create/update customer record - only if it doesn't exist
       const customerKey = `customer:${userId}`;
-      await kv.set(customerKey, {
-        id: userId,
-        email: account.email,
-        name: account.name,
-        username: account.username,
-        role: account.role,
-        status: 'new',
-        created_at: new Date().toISOString(),
-        has_intake: false,
-      });
+      const existingCustomer = await kv.get(customerKey);
       
-      // Create/update profile
+      if (!existingCustomer) {
+        await kv.set(customerKey, {
+          id: userId,
+          email: account.email,
+          name: account.name,
+          username: account.username,
+          role: account.role,
+          status: 'new',
+          created_at: new Date().toISOString(),
+          has_intake: false,
+        });
+      }
+      
+      // Create/update profile - only if it doesn't exist
       const profileKey = `profile:${userId}`;
-      await kv.set(profileKey, {
-        user_id: userId,
-        username: account.username,
-        display_name: account.name,
-        name: account.name,
-        bio: account.bio,
-        profile_photo_url: '',
-        external_link: '',
-        location: '',
-        created_edits: [],
-        liked_edits: [],
-        followers_count: 0,
-        following_count: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
+      const existingProfile = await kv.get(profileKey);
+      
+      if (!existingProfile) {
+        await kv.set(profileKey, {
+          user_id: userId,
+          username: account.username,
+          display_name: account.name,
+          name: account.name,
+          bio: account.bio,
+          profile_photo_url: '',
+          external_link: '',
+          location: '',
+          created_edits: [],
+          liked_edits: [],
+          followers_count: 0,
+          following_count: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+        console.log(`✅ ${account.email} profile created successfully`);
+      } else {
+        console.log(`✅ ${account.email} profile already exists, skipping creation`);
+      }
       
       console.log(`✅ ${account.email} account created/updated successfully`);
       

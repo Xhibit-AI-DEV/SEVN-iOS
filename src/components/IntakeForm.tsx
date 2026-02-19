@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { toast } from 'sonner@2.0.3';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
@@ -397,6 +397,9 @@ export function IntakeForm({ uploadedImage, onComplete }: IntakeFormProps) {
         };
 
         console.log('🚀 Navigating to waitlist with state:', navigationState);
+        
+        // Persist to localStorage as backup in case of page refresh
+        localStorage.setItem('pendingIntakeData', JSON.stringify(navigationState));
         
         navigate('/lissy/waitlist', { state: navigationState });
         

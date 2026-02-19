@@ -285,7 +285,11 @@ app.get('/user/:userId', async (c) => {
       const editKey = `edit:${editId}`;
       const edit = await kv.get(editKey);
       if (edit) {
-        edits.push(edit);
+        // Add creator_id as alias for user_id for frontend compatibility
+        edits.push({
+          ...edit,
+          creator_id: edit.user_id,
+        });
       }
     }
     
@@ -438,7 +442,11 @@ app.get('/liked/:userId', async (c) => {
       const editKey = `edit:${editId}`;
       const edit = await kv.get(editKey);
       if (edit) {
-        edits.push(edit);
+        // Add creator_id as alias for user_id for frontend compatibility
+        edits.push({
+          ...edit,
+          creator_id: edit.user_id,
+        });
       }
     }
     

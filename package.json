@@ -4,6 +4,7 @@
       "version": "0.1.0",
       "private": true,
       "dependencies": {
+          "@capacitor/browser": "*",
           "@capacitor/camera": "*",
           "@capacitor/cli": "*",
           "@capacitor/core": "*",
@@ -52,6 +53,7 @@
           "react-dom": "^18.3.1",
           "react-hook-form": "^7.55.0",
           "react-resizable-panels": "^2.1.7",
+          "react-router": "*",
           "react-router-dom": "*",
           "react-toastify": "*",
           "recharts": "^2.15.2",

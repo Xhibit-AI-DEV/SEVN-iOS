@@ -26,7 +26,7 @@ export function TermsOfServicePage() {
       </div>
 
       {/* Content */}
-      <div className="w-full max-w-[393px] mx-auto px-4 pt-8 pb-24">
+      <div className="w-full max-w-[393px] mx-auto px-4 pt-8" style={{ paddingBottom: 'calc(24px + env(safe-area-inset-bottom))' }}>
         <div className="flex flex-col gap-6">
           <div className="font-['Helvetica_Neue:Regular',sans-serif] text-[13px] leading-[20px] text-[#1e1709]/85">
             

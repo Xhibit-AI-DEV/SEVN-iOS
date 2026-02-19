@@ -107,6 +107,14 @@ export function MessageDetailPage() {
     }
   }, [order?.id, order?.status, isCustomer]); // Use specific order properties instead of full object
 
+  // Debug: Log the selectedItems whenever they change
+  useEffect(() => {
+    if (selectedItems.length > 0) {
+      console.log('📊 CURRENT SELECTED ITEMS:', selectedItems);
+      console.log('📊 URLs present?', selectedItems.map((item, i) => `Item ${i+1}: ${!!item.url} (${item.url})`));
+    }
+  }, [selectedItems]);
+
   // Auto-save selections whenever they change (but skip initial load)
   useEffect(() => {
     // Skip the first render to avoid saving immediately after loading
@@ -151,6 +159,19 @@ export function MessageDetailPage() {
         const data = await response.json();
         if (data.success && data.data) {
           console.log('✅ Loaded selections:', data.data);
+          console.log('📦 Items loaded:', data.data.items);
+          
+          // Log each item's URL to debug
+          data.data.items?.forEach((item: any, idx: number) => {
+            console.log(`Item ${idx + 1}:`, {
+              id: item.id,
+              url: item.url,
+              title: item.title,
+              hasUrl: !!item.url,
+              urlValue: item.url,
+            });
+          });
+          
           setSelectedItems(data.data.items || []);
           setStylingNotes(data.data.stylingNotes || '');
         } else {
@@ -881,7 +902,7 @@ export function MessageDetailPage() {
   // COMPLETED VIEW - Both customers and stylists see the final selections
   if (order.status === 'completed') {
     return (
-      <div className="min-h-screen bg-white w-full overflow-x-hidden">
+      <div className="min-h-screen bg-white w-full">
         <div className="w-full max-w-[393px] mx-auto px-6 pb-8">
           {/* Header */}
           <div className="sticky top-0 bg-white z-10 py-6 -mx-6 px-6 mb-6">
@@ -989,12 +1010,20 @@ export function MessageDetailPage() {
               {selectedItems[0] && (
                 <a
                   key={selectedItems[0].id}
-                  href={selectedItems[0].url}
+                  href={selectedItems[0].url || '#'}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block group cursor-pointer"
-                  style={{ pointerEvents: 'auto' }}
-                  onClick={() => console.log('✅ Product 1 clicked:', selectedItems[0].url)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (!selectedItems[0].url || selectedItems[0].url.trim() === '') {
+                      console.warn('⚠️ Product 1 has no URL');
+                      toast.error('This product link is not available');
+                      return;
+                    }
+                    console.log('✅ Product 1 clicked:', selectedItems[0].url);
+                    window.open(selectedItems[0].url, '_blank');
+                  }}
                 >
                   <div className="border border-black rounded-[5px] overflow-hidden bg-white">
                     {/* Product Image */}
@@ -1034,12 +1063,20 @@ export function MessageDetailPage() {
                   {selectedItems.slice(1, 7).map((item, idx) => (
                     <a
                       key={item.id}
-                      href={item.url}
+                      href={item.url || '#'}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="block group cursor-pointer"
-                      style={{ pointerEvents: 'auto' }}
-                      onClick={() => console.log(`✅ Product ${idx + 2} clicked:`, item.url)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (!item.url || item.url.trim() === '') {
+                          console.warn(`⚠️ Product ${idx + 2} has no URL`);
+                          toast.error('This product link is not available');
+                          return;
+                        }
+                        console.log(`✅ Product ${idx + 2} clicked:`, item.url);
+                        window.open(item.url, '_blank');
+                      }}
                     >
                       <div className="border border-black rounded-[5px] overflow-hidden bg-white">
                         {/* Product Image */}

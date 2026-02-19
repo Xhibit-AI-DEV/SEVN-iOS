@@ -2152,7 +2152,7 @@
     border-width: 1px;
   }
 
-  .border-t {
+  .border-t, .border-t-\[1px\] {
     border-top-style: var(--tw-border-style);
     border-top-width: 1px;
   }
@@ -2162,7 +2162,17 @@
     border-bottom-width: 1px;
   }
 
-  .border-b-2, .border-b-\[2px\] {
+  .border-b-2 {
+    border-bottom-style: var(--tw-border-style);
+    border-bottom-width: 2px;
+  }
+
+  .border-b-\[1px\] {
+    border-bottom-style: var(--tw-border-style);
+    border-bottom-width: 1px;
+  }
+
+  .border-b-\[2px\] {
     border-bottom-style: var(--tw-border-style);
     border-bottom-width: 2px;
   }

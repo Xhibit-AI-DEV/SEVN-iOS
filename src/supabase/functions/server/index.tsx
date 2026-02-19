@@ -1284,9 +1284,53 @@ app.post("/make-server-b14d984c/fetch-url-metadata", async (c) => {
                           '';
 
       // Extract price if available
-      const price = getMetaContent('og:price:amount') || 
+      let price = getMetaContent('og:price:amount') || 
                     getMetaContent('product:price:amount') ||
                     '';
+      
+      // Try to find price in JSON-LD structured data if not found in meta tags
+      if (!price) {
+        const jsonLdMatch = html.match(/<script[^>]*type=[\"']application\/ld\+json[\"'][^>]*>(.*?)<\/script>/is);
+        if (jsonLdMatch && jsonLdMatch[1]) {
+          try {
+            const structuredData = JSON.parse(jsonLdMatch[1]);
+            console.log('Checking JSON-LD for price:', structuredData);
+            
+            // Check for price in different formats
+            if (structuredData.offers) {
+              const offers = Array.isArray(structuredData.offers) ? structuredData.offers[0] : structuredData.offers;
+              if (offers.price) {
+                price = offers.priceCurrency ? `${offers.priceCurrency} ${offers.price}` : String(offers.price);
+                console.log('Extracted price from JSON-LD offers:', price);
+              }
+            } else if (structuredData.price) {
+              price = String(structuredData.price);
+              console.log('Extracted price from JSON-LD root:', price);
+            }
+          } catch (e) {
+            console.log('Failed to parse JSON-LD for price:', e.message);
+          }
+        }
+      }
+      
+      // If still no price, try to find it in the HTML content
+      if (!price) {
+        // Look for common price patterns in the HTML
+        const pricePatterns = [
+          /[\"']price[\"'][\s:]*[\"']?(\$?[\d,]+\.?\d*)[\"']?/i,
+          /itemprop=[\"']price[\"'][^>]*content=[\"'](\$?[\d,]+\.?\d*)[\"']/i,
+          /<span[^>]*class=[\"'][^\"']*price[^\"']*[\"'][^>]*>[\s]*(\$?[\d,]+\.?\d*)/i,
+        ];
+        
+        for (const pattern of pricePatterns) {
+          const match = html.match(pattern);
+          if (match && match[1]) {
+            price = match[1];
+            console.log('Extracted price from HTML pattern:', price);
+            break;
+          }
+        }
+      }
 
       // Extract brand if available
       const brand = getMetaContent('og:brand') || 

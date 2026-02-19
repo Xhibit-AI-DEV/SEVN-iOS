@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, Link } from 'react-router';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
@@ -257,7 +257,7 @@ export function SignIn() {
                     style={{ accentColor: '#1E1709' }}
                   />
                   <label htmlFor="terms-checkbox" className="font-['Helvetica_Neue:Regular',sans-serif] text-[13px] leading-[20px] text-[#1E1709]/75">
-                    I agree to the <a href="https://www.sevn.app/termsofservice" target="_blank" rel="noopener noreferrer" className="text-[#1E1709] hover:underline font-['Helvetica_Neue:Medium',sans-serif]">Terms of Service</a> and <a href="https://www.sevn.app/privacypolicy" target="_blank" rel="noopener noreferrer" className="text-[#1E1709] hover:underline font-['Helvetica_Neue:Medium',sans-serif]">Privacy Policy</a>
+                    I agree to the <Link to="/terms-of-service" className="text-[#1E1709] hover:underline font-['Helvetica_Neue:Medium',sans-serif]">Terms of Service</Link> and <Link to="/privacy-policy" className="text-[#1E1709] hover:underline font-['Helvetica_Neue:Medium',sans-serif]">Privacy Policy</Link>
                   </label>
                 </div>
               )}

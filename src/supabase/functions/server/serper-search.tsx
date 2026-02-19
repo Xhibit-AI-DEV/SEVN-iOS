@@ -62,13 +62,14 @@ app.post('/search', async (c) => {
       name: item.title || '',
       brand: extractBrand(item.title, item.source),
       price: item.price || '',
-      link: item.link || '',
+      url: item.link || '', // ✅ Frontend expects 'url', not 'link'
+      link: item.link || '', // Keep for backwards compatibility
       imageUrl: item.imageUrl || item.thumbnail || '',
       source: item.source || '',
       rating: item.rating,
       reviews: item.reviews,
       delivery: item.delivery,
-    })).filter((p: any) => p.link && p.imageUrl); // Only include products with valid links and images
+    })).filter((p: any) => p.url && p.imageUrl); // Only include products with valid links and images
 
     return c.json({
       products,

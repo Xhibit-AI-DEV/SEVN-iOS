@@ -733,7 +733,7 @@ export function MessagesPage() {
         </div>
 
         {/* Divider */}
-        <div className="h-px bg-black/70" />
+        <div className="h-[1px] bg-[#1e1709]" />
       </div>
     );
   };
@@ -748,7 +748,7 @@ export function MessagesPage() {
         style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-[#FFFEFD] z-10 pt-5 pb-4 border-b border-[#1e1709]">
+        <div className="sticky top-0 bg-[#FFFEFD] z-10 pt-5 pb-4 border-b-[1px] border-[#1e1709]">
           <div className="flex items-center gap-3 pl-4">
             {/* Back button */}
             <button 
@@ -782,7 +782,7 @@ export function MessagesPage() {
               {clientRequests.length > 0 && (
                 <div className="mb-8">
                   {/* Section Header */}
-                  <div className="bg-[#1e1709] px-[21px] py-4 border-b border-black">
+                  <div className="bg-[#1e1709] px-[21px] py-4 border-b-[1px] border-[#1e1709]">
                     <h2 className="font-['Helvetica_Neue:Bold',sans-serif] text-[14px] tracking-[1.5px] uppercase text-white">
                       CLIENT REQUESTS
                     </h2>
@@ -791,7 +791,7 @@ export function MessagesPage() {
                   {/* WAITLIST */}
                   {clientWaitlistOrders.length > 0 && (
                     <div>
-                      <div className="bg-white border-t border-b border-black/70 px-[21px] py-3">
+                      <div className="bg-white border-t-[1px] border-b-[1px] border-[#1e1709] px-[21px] py-3">
                         <div className="flex items-center justify-between">
                           <p className="font-['Helvetica_Neue:Medium',sans-serif] text-[12px] tracking-[1px] uppercase text-[#1e1709]/50">
                             Requests
@@ -810,7 +810,7 @@ export function MessagesPage() {
                   {/* INVITED (AWAITING PAYMENT) */}
                   {clientInvitedOrders.length > 0 && (
                     <div>
-                      <div className="bg-white border-t border-b border-black/70 px-[21px] py-3">
+                      <div className="bg-white border-t-[1px] border-b-[1px] border-[#1e1709] px-[21px] py-3">
                         <p className="font-['Helvetica_Neue:Medium',sans-serif] text-[12px] tracking-[1px] uppercase text-[#1e1709]/50">
                           Awaiting Payment
                         </p>
@@ -822,7 +822,7 @@ export function MessagesPage() {
                   {/* PAID (READY TO STYLE) */}
                   {clientPaidOrders.length > 0 && (
                     <div>
-                      <div className="bg-white border-t border-b border-black/70 px-[21px] py-3">
+                      <div className="bg-white border-t-[1px] border-b-[1px] border-[#1e1709] px-[21px] py-3">
                         <div className="flex items-center justify-between">
                           <p className="font-['Helvetica_Neue:Medium',sans-serif] text-[12px] tracking-[1px] uppercase text-[#1e1709]">
                             Ready to Style
@@ -841,7 +841,7 @@ export function MessagesPage() {
                   {/* STYLING (IN PROGRESS) */}
                   {clientStylingOrders.length > 0 && (
                     <div>
-                      <div className="bg-white border-t border-b border-black/70 px-[21px] py-3">
+                      <div className="bg-white border-t-[1px] border-b-[1px] border-[#1e1709] px-[21px] py-3">
                         <p className="font-['Helvetica_Neue:Medium',sans-serif] text-[12px] tracking-[1px] uppercase text-[#1e1709]/50">
                           In Progress
                         </p>
@@ -853,7 +853,7 @@ export function MessagesPage() {
                   {/* SENT (COMPLETED) */}
                   {clientCompletedOrders.length > 0 && (
                     <div>
-                      <div className="bg-white border-t border-b border-black/70 px-[21px] py-3">
+                      <div className="bg-white border-t-[1px] border-b-[1px] border-[#1e1709] px-[21px] py-3">
                         <p className="font-['Helvetica_Neue:Medium',sans-serif] text-[12px] tracking-[1px] uppercase text-[#1e1709]/50">
                           Sent
                         </p>
@@ -868,7 +868,7 @@ export function MessagesPage() {
               {stylingRequests.length > 0 && (
                 <div>
                   {/* Section Header */}
-                  <div className="bg-[#1e1709] px-[21px] py-4 border-b border-black">
+                  <div className="bg-[#1e1709] px-[21px] py-4 border-b-[1px] border-[#1e1709]">
                     <h2 className="font-['Helvetica_Neue:Bold',sans-serif] text-[14px] tracking-[1.5px] uppercase text-white">
                       STYLING REQUESTS
                     </h2>
@@ -877,7 +877,7 @@ export function MessagesPage() {
                   {/* YOUR SELECTS (COMPLETED) - Show at top for clients */}
                   {stylingCompletedOrders.length > 0 && (
                     <div>
-                      <div className="bg-white border-b border-black/70 px-[21px] py-3">
+                      <div className="bg-white border-b-[1px] border-[#1e1709] px-[21px] py-3">
                         <p className="font-['Helvetica_Neue:Medium',sans-serif] text-[12px] tracking-[1px] uppercase text-[#1e1709]">
                           Your Selects
                         </p>
@@ -889,7 +889,7 @@ export function MessagesPage() {
                   {/* WAITLIST */}
                   {stylingWaitlistOrders.length > 0 && (
                     <div>
-                      <div className="bg-white border-b border-black/70 px-[21px] py-3">
+                      <div className="bg-white border-b-[1px] border-[#1e1709] px-[21px] py-3">
                         <p className="font-['Helvetica_Neue:Medium',sans-serif] text-[12px] tracking-[1px] uppercase text-[#1e1709]/50">
                           Waitlisted
                         </p>
@@ -901,7 +901,7 @@ export function MessagesPage() {
                   {/* INVITED */}
                   {stylingInvitedOrders.length > 0 && (
                     <div>
-                      <div className="bg-white border-t border-b border-black/70 px-[21px] py-3">
+                      <div className="bg-white border-t-[1px] border-b-[1px] border-[#1e1709] px-[21px] py-3">
                         <p className="font-['Helvetica_Neue:Medium',sans-serif] text-[12px] tracking-[1px] uppercase text-[#1e1709]">
                           Invited
                         </p>
@@ -913,7 +913,7 @@ export function MessagesPage() {
                   {/* PAID */}
                   {stylingPaidOrders.length > 0 && (
                     <div>
-                      <div className="bg-white border-t border-b border-black/70 px-[21px] py-3">
+                      <div className="bg-white border-t-[1px] border-b-[1px] border-[#1e1709] px-[21px] py-3">
                         <p className="font-['Helvetica_Neue:Medium',sans-serif] text-[12px] tracking-[1px] uppercase text-[#1e1709]/50">
                           Ready to be Styled
                         </p>
@@ -925,7 +925,7 @@ export function MessagesPage() {
                   {/* STYLING */}
                   {stylingStylingOrders.length > 0 && (
                     <div>
-                      <div className="bg-white border-t border-b border-black/70 px-[21px] py-3">
+                      <div className="bg-white border-t-[1px] border-b-[1px] border-[#1e1709] px-[21px] py-3">
                         <p className="font-['Helvetica_Neue:Medium',sans-serif] text-[12px] tracking-[1px] uppercase text-[#1e1709]/50">
                           In Progress
                         </p>

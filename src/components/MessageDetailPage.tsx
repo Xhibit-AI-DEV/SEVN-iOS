@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2, Send, Heart, MoreHorizontal, Trash2 } from 'lucide-react';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { supabase } from '../utils/supabase/client';
 import { toast } from 'sonner@2.0.3';
 import { GPTSearchPanel } from './GPTSearchPanel';
 
@@ -462,13 +463,17 @@ export function MessageDetailPage() {
     try {
       setLoading(true);
       
-      // Get current user profile first
-      const accessToken = localStorage.getItem('access_token');
-      if (!accessToken) {
+      // Use Supabase's session management (automatically refreshes tokens)
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        console.error('❌ No valid session:', sessionError);
         toast.error('Please sign in');
         navigate('/signin');
         return;
       }
+      
+      const accessToken = session.access_token;
       
       // Get the current user's ID from their profile (this also validates the token)
       const profileResponse = await fetch(
@@ -484,13 +489,24 @@ export function MessageDetailPage() {
         const errorText = await profileResponse.text();
         console.error('❌ Profile fetch failed:', profileResponse.status, errorText);
         
-        // If auth error, clear token and redirect to signin
+        // If auth error, try to refresh the session
         if (profileResponse.status === 401 || profileResponse.status === 403) {
-          console.error('❌ Authentication failed - clearing token and redirecting to signin');
-          localStorage.clear(); // Clear all localStorage to reset state
-          toast.error('Session expired. Please sign in again.');
-          setTimeout(() => navigate('/signin'), 100);
-          return;
+          console.log('🔄 Token expired, attempting to refresh session...');
+          
+          const { data: { session: newSession }, error: refreshError } = await supabase.auth.refreshSession();
+          
+          if (refreshError || !newSession) {
+            console.error('❌ Session refresh failed - clearing and redirecting to signin');
+            localStorage.clear();
+            await supabase.auth.signOut();
+            toast.error('Session expired. Please sign in again.');
+            setTimeout(() => navigate('/signin'), 100);
+            return;
+          }
+          
+          console.log('✅ Session refreshed successfully, retrying...');
+          // Retry with new token
+          return fetchOrder();
         }
         
         throw new Error(`Failed to fetch user profile: ${profileResponse.status} - ${errorText}`);

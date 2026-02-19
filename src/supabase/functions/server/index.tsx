@@ -25,6 +25,7 @@ import editsRoutes from "./edits.tsx";
 import adminRoutes from "./admin.tsx";
 import followsRoutes from "./follows.tsx";
 import blocksRoutes from "./blocks.tsx";
+import pushRoutes from "./push.tsx";
 
 const app = new Hono();
 
@@ -108,6 +109,9 @@ app.route("/make-server-b14d984c/follows", followsRoutes);
 
 // Mount Blocks routes (NEW - for managing user blocks)
 app.route("/make-server-b14d984c/blocks", blocksRoutes);
+
+// Mount Push routes (NEW - for managing push notifications)
+app.route("/make-server-b14d984c/push", pushRoutes);
 
 // Upload endpoint (for intake form images)
 app.post("/make-server-b14d984c/upload", async (c) => {

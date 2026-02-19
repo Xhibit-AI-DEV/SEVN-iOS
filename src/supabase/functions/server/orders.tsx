@@ -452,10 +452,41 @@ app.post('/:orderId/invite', async (c) => {
     await kv.set(orderKey, order);
 
     console.log('✅ Order invited:', orderId);
-    console.log('📧 Client will receive payment prompt');
+    console.log('📱 Sending push notification to customer...');
 
-    // TODO: Send push notification to client
-    // TODO: Create in-app notification
+    // Send push notification to customer
+    try {
+      const pushResponse = await fetch(
+        `https://${Deno.env.get('SUPABASE_URL')?.replace('https://', '').replace('.supabase.co', '')}.supabase.co/functions/v1/make-server-b14d984c/push/send`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: order.customer_id,
+            title: '🎉 You\'ve been invited!',
+            body: 'Your stylist is ready to create your personalized edit. Complete your payment to get started!',
+            data: {
+              orderId: orderId,
+              type: 'invite',
+              screen: 'payment',
+            },
+          }),
+        }
+      );
+
+      if (pushResponse.ok) {
+        console.log('✅ Push notification sent to:', order.customer_id);
+      } else {
+        const errorText = await pushResponse.text();
+        console.log('⚠️ Failed to send push notification:', errorText);
+        // Don't fail the invite if push fails - just log it
+      }
+    } catch (pushError: any) {
+      console.log('⚠️ Error sending push notification:', pushError);
+      // Don't fail the invite if push fails - just log it
+    }
 
     return c.json({
       success: true,

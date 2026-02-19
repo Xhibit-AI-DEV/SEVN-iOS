@@ -31,7 +31,8 @@
     "sonner": "^2.0.3",
     "motion": "^11.0.0",
     "@capacitor/core": "^6.0.0",
-    "@capacitor/camera": "^6.0.0"
+    "@capacitor/camera": "^6.0.0",
+    "@capacitor/push-notifications": "^6.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",

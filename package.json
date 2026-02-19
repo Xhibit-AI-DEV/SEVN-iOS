@@ -8,6 +8,7 @@
           "@capacitor/camera": "*",
           "@capacitor/cli": "*",
           "@capacitor/core": "*",
+          "@capacitor/push-notifications": "*",
           "@capacitor/status-bar": "*",
           "@jsr/supabase__supabase-js": "^2.49.8",
           "@radix-ui/react-accordion": "^1.2.3",

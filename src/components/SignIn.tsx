@@ -1,9 +1,7 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router';
-import { Loader2 } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
-import viiLogo from 'figma:asset/4ec03ff54a95119f5d32d5425296f54905e0e776.png';
+import React, { useState } from 'react';
+import { toast } from 'sonner';
+import { projectId } from '../utils/supabase/info';
+import { initializePushNotifications, isPushNotificationsSupported } from '../utils/pushNotifications';
 
 /**
  * SignIn Component - Handles both sign up and sign in flows
@@ -19,7 +17,6 @@ import viiLogo from 'figma:asset/4ec03ff54a95119f5d32d5425296f54905e0e776.png';
  */
 
 export function SignIn() {
-  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [earlyAccessCode, setEarlyAccessCode] = useState('');
@@ -62,7 +59,6 @@ export function SignIn() {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${publicAnonKey}`,
             },
             body: JSON.stringify({
               email,
@@ -82,6 +78,13 @@ export function SignIn() {
           localStorage.setItem('user_role', data.role || 'customer');
           
           toast.success('Account created! Welcome to SEVN.');
+          
+          // Initialize push notifications if supported
+          if (isPushNotificationsSupported()) {
+            initializePushNotifications(data.user_id, data.access_token).catch(err => {
+              console.log('Failed to initialize push notifications:', err);
+            });
+          }
           
           // Reload the page to ensure auth state is properly updated everywhere
           window.location.href = '/home';
@@ -106,7 +109,6 @@ export function SignIn() {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${publicAnonKey}`,
             },
             body: JSON.stringify({
               email,
@@ -127,11 +129,18 @@ export function SignIn() {
           
           toast.success('Welcome back!');
           
+          // Initialize push notifications if supported
+          if (isPushNotificationsSupported()) {
+            initializePushNotifications(data.user_id, data.access_token).catch(err => {
+              console.log('Failed to initialize push notifications:', err);
+            });
+          }
+          
           // Dispatch auth changed event to update CustomerApp state
           window.dispatchEvent(new Event('authChanged'));
           
           // Redirect to home page
-          navigate('/home');
+          window.location.href = '/home';
         } else {
           const error = await response.json();
           toast.error(error.error || 'Failed to sign in');

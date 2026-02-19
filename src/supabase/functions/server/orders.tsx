@@ -798,15 +798,29 @@ app.delete('/:orderId', async (c) => {
       username: userProfile?.username,
     });
     
+    // Map stylist email to stylist ID used in orders
+    const stylistEmailToId: Record<string, string> = {
+      'lewis@sevn.app': 'lewis_bloyce',
+      'lissy@sevn.app': 'lissy_roddy',
+      'chris@sevn.app': 'chris_whly',
+      'dovheichemer@gmail.com': 'lissy_roddy', // Legacy mapping
+    };
+    
+    const userStylistId = user.email ? stylistEmailToId[user.email.toLowerCase()] : null;
+    
     const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'stylist';
     const isCustomer = order.customer_id === user.id;
-    const isStylist = order.stylist_id === user.id || order.stylist_id === userProfile?.username;
+    const isStylist = order.stylist_id === user.id || 
+                      order.stylist_id === userProfile?.username ||
+                      (userStylistId && order.stylist_id === userStylistId);
     
     console.log('🔐 Authorization check:', {
       isAdmin,
       isCustomer,
       isStylist,
       userRole: userProfile?.role,
+      userEmail: user.email,
+      userStylistId,
       orderCustomerId: order.customer_id,
       orderStylistId: order.stylist_id,
       currentUserId: user.id,

@@ -93,23 +93,32 @@ export function MessageDetailPage() {
     fetchOrder();
   }, [orderId]);
 
+  // Track initial load to prevent auto-save on first render
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
   // Load selections and styling notes when order changes
   useEffect(() => {
     if (order && !isCustomer && (order.status === 'invited' || order.status === 'paid' || order.status === 'styling')) {
       loadStylingData();
     }
-    // Also load selections for customers when order is completed
-    if (order && isCustomer && order.status === 'completed') {
+    // Also load selections when order is completed (for both customers and stylists)
+    if (order && order.status === 'completed') {
       loadStylingData();
     }
-  }, [order, isCustomer]);
+  }, [order?.id, order?.status, isCustomer]); // Use specific order properties instead of full object
 
-  // Auto-save selections whenever they change
+  // Auto-save selections whenever they change (but skip initial load)
   useEffect(() => {
+    // Skip the first render to avoid saving immediately after loading
+    if (isInitialLoad) {
+      setIsInitialLoad(false);
+      return;
+    }
+    
     if (order && selectedItems.length > 0 && !isCustomer) {
       saveSelections();
     }
-  }, [selectedItems]);
+  }, [selectedItems]); // Only trigger on selectedItems changes
 
   // Auto-save styling notes (with debounce)
   useEffect(() => {
@@ -122,7 +131,7 @@ export function MessageDetailPage() {
     }, 1000); // Debounce 1 second
 
     return () => clearTimeout(timer);
-  }, [stylingNotes]);
+  }, [stylingNotes]); // Only trigger on stylingNotes changes
 
   const loadStylingData = async () => {
     if (!order) return;
@@ -358,6 +367,7 @@ export function MessageDetailPage() {
           hasImage: !!metadata.image,
           imageUrl: metadata.image,
           price: metadata.price,
+          brand: metadata.brand,
         });
         
         // Update the item with metadata
@@ -369,6 +379,7 @@ export function MessageDetailPage() {
                   title: metadata.title || 'Product Link',
                   image: metadata.image || '',
                   price: metadata.price || '',
+                  brand: metadata.brand || '',
                 }
               : item
           )
@@ -377,7 +388,7 @@ export function MessageDetailPage() {
         const errorText = await response.text();
         console.error('❌ Failed to fetch metadata:', response.status, errorText);
         
-        // Update item to show it failed
+        // Update item to show it failed but keep the URL
         setSelectedItems(items =>
           items.map(item =>
             item.id === itemId
@@ -385,6 +396,7 @@ export function MessageDetailPage() {
                   ...item,
                   title: 'Product Link',
                   image: '',
+                  brand: '',
                 }
               : item
           )
@@ -463,17 +475,17 @@ export function MessageDetailPage() {
     try {
       setLoading(true);
       
-      // Use Supabase's session management (automatically refreshes tokens)
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      // Use localStorage token like the rest of the app
+      const accessToken = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
       
-      if (sessionError || !session) {
-        console.error('❌ No valid session:', sessionError);
+      if (!accessToken) {
+        console.error('❌ No access token found in localStorage');
         toast.error('Please sign in');
         navigate('/signin');
         return;
       }
       
-      const accessToken = session.access_token;
+      console.log('🔐 Access token found, fetching order...');
       
       // Get the current user's ID from their profile (this also validates the token)
       const profileResponse = await fetch(
@@ -489,24 +501,14 @@ export function MessageDetailPage() {
         const errorText = await profileResponse.text();
         console.error('❌ Profile fetch failed:', profileResponse.status, errorText);
         
-        // If auth error, try to refresh the session
+        // If auth error, clear everything and redirect
         if (profileResponse.status === 401 || profileResponse.status === 403) {
-          console.log('🔄 Token expired, attempting to refresh session...');
-          
-          const { data: { session: newSession }, error: refreshError } = await supabase.auth.refreshSession();
-          
-          if (refreshError || !newSession) {
-            console.error('❌ Session refresh failed - clearing and redirecting to signin');
-            localStorage.clear();
-            await supabase.auth.signOut();
-            toast.error('Session expired. Please sign in again.');
-            setTimeout(() => navigate('/signin'), 100);
-            return;
-          }
-          
-          console.log('✅ Session refreshed successfully, retrying...');
-          // Retry with new token
-          return fetchOrder();
+          console.error('❌ Token invalid - clearing and redirecting to signin');
+          localStorage.clear();
+          await supabase.auth.signOut();
+          toast.error('Session expired. Please sign in again.');
+          setTimeout(() => navigate('/signin'), 100);
+          return;
         }
         
         throw new Error(`Failed to fetch user profile: ${profileResponse.status} - ${errorText}`);
@@ -876,8 +878,8 @@ export function MessageDetailPage() {
     );
   }
 
-  // CUSTOMER VIEW - COMPLETED (Viewing Selections from Stylist)
-  if (isCustomer && order.status === 'completed') {
+  // COMPLETED VIEW - Both customers and stylists see the final selections
+  if (order.status === 'completed') {
     return (
       <div className="min-h-screen bg-white w-full overflow-x-hidden">
         <div className="w-full max-w-[393px] mx-auto px-6 pb-8">
@@ -990,7 +992,9 @@ export function MessageDetailPage() {
                   href={selectedItems[0].url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block group"
+                  className="block group cursor-pointer"
+                  style={{ pointerEvents: 'auto' }}
+                  onClick={() => console.log('✅ Product 1 clicked:', selectedItems[0].url)}
                 >
                   <div className="border border-black rounded-[5px] overflow-hidden bg-white">
                     {/* Product Image */}
@@ -1033,7 +1037,9 @@ export function MessageDetailPage() {
                       href={item.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block group"
+                      className="block group cursor-pointer"
+                      style={{ pointerEvents: 'auto' }}
+                      onClick={() => console.log(`✅ Product ${idx + 2} clicked:`, item.url)}
                     >
                       <div className="border border-black rounded-[5px] overflow-hidden bg-white">
                         {/* Product Image */}
@@ -1076,34 +1082,6 @@ export function MessageDetailPage() {
               </p>
             </div>
           )}
-
-          {/* Line Divider */}
-          <div className="w-full h-0 mb-8">
-            <svg className="block w-full h-[1px]" fill="none" preserveAspectRatio="none" viewBox="0 0 349 1">
-              <line stroke="#1e1709" strokeOpacity="0.15" x2="349" y1="0.5" y2="0.5" />
-            </svg>
-          </div>
-
-          {/* Save Edit Button */}
-          <button
-            onClick={async () => {
-              try {
-                // Save all selected items to liked products
-                const savePromises = selectedItems.map(item => 
-                  handleLike(item)
-                );
-                
-                await Promise.all(savePromises);
-                toast.success('Edit saved to your likes!');
-              } catch (error) {
-                console.error('Error saving edit:', error);
-                toast.error('Failed to save edit');
-              }
-            }}
-            className="w-full h-[52px] bg-[#1e1709] text-white rounded-[8px] font-['IBM_Plex_Mono:Regular',sans-serif] text-[14px] hover:bg-[#2a2010] transition-colors flex items-center justify-center"
-          >
-            SAVE EDIT
-          </button>
         </div>
       </div>
     );

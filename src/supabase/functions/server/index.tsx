@@ -1288,10 +1288,16 @@ app.post("/make-server-b14d984c/fetch-url-metadata", async (c) => {
                     getMetaContent('product:price:amount') ||
                     '';
 
+      // Extract brand if available
+      const brand = getMetaContent('og:brand') || 
+                    getMetaContent('product:brand') ||
+                    '';
+
       console.log('Final extracted metadata:', { 
         title, 
         image: image || 'NO IMAGE FOUND', 
         price,
+        brand,
         hasImage: !!image 
       });
 
@@ -1301,6 +1307,7 @@ app.post("/make-server-b14d984c/fetch-url-metadata", async (c) => {
         image,
         description: description.substring(0, 200), // Limit description length
         price,
+        brand,
       });
     } catch (error) {
       console.error("Error fetching URL metadata:", error);

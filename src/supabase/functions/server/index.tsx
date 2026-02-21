@@ -957,7 +957,7 @@ app.post("/make-server-b14d984c/seed-waitlist", async (c) => {
 // Create Chris test account (for testing)
 app.post("/make-server-b14d984c/seed-chris-account", async (c) => {
   try {
-    console.log('🌱 Creating test accounts (Lissy + Chris + Lewis)...');
+    console.log('🌱 Creating test accounts (Lissy + Chris + Lewis + Dorian)...');
     
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -986,6 +986,14 @@ app.post("/make-server-b14d984c/seed-chris-account", async (c) => {
         password: 'Password123',
         name: 'Lewis Bloyce',
         username: 'lewis',
+        role: 'stylist',
+        bio: 'Professional stylist at SEVN',
+      },
+      {
+        email: 'dorian.who@sevn.app',
+        password: 'Password123',
+        name: 'Dorian Who',
+        username: 'dorian_who',
         role: 'stylist',
         bio: 'Professional stylist at SEVN',
       }

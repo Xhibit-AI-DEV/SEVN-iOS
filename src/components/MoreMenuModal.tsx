@@ -55,6 +55,11 @@ export function MoreMenuModal({
     onClose();
   };
 
+  const handleAbout = () => {
+    navigate('/about');
+    onClose();
+  };
+
   const handleBlockedAccounts = () => {
     navigate('/blocked-accounts');
     onClose();
@@ -279,6 +284,21 @@ export function MoreMenuModal({
               >
                 <span className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] tracking-[2px] text-[#1e1709] uppercase">
                   Terms of Service
+                </span>
+                <ChevronRight className="w-4 h-4 text-[#1e1709]" strokeWidth={1.5} />
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('About clicked');
+                  handleAbout();
+                }}
+                className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#1e1709]/5 transition-colors border-b border-[#1e1709]/10 cursor-pointer"
+              >
+                <span className="font-['Helvetica_Neue:Regular',sans-serif] text-[14px] tracking-[2px] text-[#1e1709] uppercase">
+                  About
                 </span>
                 <ChevronRight className="w-4 h-4 text-[#1e1709]" strokeWidth={1.5} />
               </button>

@@ -16,6 +16,7 @@ import imgValDrozg2 from "figma:asset/20128333cc3dc0dc5a9ed76f88c9c981a3185bd7.p
 import imgValDrozg3 from "figma:asset/e0a9d1b58aed482da9011bb5f685dc39e3501d17.png";
 import imgChrisWhyle from "figma:asset/083df4dc1c94d586d53c3644182d81e287c70454.png";
 import imgLewisBloyce from "figma:asset/9cffcde461e169a56491d6b656c1a87f1cc6898f.png";
+import imgDorianWho from "figma:asset/9593603f59b50c4fa125ac1b72a028ee00773a1c.png";
 import imgV22Logo from "figma:asset/4ec03ff54a95119f5d32d5425296f54905e0e776.png";
 import imgChrisEdit from "figma:asset/d6d0374d1209d254e69a363bf2bd48de2a8fd831.png";
 import imgLissyEdit from "figma:asset/5301c6e1e005f08fe75d30911849e67eca98064e.png";
@@ -36,6 +37,7 @@ export default function HomePage() {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${publicAnonKey}`,
+              'Content-Type': 'application/json',
             },
           }
         );
@@ -49,16 +51,16 @@ export default function HomePage() {
           console.error('❌ Failed to seed profiles:', response.status, errorText);
         }
       } catch (error) {
-        console.error('❌ Error seeding profiles:', error);
-        console.error('❌ Error details:', {
-          name: error instanceof Error ? error.name : 'Unknown',
-          message: error instanceof Error ? error.message : String(error),
-        });
+        // Silently fail - seeding is not critical for app functionality
+        console.warn('⚠️ Could not seed profiles (server may not be available):', error instanceof Error ? error.message : String(error));
       }
     };
     
-    seedStylistProfiles();
-  }, [profilesSeeded]);
+    // Only seed once
+    if (!profilesSeeded) {
+      seedStylistProfiles();
+    }
+  }, []);
 
   // Navigate to profile by username - fetches userId first
   const navigateToProfile = async (username: string) => {
@@ -198,81 +200,9 @@ export default function HomePage() {
               </div>
             </button>
 
-            {/* Second Featured Stylist - VAL DROZG */}
-            <div className="relative shrink-0 size-[225px] rounded-[1px]" style={{ border: '1px solid #1e1709' }}>
-              {/* Layered circular images */}
-              <div className="absolute inset-[5.05%_4.71%_4.69%_4.71%] pointer-events-none rounded-[147px]">
-                <ImageWithFallback 
-                  alt="Val Drozg" 
-                  loading="lazy" 
-                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
-                  src={imgValDrozg1} 
-                />
-                <ImageWithFallback 
-                  alt="Val Drozg" 
-                  loading="lazy" 
-                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
-                  src={imgValDrozg2} 
-                />
-                <ImageWithFallback 
-                  alt="Val Drozg" 
-                  loading="lazy" 
-                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
-                  src={imgValDrozg3} 
-                />
-                <div className="absolute inset-0 rounded-[147px]" style={{ border: '1px solid #EAEAEA' }} />
-              </div>
-              
-              {/* Name badge */}
-              <div className="absolute inset-[80%_5.97%_9.26%_6.11%]">
-                <div className="absolute bg-[rgba(255,254,253,0.8)] inset-0 rounded-[8px]" style={{ border: '1px solid #1e1709' }} />
-                <div className="absolute flex flex-col font-['Helvetica_Neue:Regular',sans-serif] inset-[0_0_0_0] justify-center items-center leading-[14px] text-[#1e1709] text-[12px] tracking-[0.5px] uppercase">
-                  <p>VAL DROZG</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Third Featured Stylist - CHRIS WHYLE */}
+            {/* Second Featured Stylist - LEWIS BLOYCE */}
             <button 
               className="relative shrink-0 size-[225px] rounded-[1px]"
-              onClick={() => navigate('/chris')}
-              style={{ border: '1px solid #1e1709' }}
-            >
-              {/* Layered circular images */}
-              <div className="absolute inset-[5.05%_4.71%_4.69%_4.71%] pointer-events-none rounded-[147px]">
-                <ImageWithFallback 
-                  alt="Chris Whyle" 
-                  loading="lazy" 
-                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
-                  src={imgChrisWhyle} 
-                />
-                <ImageWithFallback 
-                  alt="Chris Whyle" 
-                  loading="lazy" 
-                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
-                  src={imgChrisWhyle} 
-                />
-                <ImageWithFallback 
-                  alt="Chris Whyle" 
-                  loading="lazy" 
-                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
-                  src={imgChrisWhyle} 
-                />
-                <div className="absolute inset-0 rounded-[147px]" style={{ border: '1px solid #EAEAEA' }} />
-              </div>
-              
-              {/* Name badge */}
-              <div className="absolute inset-[80%_5.97%_9.26%_6.11%]">
-                <div className="absolute bg-[rgba(255,254,253,0.8)] inset-0 rounded-[8px]" style={{ border: '1px solid #1e1709' }} />
-                <div className="absolute flex flex-col font-['Helvetica_Neue:Regular',sans-serif] inset-[0_0_0_0] justify-center items-center leading-[14px] text-[#1e1709] text-[12px] tracking-[0.5px] uppercase">
-                  <p>CHRIS WHLY</p>
-                </div>
-              </div>
-            </button>
-
-            {/* Fourth Featured Stylist - LEWIS BLOYCE */}
-            <button 
-              className="relative shrink-0 size-[225px] rounded-[1px] mr-4"
               onClick={() => navigate('/lewis')}
               style={{ border: '1px solid #1e1709' }}
             >
@@ -307,6 +237,116 @@ export default function HomePage() {
                 </div>
               </div>
             </button>
+
+            {/* Third Featured Stylist - VAL DROZG */}
+            <div className="relative shrink-0 size-[225px] rounded-[1px]" style={{ border: '1px solid #1e1709' }}>
+              {/* Layered circular images */}
+              <div className="absolute inset-[5.05%_4.71%_4.69%_4.71%] pointer-events-none rounded-[147px]">
+                <ImageWithFallback 
+                  alt="Val Drozg" 
+                  loading="lazy" 
+                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
+                  src={imgValDrozg1} 
+                />
+                <ImageWithFallback 
+                  alt="Val Drozg" 
+                  loading="lazy" 
+                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
+                  src={imgValDrozg2} 
+                />
+                <ImageWithFallback 
+                  alt="Val Drozg" 
+                  loading="lazy" 
+                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
+                  src={imgValDrozg3} 
+                />
+                <div className="absolute inset-0 rounded-[147px]" style={{ border: '1px solid #EAEAEA' }} />
+              </div>
+              
+              {/* Name badge */}
+              <div className="absolute inset-[80%_5.97%_9.26%_6.11%]">
+                <div className="absolute bg-[rgba(255,254,253,0.8)] inset-0 rounded-[8px]" style={{ border: '1px solid #1e1709' }} />
+                <div className="absolute flex flex-col font-['Helvetica_Neue:Regular',sans-serif] inset-[0_0_0_0] justify-center items-center leading-[14px] text-[#1e1709] text-[12px] tracking-[0.5px] uppercase">
+                  <p>VAL DROZG</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Fourth Featured Stylist - DORIAN WHO */}
+            <button 
+              className="relative shrink-0 size-[225px] rounded-[1px]"
+              onClick={() => navigate('/dorian')}
+              style={{ border: '1px solid #1e1709' }}
+            >
+              {/* Layered circular images */}
+              <div className="absolute inset-[5.05%_4.71%_4.69%_4.71%] pointer-events-none rounded-[147px]">
+                <ImageWithFallback 
+                  alt="Dorian Who" 
+                  loading="lazy" 
+                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
+                  src={imgDorianWho} 
+                />
+                <ImageWithFallback 
+                  alt="Dorian Who" 
+                  loading="lazy" 
+                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
+                  src={imgDorianWho} 
+                />
+                <ImageWithFallback 
+                  alt="Dorian Who" 
+                  loading="lazy" 
+                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
+                  src={imgDorianWho} 
+                />
+                <div className="absolute inset-0 rounded-[147px]" style={{ border: '1px solid #EAEAEA' }} />
+              </div>
+              
+              {/* Name badge */}
+              <div className="absolute inset-[80%_5.97%_9.26%_6.11%]">
+                <div className="absolute bg-[rgba(255,254,253,0.8)] inset-0 rounded-[8px]" style={{ border: '1px solid #1e1709' }} />
+                <div className="absolute flex flex-col font-['Helvetica_Neue:Regular',sans-serif] inset-[0_0_0_0] justify-center items-center leading-[14px] text-[#1e1709] text-[12px] tracking-[0.5px] uppercase">
+                  <p>DORIAN WHO</p>
+                </div>
+              </div>
+            </button>
+
+            {/* Fifth Featured Stylist - CHRIS WHYLE */}
+            <button 
+              className="relative shrink-0 size-[225px] rounded-[1px] mr-4"
+              onClick={() => navigate('/chris')}
+              style={{ border: '1px solid #1e1709' }}
+            >
+              {/* Layered circular images */}
+              <div className="absolute inset-[5.05%_4.71%_4.69%_4.71%] pointer-events-none rounded-[147px]">
+                <ImageWithFallback 
+                  alt="Chris Whyle" 
+                  loading="lazy" 
+                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
+                  src={imgChrisWhyle} 
+                />
+                <ImageWithFallback 
+                  alt="Chris Whyle" 
+                  loading="lazy" 
+                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
+                  src={imgChrisWhyle} 
+                />
+                <ImageWithFallback 
+                  alt="Chris Whyle" 
+                  loading="lazy" 
+                  className="absolute inset-0 max-w-none object-cover rounded-[147px] size-full" 
+                  src={imgChrisWhyle} 
+                />
+                <div className="absolute inset-0 rounded-[147px]" style={{ border: '1px solid #EAEAEA' }} />
+              </div>
+              
+              {/* Name badge */}
+              <div className="absolute inset-[80%_5.97%_9.26%_6.11%]">
+                <div className="absolute bg-[rgba(255,254,253,0.8)] inset-0 rounded-[8px]" style={{ border: '1px solid #1e1709' }} />
+                <div className="absolute flex flex-col font-['Helvetica_Neue:Regular',sans-serif] inset-[0_0_0_0] justify-center items-center leading-[14px] text-[#1e1709] text-[12px] tracking-[0.5px] uppercase">
+                  <p>CHRIS WHLY</p>
+                </div>
+              </div>
+            </button>
           </div>
         </div>
 
@@ -324,52 +364,9 @@ export default function HomePage() {
               WebkitOverflowScrolling: 'touch'
             }}
           >
-            {/* Chris Whyle Edit Card */}
-            <div 
-              className="relative shrink-0 w-[361px] h-[543px]"
-              data-name="Card/Lookbook/Big"
-            >
-              {/* Triple border layers */}
-              <div className="absolute border border-[#1e1709] inset-[3px] opacity-80 rounded-[8px]" />
-              <div className="absolute border border-[#1e1709] inset-[6px_0_0_6px] rounded-[8px]" />
-              
-              {/* Main image */}
-              <div className="absolute inset-[0_6px_6px_0] overflow-hidden rounded-[8px]">
-                <img alt="" className="absolute inset-0 w-full h-full object-cover rounded-[8px]" src={imgChrisEdit} />
-                <div className="absolute border border-[#1e1709] inset-0 rounded-[8px]" />
-              </div>
-              
-              {/* Name badge - bottom left */}
-              <button 
-                onClick={() => navigateToProfile('chris_whly')}
-                className="absolute bottom-[16px] left-[16px] z-10"
-              >
-                <div className="bg-[rgba(255,254,253,0.8)] border border-[#1e1709] rounded-[20px] px-[14px] h-[30px] flex items-center justify-center">
-                  <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[13px] text-[#1e1709] tracking-[1px] uppercase leading-[22px]">
-                    CHRIS WHLY
-                  </p>
-                </div>
-              </button>
-              
-              {/* Heart icon - top right */}
-              <button className="absolute top-[12px] right-[16px] z-10">
-                <div className="relative w-[36.3px] h-[33.871px]">
-                  <div className="absolute bg-[rgba(255,254,253,0.8)] border border-[#1e1709] rounded-[20px] inset-0" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Heart 
-                      className="w-[16px] h-[16px]" 
-                      fill="none"
-                      stroke="#1E1709"
-                      strokeWidth={1.5}
-                    />
-                  </div>
-                </div>
-              </button>
-            </div>
-
             {/* Lissy Roddy Edit Card */}
             <div 
-              className="relative shrink-0 w-[361px] h-[543px] mr-4"
+              className="relative shrink-0 w-[361px] h-[543px]"
               data-name="Card/Lookbook/Big"
             >
               {/* Triple border layers */}
@@ -390,6 +387,49 @@ export default function HomePage() {
                 <div className="bg-[rgba(255,254,253,0.8)] border border-[#1e1709] rounded-[20px] px-[14px] h-[30px] flex items-center justify-center">
                   <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[13px] text-[#1e1709] tracking-[1px] uppercase leading-[22px]">
                     LISSY RODDY
+                  </p>
+                </div>
+              </button>
+              
+              {/* Heart icon - top right */}
+              <button className="absolute top-[12px] right-[16px] z-10">
+                <div className="relative w-[36.3px] h-[33.871px]">
+                  <div className="absolute bg-[rgba(255,254,253,0.8)] border border-[#1e1709] rounded-[20px] inset-0" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Heart 
+                      className="w-[16px] h-[16px]" 
+                      fill="none"
+                      stroke="#1E1709"
+                      strokeWidth={1.5}
+                    />
+                  </div>
+                </div>
+              </button>
+            </div>
+
+            {/* Chris Whyle Edit Card */}
+            <div 
+              className="relative shrink-0 w-[361px] h-[543px] mr-4"
+              data-name="Card/Lookbook/Big"
+            >
+              {/* Triple border layers */}
+              <div className="absolute border border-[#1e1709] inset-[3px] opacity-80 rounded-[8px]" />
+              <div className="absolute border border-[#1e1709] inset-[6px_0_0_6px] rounded-[8px]" />
+              
+              {/* Main image */}
+              <div className="absolute inset-[0_6px_6px_0] overflow-hidden rounded-[8px]">
+                <img alt="" className="absolute inset-0 w-full h-full object-cover rounded-[8px]" src={imgChrisEdit} />
+                <div className="absolute border border-[#1e1709] inset-0 rounded-[8px]" />
+              </div>
+              
+              {/* Name badge - bottom left */}
+              <button 
+                onClick={() => navigateToProfile('chris_whly')}
+                className="absolute bottom-[16px] left-[16px] z-10"
+              >
+                <div className="bg-[rgba(255,254,253,0.8)] border border-[#1e1709] rounded-[20px] px-[14px] h-[30px] flex items-center justify-center">
+                  <p className="font-['Helvetica_Neue:Regular',sans-serif] text-[13px] text-[#1e1709] tracking-[1px] uppercase leading-[22px]">
+                    CHRIS WHLY
                   </p>
                 </div>
               </button>

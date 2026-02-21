@@ -32,108 +32,112 @@ export function TermsOfServicePage() {
             
             {/* Header */}
             <p className="mb-2 font-['Helvetica_Neue:Medium',sans-serif]">
-              Last updated: 1/26/2026
+              Last Updated: January 26, 2026
+            </p>
+            <h1 className="mb-6 font-['Helvetica_Neue:Medium',sans-serif] text-[16px]">
+              Terms of Service
+            </h1>
+            <p className="mb-6">
+              These Terms of Service ("Terms") govern your use of the SEVN SELECTS service (the "Service"), operated by SEVN INC ("SEVN," "we," "us," or "our").
             </p>
             <p className="mb-6">
-              These Terms of Service ("Terms") govern your use of the SEVN SELECTS service (the "Service"), operated by SEVN INC ("we," "us," or "our").
-            </p>
-            <p className="mb-6">
-              By using the Service or completing a purchase, you agree to these Terms. If you do not agree, please do not use the Service.
+              By using the Service or completing a purchase, you agree to these Terms.
             </p>
 
-            {/* 1. The Service */}
+            {/* The Service */}
             <h2 className="font-['Helvetica_Neue:Medium',sans-serif] text-[14px] tracking-[1px] text-[#1e1709] mb-3 mt-6">
               1. The Service
             </h2>
             <p className="mb-2">SEVN SELECTS provides:</p>
-            <ul className="list-none space-y-1 mb-6 pl-0">
-              <li>• Image-based style analysis</li>
-              <li>• Intake questions</li>
-              <li>• The option to purchase a personalized "7-Select" curated by Lissy Roddy</li>
-              <li>• Delivery of curated selections and styling notes via email within approximately two weeks</li>
+            <ul className="list-none space-y-1 mb-3 pl-0">
+              <li>• Image-based styling analysis</li>
+              <li>• Styling intake questions</li>
+              <li>• The option to purchase a personalized curated edit</li>
+              <li>• Delivery of curated selections and styling notes via email</li>
             </ul>
+            <p className="mb-6">Delivery is typically completed within approximately two weeks of purchase.</p>
 
-            {/* 2. Eligibility */}
+            {/* Eligibility */}
             <h2 className="font-['Helvetica_Neue:Medium',sans-serif] text-[14px] tracking-[1px] text-[#1e1709] mb-3 mt-6">
               2. Eligibility
             </h2>
             <p className="mb-3">You must be 18 years or older to use the Service.</p>
-            <p className="mb-2">You confirm that:</p>
+            <p className="mb-2">By using the Service, you confirm that:</p>
             <ul className="list-none space-y-1 mb-6 pl-0">
-              <li>• You have the right to upload the image you submit</li>
+              <li>• You have the legal right to upload any image you submit</li>
               <li>• The information you provide is accurate</li>
             </ul>
 
-            {/* 3. No Account Required */}
+            {/* No Account Required */}
             <h2 className="font-['Helvetica_Neue:Medium',sans-serif] text-[14px] tracking-[1px] text-[#1e1709] mb-3 mt-6">
               3. No Account Required
             </h2>
             <p className="mb-6">No account is required. Use of the Service is provided on a per-submission and per-purchase basis.</p>
 
-            {/* 4. User Content */}
+            {/* User Content */}
             <h2 className="font-['Helvetica_Neue:Medium',sans-serif] text-[14px] tracking-[1px] text-[#1e1709] mb-3 mt-6">
               4. User Content
             </h2>
-            <p className="mb-3">You retain ownership of any image and information you submit.</p>
+            <p className="mb-3">You retain ownership of any image or information you submit.</p>
             <p className="mb-2">By submitting content, you grant SEVN INC a limited, non-exclusive license to use that content solely to:</p>
             <ul className="list-none space-y-1 mb-3 pl-0">
               <li>• Provide the Service</li>
-              <li>• Generate style analysis</li>
+              <li>• Generate styling analysis</li>
               <li>• Deliver curated selections and styling notes</li>
             </ul>
-            <p className="mb-6">Your content is not used for marketing purposes.</p>
+            <p className="mb-6">Your content is not used for advertising or unrelated marketing purposes.</p>
 
-            {/* 5. AI Output Disclaimer */}
+            {/* AI-Assisted Output */}
             <h2 className="font-['Helvetica_Neue:Medium',sans-serif] text-[14px] tracking-[1px] text-[#1e1709] mb-3 mt-6">
-              5. AI Output Disclaimer
+              5. AI-Assisted Output
             </h2>
-            <p className="mb-3">The Service uses automated and AI-assisted tools to generate style insights.</p>
+            <p className="mb-3">The Service may use automated or AI-assisted tools to generate styling insights.</p>
             <p className="mb-2">You understand and agree that:</p>
             <ul className="list-none space-y-1 mb-6 pl-0">
-              <li>• Style recommendations are subjective</li>
+              <li>• Styling recommendations are subjective</li>
               <li>• Results are informational only</li>
               <li>• No professional or guaranteed advice is provided</li>
             </ul>
 
-            {/* 6. Purchases & Payments */}
+            {/* Purchases and Payments */}
             <h2 className="font-['Helvetica_Neue:Medium',sans-serif] text-[14px] tracking-[1px] text-[#1e1709] mb-3 mt-6">
-              6. Purchases & Payments
+              6. Purchases and Payments
             </h2>
             <ul className="list-none space-y-1 mb-6 pl-0">
-              <li>• Prices are displayed at checkout (typically $100 USD)</li>
+              <li>• Prices are displayed at checkout</li>
               <li>• Payments are processed securely through Stripe</li>
               <li>• SEVN INC does not store payment card information</li>
             </ul>
 
-            {/* 7. Refund Policy */}
+            {/* Refund Policy */}
             <h2 className="font-['Helvetica_Neue:Medium',sans-serif] text-[14px] tracking-[1px] text-[#1e1709] mb-3 mt-6">
               7. Refund Policy
             </h2>
-            <p className="mb-3">Because the Service is personalized and begins immediately after payment:</p>
+            <p className="mb-3">Because the Service is personalized and begins shortly after payment:</p>
             <ul className="list-none space-y-1 mb-3 pl-0">
               <li>• All sales are final once the service has started</li>
-              <li>• This includes image analysis, intake review, and curation work</li>
+              <li>• This includes image analysis, intake review, and curation</li>
             </ul>
             <p className="mb-2 font-['Helvetica_Neue:Medium',sans-serif]">For users in the EU or EEA:</p>
             <ul className="list-none space-y-1 mb-6 pl-0">
-              <li>• By completing your purchase, you expressly consent to the immediate performance of the Service</li>
-              <li>• You acknowledge that you waive your 14-day right of withdrawal under EU consumer law</li>
+              <li>• By completing your purchase, you expressly consent to immediate performance of the Service</li>
+              <li>• You acknowledge that you waive your 14-day right of withdrawal under applicable consumer protection laws</li>
             </ul>
 
-            {/* 8. Delivery Timeline */}
+            {/* Delivery Timeline */}
             <h2 className="font-['Helvetica_Neue:Medium',sans-serif] text-[14px] tracking-[1px] text-[#1e1709] mb-3 mt-6">
               8. Delivery Timeline
             </h2>
-            <p className="mb-3">Curated selections and styling notes are typically delivered within two weeks of purchase.</p>
-            <p className="mb-6">Delays may occur due to volume or circumstances beyond our control. We will notify you if timelines change.</p>
+            <p className="mb-3">Curated selections and styling notes are typically delivered within approximately two weeks of purchase.</p>
+            <p className="mb-6">Delivery timelines are estimates and may vary due to volume or circumstances beyond our control.</p>
 
-            {/* 9. Intellectual Property */}
+            {/* Intellectual Property */}
             <h2 className="font-['Helvetica_Neue:Medium',sans-serif] text-[14px] tracking-[1px] text-[#1e1709] mb-3 mt-6">
               9. Intellectual Property
             </h2>
             <p className="mb-6">All materials provided through the Service, excluding your submitted content, are the property of SEVN INC or its licensors and may not be copied, distributed, or used without permission.</p>
 
-            {/* 10. Prohibited Use */}
+            {/* Prohibited Use */}
             <h2 className="font-['Helvetica_Neue:Medium',sans-serif] text-[14px] tracking-[1px] text-[#1e1709] mb-3 mt-6">
               10. Prohibited Use
             </h2>
@@ -144,7 +148,7 @@ export function TermsOfServicePage() {
               <li>• Attempt to interfere with or misuse the Service</li>
             </ul>
 
-            {/* 11. Limitation of Liability */}
+            {/* Limitation of Liability */}
             <h2 className="font-['Helvetica_Neue:Medium',sans-serif] text-[14px] tracking-[1px] text-[#1e1709] mb-3 mt-6">
               11. Limitation of Liability
             </h2>
@@ -152,23 +156,22 @@ export function TermsOfServicePage() {
             <p className="mb-3">To the maximum extent permitted by law, SEVN INC's total liability shall not exceed the amount paid for the Service.</p>
             <p className="mb-6">Nothing in these Terms limits rights that cannot be excluded under applicable law.</p>
 
-            {/* 12. Governing Law */}
+            {/* Governing Law */}
             <h2 className="font-['Helvetica_Neue:Medium',sans-serif] text-[14px] tracking-[1px] text-[#1e1709] mb-3 mt-6">
               12. Governing Law
             </h2>
             <p className="mb-6">These Terms are governed by the laws of the United States, without limiting mandatory consumer protections applicable in your country of residence.</p>
 
-            {/* 13. Changes */}
+            {/* Changes */}
             <h2 className="font-['Helvetica_Neue:Medium',sans-serif] text-[14px] tracking-[1px] text-[#1e1709] mb-3 mt-6">
               13. Changes
             </h2>
             <p className="mb-6">We may update these Terms from time to time. Continued use of the Service constitutes acceptance of the updated Terms.</p>
 
-            {/* 14. Contact */}
+            {/* Contact */}
             <h2 className="font-['Helvetica_Neue:Medium',sans-serif] text-[14px] tracking-[1px] text-[#1e1709] mb-3 mt-6">
               14. Contact
             </h2>
-            <p className="mb-2">For questions about these Terms or the Service, contact:</p>
             <p className="mb-6">contact@sevn.app</p>
           </div>
         </div>

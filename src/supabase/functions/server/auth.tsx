@@ -25,6 +25,7 @@ const STYLIST_WHITELIST = [
   'lissy@sevn.app', // Changed to lowercase for case-insensitive matching
   'lewis@sevn.app', // Lewis Bloyce - stylist
   'chris@sevn.app', // Chris Whly - stylist
+  'dorian.who@sevn.app', // Dorian Who - stylist
   'dovheichemer@gmail.com', // Keep old email for backward compatibility
 ];
 
@@ -298,6 +299,7 @@ app.post('/signin', async (c) => {
       name: data.user.user_metadata?.name || customer.name || '',
       role: userRole, // Return the determined role
       access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token, // Add refresh token for frontend session
       has_intake: customer.has_intake || false,
     });
 

@@ -32,6 +32,7 @@ export function HomePageBanner({ onBannerHeightChange }: HomePageBannerProps) {
           {
             headers: {
               Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
             },
           }
         );
@@ -50,11 +51,8 @@ export function HomePageBanner({ onBannerHeightChange }: HomePageBannerProps) {
           console.log('📊 Banner orders:', { invited, completed });
         }
       } catch (error) {
-        console.error('❌ Error fetching orders for banner:', error);
-        console.error('❌ Error details:', {
-          name: error instanceof Error ? error.name : 'Unknown',
-          message: error instanceof Error ? error.message : String(error),
-        });
+        // Silently fail - banner is not critical for app functionality
+        console.warn('⚠️ Could not fetch orders for banner (server may not be available):', error instanceof Error ? error.message : String(error));
       } finally {
         setIsLoading(false);
       }

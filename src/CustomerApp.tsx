@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter, Routes, Route, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { Toaster, toast } from 'sonner@2.0.3';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SafeArea } from 'capacitor-plugin-safe-area';
@@ -16,12 +16,14 @@ import { CustomerOrderView } from './components/CustomerOrderView';
 import { ProfilePage } from './components/ProfilePage';
 import { LissyLanding } from './components/LissyLanding';
 import { LewisLanding } from './components/LewisLanding';
+import { DorianLanding } from './components/DorianLanding';
 import { IntakeForm } from './components/IntakeForm';
 import { WaitlistPage } from './components/WaitlistPage';
 import { ChrisLanding } from './components/ChrisLanding';
 import { ChrisIntakeForm } from './components/ChrisIntakeForm';
 import { ChrisWaitlistPage } from './components/ChrisWaitlistPage';
 import { LewisWaitlistPage } from './components/LewisWaitlistPage';
+import { DorianWaitlistPage } from './components/DorianWaitlistPage';
 import { GenericWaitlistPage } from './components/GenericWaitlistPage';
 import { EditIntakeForm } from './components/EditIntakeForm';
 import { EditDetailPage } from './components/EditDetailPage';
@@ -40,6 +42,7 @@ import { ChangeEmailPage } from './components/ChangeEmailPage';
 import { ForgotPasswordPage } from './components/ForgotPasswordPage';
 import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
 import { TermsOfServicePage } from './components/TermsOfServicePage';
+import { AboutPage } from './components/AboutPage';
 import { BlockedAccountsPage } from './components/BlockedAccountsPage';
 import { NotificationsPage } from './components/NotificationsPage';
 import { HelpContactPage } from './components/HelpContactPage';
@@ -117,6 +120,7 @@ function AppContent() {
   const [lissyUploadedImage, setLissyUploadedImage] = useState<File | null>(null);
   const [chrisUploadedImage, setChrisUploadedImage] = useState<File | null>(null);
   const [lewisUploadedImage, setLewisUploadedImage] = useState<File | null>(null);
+  const [dorianUploadedImage, setDorianUploadedImage] = useState<File | null>(null);
   const [customerData, setCustomerData] = useState<{
     name: string;
     email: string;
@@ -286,6 +290,30 @@ function AppContent() {
     reader.readAsDataURL(file);
   };
 
+  const handleDorianImageUpload = (file: File) => {
+    setDorianUploadedImage(file);
+    console.log('📸 Dorian image uploaded:', file.name, file.type, file.size);
+    
+    // Save to sessionStorage for persistence
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      sessionStorage.setItem('dorian_uploaded_image', base64);
+      sessionStorage.setItem('dorian_uploaded_image_name', file.name);
+      sessionStorage.setItem('dorian_uploaded_image_type', file.type);
+      console.log('✅ Dorian image saved to sessionStorage:', file.name);
+      
+      // Navigate AFTER sessionStorage is written
+      navigate('/dorian/intake');
+    };
+    reader.onerror = (error) => {
+      console.error('❌ Failed to save Dorian image to sessionStorage:', error);
+      // Still navigate even if sessionStorage fails
+      navigate('/dorian/intake');
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleIntakeComplete = () => {
     // IntakeForm handles its own navigation with state - no need to navigate here
     console.log('✅ Intake complete - form will handle navigation');
@@ -299,6 +327,11 @@ function AppContent() {
   const handleLewisIntakeComplete = () => {
     // LewisIntakeForm handles its own navigation with state - no need to navigate here
     console.log('✅ Lewis intake complete - form will handle navigation');
+  };
+
+  const handleDorianIntakeComplete = () => {
+    // DorianIntakeForm handles its own navigation with state - no need to navigate here
+    console.log('✅ Dorian intake complete - form will handle navigation');
   };
 
   return (
@@ -334,6 +367,7 @@ function AppContent() {
         {/* Public legal pages - no authentication required */}
         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
         <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+        <Route path="/about" element={<AboutPage />} />
         <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
         <Route path="/help-contact" element={<ProtectedRoute><HelpContactPage /></ProtectedRoute>} />
         
@@ -412,6 +446,29 @@ function AppContent() {
         } />
         <Route path="/lewis/waitlist" element={<ProtectedRoute><LewisWaitlistPage /></ProtectedRoute>} />
         <Route path="/lewis/intake/edit/:orderId" element={<ProtectedRoute><EditIntakeForm /></ProtectedRoute>} />
+        
+        <Route path="/dorian" element={<DorianLanding onImageUpload={handleDorianImageUpload} />} />
+        <Route path="/dorian/intake" element={
+          <ProtectedRoute>
+            {dorianUploadedImage ? (
+              <ChrisIntakeForm uploadedImage={dorianUploadedImage} onComplete={handleDorianIntakeComplete} stylistId="dorian" />
+            ) : (
+              <div className="w-full min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                  <p className="text-gray-600 mb-4">No image uploaded</p>
+                  <button 
+                    onClick={() => navigate('/dorian')}
+                    className="px-4 py-2 bg-black text-white rounded"
+                  >
+                    Go Back
+                  </button>
+                </div>
+              </div>
+            )}
+          </ProtectedRoute>
+        } />
+        <Route path="/dorian/waitlist" element={<ProtectedRoute><DorianWaitlistPage /></ProtectedRoute>} />
+        <Route path="/dorian/intake/edit/:orderId" element={<ProtectedRoute><EditIntakeForm /></ProtectedRoute>} />
         
         {/* UNIVERSAL INTAKE FORMS - By username */}
         <Route path="/intake/:username" element={<ProtectedRoute><IntakeFormPage /></ProtectedRoute>} />
@@ -505,10 +562,10 @@ export default function CustomerApp() {
   }, []);
 
   return (
-    <HashRouter>
+    <BrowserRouter>
       <ErrorBoundary>
         <AppContent />
       </ErrorBoundary>
-    </HashRouter>
+    </BrowserRouter>
   );
 }

@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
 import { toast } from 'sonner';
-import { projectId } from '../utils/supabase/info';
+import { Link, useNavigate } from 'react-router';
+import { Loader2 } from 'lucide-react';
+import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { initializePushNotifications, isPushNotificationsSupported } from '../utils/pushNotifications';
+import { supabase } from '../utils/supabase/client';
+
+// Import V22 logo
+import viiLogo from "figma:asset/4ec03ff54a95119f5d32d5425296f54905e0e776.png";
 
 /**
  * SignIn Component - Handles both sign up and sign in flows
@@ -24,6 +30,7 @@ export function SignIn() {
   const [loading, setLoading] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [showAuthForm, setShowAuthForm] = useState(false); // Track if user passed early access
+  const navigate = useNavigate();
 
   const handleEarlyAccessSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,6 +66,7 @@ export function SignIn() {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'Authorization': `Bearer ${publicAnonKey}`,
             },
             body: JSON.stringify({
               email,
@@ -109,6 +117,7 @@ export function SignIn() {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'Authorization': `Bearer ${publicAnonKey}`,
             },
             body: JSON.stringify({
               email,
@@ -127,6 +136,20 @@ export function SignIn() {
           localStorage.setItem('user_id', data.user_id);
           localStorage.setItem('user_role', data.role || 'customer');
           
+          // Set the session in the Supabase client so it can refresh tokens
+          if (data.refresh_token) {
+            try {
+              await supabase.auth.setSession({
+                access_token: data.access_token,
+                refresh_token: data.refresh_token,
+              });
+              console.log('✅ Supabase session set successfully');
+            } catch (sessionError) {
+              console.error('⚠️ Failed to set Supabase session:', sessionError);
+              // Continue anyway - token is in localStorage
+            }
+          }
+          
           toast.success('Welcome back!');
           
           // Initialize push notifications if supported
@@ -144,19 +167,27 @@ export function SignIn() {
         } else {
           const error = await response.json();
           toast.error(error.error || 'Failed to sign in');
+          console.error('Sign in error response:', error);
           
-          // If account doesn't exist, suggest signing up
+          // If suggestion is to reset password, show a helpful link
+          if (error.suggestion === 'reset') {
+            setTimeout(() => {
+              toast.info('Forgot your password? Use the "Forgot Password?" link below to reset it.');
+            }, 1500);
+          }
+          
+          // If suggestion is to sign up, switch to sign up mode
           if (error.suggestion === 'signup') {
             setTimeout(() => {
               setIsSignUp(true);
-              toast.info('Switched to sign up mode - create your account');
-            }, 500);
+              toast.info('Switched to sign up mode');
+            }, 1000);
           }
         }
       }
-    } catch (error) {
-      console.error('Auth error:', error);
-      toast.error('Something went wrong. Please try again.');
+    } catch (error: any) {
+      console.error('Sign in error:', error);
+      toast.error(error.message || 'Network error. Please try again.');
     } finally {
       setLoading(false);
     }

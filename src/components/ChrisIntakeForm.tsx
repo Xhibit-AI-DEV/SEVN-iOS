@@ -51,11 +51,13 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
 
   // Get stylist name from stylistId
   const stylistName = stylistId === 'lewis' ? 'Lewis' : 
-                      stylistId === 'lissy' ? 'Lissy' : 'Chris';
+                      stylistId === 'lissy' ? 'Lissy' :
+                      stylistId === 'dorian' ? 'Dorian Who' : 'Chris';
   
   // Map stylistId to actual backend stylist IDs
   const backendStylistId = stylistId === 'lewis' ? 'lewis_bloyce' :
-                           stylistId === 'lissy' ? 'lissy_roddy' : 'chris_whly';
+                           stylistId === 'lissy' ? 'lissy_roddy' :
+                           stylistId === 'dorian' ? 'dorian_who' : 'chris_whly';
   
   // Get questions with dynamic stylist name
   const intakeQuestions = getIntakeQuestions(stylistName);
@@ -65,7 +67,8 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
     if (!mainImage && !uploadedImage) {
       // Check for stylist-specific sessionStorage keys
       const storagePrefix = stylistId === 'lewis' ? 'lewis' : 
-                           stylistId === 'lissy' ? 'lissy' : 'chris';
+                           stylistId === 'lissy' ? 'lissy' :
+                           stylistId === 'dorian' ? 'dorian' : 'chris';
       
       const base64 = sessionStorage.getItem(`${storagePrefix}_uploaded_image`);
       const name = sessionStorage.getItem(`${storagePrefix}_uploaded_image_name`);
@@ -126,18 +129,38 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
       setIsSubmitting(true);
       
       try {
-        // Get access token from localStorage (set by SignIn.tsx)
-        const accessToken = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
+        // Get access token - prioritize localStorage since that's what SignIn.tsx populates
+        let accessToken: string | null = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
+        
+        if (accessToken) {
+          console.log('✅ Using access token from localStorage');
+          console.log('🔐 Token preview:', accessToken.substring(0, 20) + '...');
+        } else {
+          // Fallback: try to get from Supabase session
+          try {
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            
+            if (session?.access_token) {
+              accessToken = session.access_token;
+              console.log('✅ Using access token from Supabase session');
+            } else {
+              console.log('⚠️ No Supabase session found');
+            }
+            
+            if (sessionError) {
+              console.log('⚠️ Session error:', sessionError);
+            }
+          } catch (err) {
+            console.error('❌ Error getting Supabase session:', err);
+          }
+        }
         
         if (!accessToken) {
-          console.error('❌ No access token in localStorage');
-          toast.error('Session expired. Please sign in again.');
+          console.error('❌ No access token available');
+          toast.error('Please sign in to continue');
           navigate('/signin');
           return;
         }
-        
-        console.log('✅ Using access token from localStorage');
-        console.log('🔐 Token preview:', accessToken.substring(0, 20) + '...');
         
         // Validate main image exists
         if (!mainImage) {
@@ -172,12 +195,16 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
           throw new Error('Failed to upload main image');
         }
 
-        const { url: mainImageUrl } = await mainImageResponse.json();
-        console.log('✅ Main image uploaded:', mainImageUrl);
+        const uploadResult = await mainImageResponse.json();
+        const mainImageUrl = uploadResult.url;
+        const mainImageType = uploadResult.mediaType || 'image'; // Get media type from upload response
+        console.log('✅ Main image uploaded:', mainImageUrl, 'Type:', mainImageType);
 
         // Upload reference images
         const referenceImageUrls: string[] = [];
+        const referenceImageTypes: ('image' | 'video')[] = [];
         for (const image of referenceImages) {
+          console.log('📤 Uploading reference image:', image.name);
           const formData = new FormData();
           formData.append('file', image);
 
@@ -193,8 +220,10 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
           );
 
           if (response.ok) {
-            const { url } = await response.json();
-            referenceImageUrls.push(url);
+            const result = await response.json();
+            referenceImageUrls.push(result.url);
+            referenceImageTypes.push(result.mediaType || 'image'); // Track media type for each reference
+            console.log('✅ Reference image uploaded:', result.url, 'Type:', result.mediaType);
           }
         }
 
@@ -229,9 +258,91 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
           }
         );
 
+        console.log('📥 Order create response status:', orderResponse.status);
+        console.log('📥 Order create response headers:', Object.fromEntries(orderResponse.headers.entries()));
+
         if (!orderResponse.ok) {
-          const errorData = await orderResponse.json();
+          const errorText = await orderResponse.text();
+          console.error('❌ Order creation failed - Full response:', errorText);
+          let errorData;
+          try {
+            errorData = JSON.parse(errorText);
+          } catch {
+            errorData = { error: errorText };
+          }
           console.error('❌ Order creation failed:', errorData);
+          
+          // If it's an auth error, try to re-authenticate
+          if (orderResponse.status === 401) {
+            console.log('🔄 Got 401, attempting to refresh session...');
+            try {
+              const { data: { session }, error: refreshError } = await supabase.auth.refreshSession();
+              if (session?.access_token) {
+                console.log('✅ Session refreshed, retrying with new token...');
+                localStorage.setItem('access_token', session.access_token);
+                localStorage.setItem('auth_token', session.access_token);
+                
+                // Retry the order creation with new token
+                const retryResponse = await fetch(
+                  `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/orders/create`,
+                  {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      Authorization: `Bearer ${session.access_token}`,
+                    },
+                    body: JSON.stringify({
+                      stylistId: backendStylistId,
+                      mainImageUrl,
+                      mainImageType,
+                      referenceImages: referenceImageUrls,
+                      referenceImageTypes,
+                      intakeAnswers,
+                      status: 'intake_submitted',
+                    }),
+                  }
+                );
+                
+                if (retryResponse.ok) {
+                  const order = await retryResponse.json();
+                  console.log('✅ Order created successfully after retry:', order);
+                  
+                  if (!order || !order.order_id) {
+                    throw new Error('Order created but no order ID returned');
+                  }
+                  
+                  // Continue with success flow
+                  const navigationState = {
+                    orderId: order.order_id,
+                    uploadedImageUrl: mainImageUrl,
+                    stylistId: backendStylistId,
+                  };
+                  
+                  localStorage.setItem('pendingIntakeData', JSON.stringify(navigationState));
+                  const waitlistRoute = stylistId === 'lewis' ? '/lewis/waitlist' :
+                                       stylistId === 'lissy' ? '/lissy/waitlist' :
+                                       stylistId === 'dorian' ? '/dorian/waitlist' : '/chris/waitlist';
+                  
+                  toast.success(`Request submitted! ${stylistName} will review your style request.`);
+                  navigate(waitlistRoute, { state: navigationState });
+                  return;
+                } else {
+                  const retryErrorText = await retryResponse.text();
+                  console.error('❌ Retry also failed:', retryErrorText);
+                }
+              } else {
+                console.error('❌ Failed to refresh session:', refreshError);
+              }
+            } catch (refreshErr) {
+              console.error('❌ Error refreshing session:', refreshErr);
+            }
+            
+            // If we get here, refresh failed - redirect to sign in
+            toast.error('Your session has expired. Please sign in again.');
+            navigate('/signin');
+            return;
+          }
+          
           throw new Error(errorData.error || 'Failed to create order');
         }
 
@@ -258,7 +369,8 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
         // Navigate to waitlist page with order ID and image URL
         // Use the correct waitlist route based on stylist
         const waitlistRoute = stylistId === 'lewis' ? '/lewis/waitlist' :
-                             stylistId === 'lissy' ? '/lissy/waitlist' : '/chris/waitlist';
+                             stylistId === 'lissy' ? '/lissy/waitlist' :
+                             stylistId === 'dorian' ? '/dorian/waitlist' : '/chris/waitlist';
         
         console.log('🚀 Navigating to:', waitlistRoute);
         toast.success(`Request submitted! ${stylistName} will review your style request.`);
@@ -304,32 +416,29 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
         console.log('📸 Reference images:', referenceImages.length);
         console.log('📝 Answers:', answers);
         
-        // Get access token
-        let accessToken: string | null = null;
+        // Get access token - prioritize localStorage since that's what SignIn.tsx populates
+        let accessToken: string | null = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
         
-        try {
-          const supabase = createClient(projectId, publicAnonKey);
-          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-          
-          if (session?.access_token) {
-            accessToken = session.access_token;
-            console.log('✅ Using access token from Supabase session');
-          } else {
-            console.log('⚠️ No Supabase session found');
-          }
-          
-          if (sessionError) {
-            console.log('⚠️ Session error, falling back to localStorage:', sessionError);
-          }
-        } catch (err) {
-          console.error('❌ Error getting Supabase session:', err);
-        }
-        
-        // Fall back to localStorage if no Supabase session
-        if (!accessToken) {
-          accessToken = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
-          if (accessToken) {
-            console.log('✅ Using access token from localStorage');
+        if (accessToken) {
+          console.log('✅ Using access token from localStorage');
+          console.log('🔐 Token preview:', accessToken.substring(0, 20) + '...');
+        } else {
+          // Fallback: try to get from Supabase session
+          try {
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            
+            if (session?.access_token) {
+              accessToken = session.access_token;
+              console.log('✅ Using access token from Supabase session');
+            } else {
+              console.log('⚠️ No Supabase session found');
+            }
+            
+            if (sessionError) {
+              console.log('⚠️ Session error:', sessionError);
+            }
+          } catch (err) {
+            console.error('❌ Error getting Supabase session:', err);
           }
         }
         
@@ -410,7 +519,7 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
           }
         }
 
-        console.log('✅ All reference images uploaded:', referenceImageUrls.length);
+        console.log('✅ Reference images uploaded:', referenceImageUrls.length);
 
         // Create intake answers object
         const intakeAnswers: Record<string, string> = {};
@@ -482,7 +591,8 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
         // Navigate to waitlist page with order ID and image URL
         // Use the correct waitlist route based on stylist
         const waitlistRoute = stylistId === 'lewis' ? '/lewis/waitlist' :
-                             stylistId === 'lissy' ? '/lissy/waitlist' : '/chris/waitlist';
+                             stylistId === 'lissy' ? '/lissy/waitlist' :
+                             stylistId === 'dorian' ? '/dorian/waitlist' : '/chris/waitlist';
         
         console.log('🚀 Navigating to:', waitlistRoute);
         toast.success(`Request submitted! ${stylistName} will review your style request.`);
@@ -515,7 +625,13 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
         <div className="h-full flex items-center justify-between px-4 max-w-[393px] mx-auto">
           {/* Back button aligned left */}
           <button
-            onClick={() => navigate('/chris')}
+            onClick={() => {
+              // Navigate back to the correct stylist landing page
+              const landingRoute = stylistId === 'lewis' ? '/lewis' :
+                                  stylistId === 'lissy' ? '/lissy' :
+                                  stylistId === 'dorian' ? '/dorian' : '/chris';
+              navigate(landingRoute);
+            }}
             className="flex items-center gap-1 text-black hover:opacity-70 transition-opacity"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">

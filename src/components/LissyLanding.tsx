@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { useNavigate } from 'react-router';
 import svgPaths from "../imports/svg-ixy1f48tju";
 import imgScreenshot20231117At12524 from "figma:asset/557e4ca658e2ff37cf2dda18e4534c106ec861c0.png";
@@ -7,8 +7,6 @@ import imgScreenshot20231117At12528 from "figma:asset/4b4531903296dd337e2503bb17
 import imgScreenshot20231117At12529 from "figma:asset/7ba87817f8223271b091058d7d6c574cf1ba0452.png";
 import img021 from "figma:asset/e848b14a74d352089a614d152282f09191ed8fc0.png";
 import imgShareIcon from "figma:asset/acdcb062503544d45e9ec42f141e5eaf2bc04359.png";
-import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { Capacitor } from '@capacitor/core';
 
 interface LissyLandingProps {
   onImageUpload: (file: File) => void;

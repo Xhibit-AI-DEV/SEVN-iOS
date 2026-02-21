@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { Loader2, X } from 'lucide-react';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { toast } from 'sonner@2.0.3';
@@ -15,12 +15,11 @@ export function WaitlistPage() {
   const [orderId, setOrderId] = useState<string | null>(null);
   const [stylistId, setStylistId] = useState<string | null>(null);
   const navigate = useNavigate();
-  const location = useLocation();
-  const hasProcessedState = useRef(false);
+  const hasProcessedState = useState(false);
 
   useEffect(() => {
     // Only process state once to avoid double-render issues
-    if (hasProcessedState.current) {
+    if (hasProcessedState[0]) {
       console.log('🔍 WaitlistPage - Already processed state, skipping');
       return;
     }
@@ -28,78 +27,91 @@ export function WaitlistPage() {
     const loadIntakeData = async () => {
       console.log('🔄 WaitlistPage: Loading intake data...');
       
-      // Try navigation state first
-      let intakeData = location.state as any;
-      console.log('📦 Navigation state:', intakeData);
-      
-      // Fallback: Try localStorage
-      if (!intakeData || !intakeData.uploadedImageUrl || !intakeData.orderId) {
-        console.log('⚠️ No navigation state found, checking localStorage...');
-        const stored = localStorage.getItem('pendingIntakeData');
-        if (stored) {
-          intakeData = JSON.parse(stored);
-          console.log('📦 Loaded from localStorage:', intakeData);
-        }
+      // Try localStorage
+      const stored = localStorage.getItem('pendingIntakeData');
+      if (stored) {
+        const intakeData = JSON.parse(stored);
+        console.log('📦 Loaded from localStorage:', intakeData);
+        
+        // Mark as processed
+        hasProcessedState[1](true);
+        
+        // Store the data
+        setUserImageUrl(intakeData.uploadedImageUrl);
+        setOrderId(intakeData.orderId);
+        setStylistId(intakeData.stylistId || 'lissy_roddy');
+        
+        // Clear localStorage since we've successfully loaded it
+        localStorage.removeItem('pendingIntakeData');
+        
+        console.log('✅ Waitlist page initialized with order:', intakeData.orderId);
+        return;
       }
       
       // If still no data, try to fetch user's most recent order from backend
-      if (!intakeData || !intakeData.uploadedImageUrl || !intakeData.orderId) {
-        console.log('⚠️ No localStorage data found, fetching most recent order from backend...');
-        
-        const accessToken = localStorage.getItem('access_token');
-        console.log('   access_token exists:', !!accessToken);
-        
-        if (accessToken) {
-          try {
-            console.log('📤 Fetching from: /orders/my-orders');
-            const response = await fetch(
-              `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/orders/my-orders`,
-              {
-                headers: {
-                  Authorization: `Bearer ${accessToken}`,
-                },
-              }
+      const accessToken = localStorage.getItem('access_token');
+      console.log('   access_token exists:', !!accessToken);
+      
+      if (accessToken) {
+        try {
+          console.log('📤 Fetching from: /orders/my-orders');
+          const response = await fetch(
+            `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/orders/my-orders`,
+            {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+            }
+          );
+          
+          console.log('📥 Response status:', response.status, response.statusText);
+          
+          if (response.ok) {
+            const orders = await response.json();
+            console.log('📦 Fetched orders:', orders);
+            console.log('📦 Number of orders:', Array.isArray(orders) ? orders.length : 'not an array');
+            
+            // Find the most recent Lissy order
+            const lissyOrders = orders.filter((o: any) => 
+              o.stylist_id === 'lissy_roddy' && 
+              (o.status === 'intake_submitted' || o.status === 'waitlist')
             );
             
-            console.log('📥 Response status:', response.status, response.statusText);
-            
-            if (response.ok) {
-              const orders = await response.json();
-              console.log('📦 Fetched orders:', orders);
-              console.log('📦 Number of orders:', Array.isArray(orders) ? orders.length : 'not an array');
-              
-              // Find the most recent Lissy order
-              const lissyOrders = orders.filter((o: any) => 
-                o.stylist_id === 'lissy_roddy' && 
-                (o.status === 'intake_submitted' || o.status === 'waitlist')
-              );
-              
-              console.log('📦 Lissy orders found:', lissyOrders.length);
-              if (lissyOrders.length > 0) {
-                console.log('📦 Most recent Lissy order:', lissyOrders[0]);
-              }
-              
-              if (lissyOrders.length > 0) {
-                const mostRecentOrder = lissyOrders[0];
-                intakeData = {
-                  orderId: mostRecentOrder.id,
-                  uploadedImageUrl: mostRecentOrder.main_image_url,
-                  stylistId: mostRecentOrder.stylist_id,
-                };
-                console.log('✅ Restored order from backend:', intakeData);
-              }
-            } else {
-              const errorText = await response.text();
-              console.error('❌ Backend error:', errorText);
+            console.log('📦 Lissy orders found:', lissyOrders.length);
+            if (lissyOrders.length > 0) {
+              console.log('📦 Most recent Lissy order:', lissyOrders[0]);
             }
-          } catch (error) {
-            console.error('❌ Failed to fetch orders:', error);
+            
+            if (lissyOrders.length > 0) {
+              const mostRecentOrder = lissyOrders[0];
+              const intakeData = {
+                orderId: mostRecentOrder.id,
+                uploadedImageUrl: mostRecentOrder.main_image_url,
+                stylistId: mostRecentOrder.stylist_id,
+              };
+              console.log('✅ Restored order from backend:', intakeData);
+              
+              // Mark as processed
+              hasProcessedState[1](true);
+              
+              // Store the data
+              setUserImageUrl(intakeData.uploadedImageUrl);
+              setOrderId(intakeData.orderId);
+              setStylistId(intakeData.stylistId || 'lissy_roddy');
+              
+              console.log('✅ Waitlist page initialized with order:', intakeData.orderId);
+            }
+          } else {
+            const errorText = await response.text();
+            console.error('❌ Backend error:', errorText);
           }
+        } catch (error) {
+          console.error('❌ Failed to fetch orders:', error);
         }
       }
       
       // If we still don't have data, redirect back
-      if (!intakeData || !intakeData.uploadedImageUrl || !intakeData.orderId) {
+      if (!userImageUrl || !orderId) {
         console.log('⚠️ No intake data found, redirecting to /lissy');
         toast.error('Please complete the intake form first');
         
@@ -109,25 +121,12 @@ export function WaitlistPage() {
         }, 1500);
         return;
       }
-      
-      // Mark as processed
-      hasProcessedState.current = true;
-      
-      // Store the data
-      setUserImageUrl(intakeData.uploadedImageUrl);
-      setOrderId(intakeData.orderId);
-      setStylistId(intakeData.stylistId || 'lissy_roddy');
-      
-      // Clear localStorage since we've successfully loaded it
-      localStorage.removeItem('pendingIntakeData');
-      
-      console.log('✅ Waitlist page initialized with order:', intakeData.orderId);
     };
     
     loadIntakeData();
     
     // DO NOT auto-show modal - only show after user clicks JOIN WAITLIST
-  }, [navigate, location.state]); // Add location.state to dependencies
+  }, [navigate]); // Add location.state to dependencies
 
   const handleJoinWaitlist = async () => {
     setIsSaving(true);

@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { toast } from 'sonner';
-import { Link, useNavigate } from 'react-router';
-import { Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router';
+import { createClient } from '../utils/supabase/client';
+import { toast } from 'sonner@2.0.3';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
-import { initializePushNotifications, isPushNotificationsSupported } from '../utils/pushNotifications';
-import { supabase } from '../utils/supabase/client';
+import { Capacitor } from '@capacitor/core';
 
 // Import V22 logo
 import viiLogo from "figma:asset/4ec03ff54a95119f5d32d5425296f54905e0e776.png";

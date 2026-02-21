@@ -1,13 +1,12 @@
-import { Menu } from 'lucide-react';
 import { useNavigate } from 'react-router';
-import { useState, useEffect } from 'react';
-import { ImageWithFallback } from './figma/ImageWithFallback';
-import { BottomNavigation } from './BottomNavigation';
-import { MoreMenuModal } from './MoreMenuModal';
-import { HomePageBanner } from './HomePageBanner';
-import { Heart } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { createClient } from '../utils/supabase/client';
+import { ChevronRight } from 'lucide-react';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
-import { supabase } from '../utils/supabase/client';
+import { HomePageBanner } from './HomePageBanner';
+
+// Import ALL homepage assets
+import svgPaths from "../imports/svg-ib8s7izy1q";
 
 // Import stylist images - must import as variables, NOT strings
 import imgLissyRoddy from "figma:asset/21ead93bac0da68ed5f33efdfb07c0bf632228cc.png";

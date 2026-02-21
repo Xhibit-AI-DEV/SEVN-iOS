@@ -1,13 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router';
-import { Heart, Link, Loader2, Menu, MoreVertical, Plus } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router';
+import { useEffect, useState } from 'react';
+import { BottomNavigation } from './BottomNavigation';
+import { MoreMenuModal } from './MoreMenuModal';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
-import { supabase } from '../utils/supabase/client';
+import { createClient } from '../utils/supabase/client';
 import { toast } from 'sonner@2.0.3';
 import { EditProfileModal } from './EditProfileModal';
-import { MoreMenuModal } from './MoreMenuModal';
-import { DeleteAccountModal } from './DeleteAccountModal';
-import { IonicBottomNav } from './IonicBottomNav';
+import { Camera, Menu, Settings } from 'lucide-react';
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import imgV22Logo from "figma:asset/4ec03ff54a95119f5d32d5425296f54905e0e776.png";
@@ -31,7 +30,6 @@ export function ProfilePage() {
   const [likedEditIds, setLikedEditIds] = useState<Set<string>>(new Set());
   const [showEditModal, setShowEditModal] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [activeTab, setActiveTab] = useState<'edits' | 'likes'>('edits');
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -1410,7 +1408,7 @@ export function ProfilePage() {
       </div>
       
       {/* Bottom navigation */}
-      <IonicBottomNav />
+      <BottomNavigation />
 
       {/* Edit Profile Modal */}
       {showEditModal && userId && (

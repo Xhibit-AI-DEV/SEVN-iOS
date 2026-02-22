@@ -9,7 +9,7 @@ export function IOSLayoutTest() {
       className="fixed inset-0 w-full overflow-x-hidden overflow-y-auto bg-gradient-to-b from-blue-500 to-purple-500"
       style={{
         height: '100vh',
-        height: '-webkit-fill-available'
+        minHeight: '-webkit-fill-available'
       }}
     >
       <div className="min-h-full flex flex-col">

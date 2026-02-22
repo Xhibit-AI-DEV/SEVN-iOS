@@ -12,8 +12,7 @@ export function SimpleHeightTest() {
         right: 0,
         bottom: 0,
         height: '100vh',
-        // @ts-ignore - webkit specific
-        height: '-webkit-fill-available',
+        minHeight: '-webkit-fill-available',
         background: 'linear-gradient(to bottom, #ff0000, #0000ff)',
         display: 'flex',
         flexDirection: 'column',

@@ -1,9 +1,12 @@
 import { useNavigate } from 'react-router';
 import { useEffect, useState } from 'react';
-import { createClient } from '../utils/supabase/client';
-import { ChevronRight } from 'lucide-react';
+import { supabase } from '../utils/supabase/client';
+import { ChevronRight, Menu, Heart } from 'lucide-react';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { HomePageBanner } from './HomePageBanner';
+import { ImageWithFallback } from './figma/ImageWithFallback';
+import { BottomNavigation } from './BottomNavigation';
+import { MoreMenuModal } from './MoreMenuModal';
 
 // Import ALL homepage assets
 import svgPaths from "../imports/svg-ib8s7izy1q";

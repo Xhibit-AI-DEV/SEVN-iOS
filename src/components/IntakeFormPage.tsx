@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { toast } from 'sonner@2.0.3';
+// import { toast } from 'sonner@2.0.3';
 import { Loader2 } from 'lucide-react';
 import { projectId } from '../utils/supabase/info';
 import svgPaths from "../imports/svg-ixy1f48tju";
@@ -54,7 +54,7 @@ export function IntakeFormPage() {
   useEffect(() => {
     const loadStylist = async () => {
       if (!username) {
-        toast.error('Invalid stylist link');
+        // toast.error('Invalid stylist link');
         navigate('/');
         return;
       }
@@ -89,7 +89,7 @@ export function IntakeFormPage() {
         setStylistData(data.profile);
       } catch (error: any) {
         console.error('❌ Error loading stylist:', error);
-        toast.error(error.message || 'Stylist not found');
+        // toast.error(error.message || 'Stylist not found');
         navigate('/');
       } finally {
         setLoadingStylist(false);
@@ -121,7 +121,7 @@ export function IntakeFormPage() {
       
       const accessToken = localStorage.getItem('access_token');
       if (!accessToken) {
-        toast.error('Please sign in to upload images');
+        // toast.error('Please sign in to upload images');
         navigate('/signin');
         return null;
       }
@@ -150,7 +150,7 @@ export function IntakeFormPage() {
       return result.url;
     } catch (error: any) {
       console.error(`❌ Error uploading ${type} image:`, error);
-      toast.error(error.message || 'Failed to upload image');
+      // toast.error(error.message || 'Failed to upload image');
       return null;
     }
   };
@@ -163,7 +163,7 @@ export function IntakeFormPage() {
       const previewUrl = URL.createObjectURL(file);
       setUploadedImageUrl(previewUrl);
       sessionStorage.setItem('pendingIntakeImageUrl', previewUrl);
-      toast.success('Main image added!');
+      // toast.success('Main image added!');
     }
   };
 
@@ -195,7 +195,7 @@ export function IntakeFormPage() {
         setMainImage(file);
         setUploadedImageUrl(image.webPath);
         sessionStorage.setItem('pendingIntakeImageUrl', image.webPath);
-        toast.success('Main image added!');
+        // toast.success('Main image added!');
       }
     } catch (error) {
       console.error('Error picking main image:', error);
@@ -206,11 +206,11 @@ export function IntakeFormPage() {
   const handleReferenceImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (referenceImages.length + files.length > 4) {
-      toast.error('Maximum 4 reference images allowed');
+      // toast.error('Maximum 4 reference images allowed');
       return;
     }
     setReferenceImages([...referenceImages, ...files]);
-    toast.success(`${files.length} reference image(s) added!`);
+    // toast.success(`${files.length} reference image(s) added!`);
   };
 
   // Native reference images picker
@@ -239,9 +239,9 @@ export function IntakeFormPage() {
         });
 
         setReferenceImages([...referenceImages, file]);
-        toast.success('Reference image added!');
+        // toast.success('Reference image added!');
       } else if (referenceImages.length >= 4) {
-        toast.error('Maximum 4 reference images allowed');
+        // toast.error('Maximum 4 reference images allowed');
       }
     } catch (error) {
       console.error('Error picking reference image:', error);
@@ -252,7 +252,7 @@ export function IntakeFormPage() {
   const handleNext = () => {
     const currentAnswer = answers[currentQuestion];
     if (!currentAnswer || currentAnswer.trim() === '') {
-      toast.error('Please answer the question before continuing');
+      // toast.error('Please answer the question before continuing');
       return;
     }
     
@@ -264,12 +264,12 @@ export function IntakeFormPage() {
 
       // Validate main image exists
       if (!mainImage && !uploadedImageUrl) {
-        toast.error('Please upload a main style reference image');
+        // toast.error('Please upload a main style reference image');
         return;
       }
 
       if (!stylistData?.user_id) {
-        toast.error('Stylist information not loaded');
+        // toast.error('Stylist information not loaded');
         return;
       }
 
@@ -303,7 +303,7 @@ export function IntakeFormPage() {
     // Validate all questions are answered
     for (let i = 0; i < intakeQuestions.length; i++) {
       if (!answers[i] || answers[i].trim() === '') {
-        toast.error(`Please answer question ${i + 1}`);
+        // toast.error(`Please answer question ${i + 1}`);
         setCurrentQuestion(i);
         return;
       }
@@ -311,12 +311,12 @@ export function IntakeFormPage() {
 
     // Validate main image
     if (!mainImage && !uploadedImageUrl) {
-      toast.error('Please upload a main style reference image');
+      // toast.error('Please upload a main style reference image');
       return;
     }
 
     if (!stylistData?.user_id) {
-      toast.error('Stylist information not loaded');
+      // toast.error('Stylist information not loaded');
       return;
     }
 
@@ -325,7 +325,7 @@ export function IntakeFormPage() {
       const accessToken = localStorage.getItem('access_token');
       
       if (!accessToken) {
-        toast.error('Please sign in to submit your request');
+        // toast.error('Please sign in to submit your request');
         navigate('/signin');
         return;
       }
@@ -394,8 +394,6 @@ export function IntakeFormPage() {
       sessionStorage.removeItem('pendingIntakeImageUrl');
       sessionStorage.removeItem('pendingIntakeImageFile');
 
-      toast.success(`Request submitted! ${stylistData.display_name || stylistData.username} will review your style request.`);
-      
       // Navigate based on stylist
       // Lissy uses the special waitlist page, others go to customer inbox
       if (stylistData.username?.toLowerCase() === 'lissy_roddy' || stylistData.username?.toLowerCase() === 'lissy') {
@@ -417,7 +415,7 @@ export function IntakeFormPage() {
       }
     } catch (error: any) {
       console.error('Error submitting intake:', error);
-      toast.error(error.message || 'Failed to submit request. Please try again.');
+      // toast.error(error.message || 'Failed to submit request. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -562,7 +560,7 @@ export function IntakeFormPage() {
                   value={answers[currentQuestion] || ''}
                   onChange={(e) => setAnswers({ ...answers, [currentQuestion]: e.target.value })}
                   placeholder={currentQuestionData.placeholder}
-                  className="w-full min-h-[98px] p-4 border border-gray-200 rounded-[12px] font-['Helvetica_Neue:Regular',sans-serif] text-[14px] text-[#1E1709] placeholder:text-gray-400 placeholder:opacity-50 focus:outline-none focus:border-gray-300 resize-none bg-white/60 backdrop-blur-sm transition-colors"
+                  className="w-full min-h-[98px] p-4 border border-gray-200 rounded-[12px] font-['Helvetica_Neue:Regular',sans-serif] text-[16px] text-[#1E1709] placeholder:text-gray-400 placeholder:opacity-50 focus:outline-none focus:border-gray-300 resize-none bg-white/60 backdrop-blur-sm transition-colors"
                 />
               </div>
             </div>

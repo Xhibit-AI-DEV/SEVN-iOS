@@ -1,12 +1,13 @@
 import { useParams, useNavigate } from 'react-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { BottomNavigation } from './BottomNavigation';
 import { MoreMenuModal } from './MoreMenuModal';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
-import { createClient } from '../utils/supabase/client';
+import { supabase } from '../utils/supabase/client';
 import { toast } from 'sonner@2.0.3';
 import { EditProfileModal } from './EditProfileModal';
-import { Camera, Menu, Settings } from 'lucide-react';
+import { DeleteAccountModal } from './DeleteAccountModal';
+import { Camera, Menu, Settings, Heart, Plus, Link, MoreVertical, Loader2 } from 'lucide-react';
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import imgV22Logo from "figma:asset/4ec03ff54a95119f5d32d5425296f54905e0e776.png";
@@ -30,6 +31,7 @@ export function ProfilePage() {
   const [likedEditIds, setLikedEditIds] = useState<Set<string>>(new Set());
   const [showEditModal, setShowEditModal] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [activeTab, setActiveTab] = useState<'edits' | 'likes'>('edits');
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -39,7 +41,7 @@ export function ProfilePage() {
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
   const swiperRef = useRef<any>(null);
-
+  
   useEffect(() => {
     let isCancelled = false;
 
@@ -144,9 +146,10 @@ export function ProfilePage() {
         }
       }
       
-      // Check cache first (valid for 30 seconds) - only for own profile
+      // Check cache first (valid for 5 minutes) - only for own profile
       const now = Date.now();
-      if (profileCache.data && (now - profileCache.timestamp) < 30000) {
+      const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+      if (profileCache.data && (now - profileCache.timestamp) < CACHE_DURATION) {
         console.log('✅ Using cached profile data');
         const cached = profileCache.data;
         if (!isCancelled) {
@@ -180,7 +183,12 @@ export function ProfilePage() {
           });
           setIsLoading(false);
           return;
-        } else {
+        }
+
+        // Check if we have cached userId in localStorage
+        let fetchedUserId = localStorage.getItem('user_id');
+        
+        if (!fetchedUserId) {
           console.log('🔐 Fetching auth info...');
           const authResponse = await fetch(
             `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/auth/me`,
@@ -199,101 +207,106 @@ export function ProfilePage() {
           }
 
           const authData = await authResponse.json();
-          const fetchedUserId = authData.user_id;
+          fetchedUserId = authData.user_id;
           console.log('✅ Got user ID:', fetchedUserId);
           
-          if (isCancelled) return;
-
-          console.log('📡 Fetching all profile data in parallel...');
-          const [profileRes, editsRes, likedProductsRes, likedEditsRes] = await Promise.allSettled([
-            fetch(`https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/profiles/${fetchedUserId}`, {
-              headers: { 'Authorization': `Bearer ${publicAnonKey}` },
-            }),
-            fetch(`https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/edits/user/${fetchedUserId}`, {
-              headers: { 'Authorization': `Bearer ${publicAnonKey}` },
-            }),
-            fetch(`https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/likes/user/${fetchedUserId}`, {
-              headers: { 'Authorization': `Bearer ${publicAnonKey}` },
-            }),
-            fetch(`https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/edits/liked/${fetchedUserId}`, {
-              headers: { 'Authorization': `Bearer ${publicAnonKey}` },
-            }),
-          ]);
-
-          if (isCancelled) return;
-
-          let profileData = {
-            user_id: fetchedUserId,
-            display_name: '',
-            bio: '',
-            avatar_url: '',
-            website_url: '',
-            created_edits: [],
-            liked_edits: [],
-            followers_count: 0,
-            following_count: 0,
-          };
-
-          let editsData: any[] = [];
-          let likedProductsData: any[] = [];
-          let likedEditsData: any[] = [];
-          let likedIdsSet = new Set<string>();
-
-          // Process profile
-          if (profileRes.status === 'fulfilled' && profileRes.value.ok) {
-            const data = await profileRes.value.json();
-            profileData = data.profile || profileData;
-            console.log('✅ Profile loaded:', profileData.display_name || '(empty)');
-          } else {
-            console.log('⚠️ No profile found, using empty profile');
-          }
-
-          // Process edits
-          if (editsRes.status === 'fulfilled' && editsRes.value.ok) {
-            const data = await editsRes.value.json();
-            editsData = data.edits || [];
-            console.log('✅ Edits loaded:', editsData.length);
-          }
-
-          // Process liked products
-          if (likedProductsRes.status === 'fulfilled' && likedProductsRes.value.ok) {
-            const data = await likedProductsRes.value.json();
-            likedProductsData = data.likes || [];
-            console.log('✅ Liked products loaded:', likedProductsData.length);
-          }
-
-          // Process liked edits
-          if (likedEditsRes.status === 'fulfilled' && likedEditsRes.value.ok) {
-            const data = await likedEditsRes.value.json();
-            likedEditsData = data.edits || [];
-            likedIdsSet = new Set(likedEditsData.map((edit: any) => edit.id));
-            console.log('✅ Liked edits loaded:', likedEditsData.length);
-          }
-
-          if (isCancelled) return;
-
-          // Cache the data
-          profileCache.data = {
-            profile: profileData,
-            edits: editsData,
-            likedProducts: likedProductsData,
-            likedEdits: likedEditsData,
-            likedEditIds: likedIdsSet,
-            userId: fetchedUserId,
-          };
-          profileCache.timestamp = Date.now();
-
-          // Set all state at once
-          setProfile(profileData);
-          setEdits(editsData);
-          setLikedProducts(likedProductsData);
-          setLikedEdits(likedEditsData);
-          setLikedEditIds(likedIdsSet);
-          setUserId(fetchedUserId);
-
-          console.log('✅ All profile data loaded successfully');
-
+          // Cache userId in localStorage for faster subsequent loads
+          localStorage.setItem('user_id', fetchedUserId);
+        } else {
+          console.log('✅ Using cached user ID:', fetchedUserId);
         }
+        
+        if (isCancelled) return;
+
+        console.log('📡 Fetching all profile data in parallel...');
+        const [profileRes, editsRes, likedProductsRes, likedEditsRes] = await Promise.allSettled([
+          fetch(`https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/profiles/${fetchedUserId}`, {
+            headers: { 'Authorization': `Bearer ${publicAnonKey}` },
+          }),
+          fetch(`https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/edits/user/${fetchedUserId}`, {
+            headers: { 'Authorization': `Bearer ${publicAnonKey}` },
+          }),
+          fetch(`https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/likes/user/${fetchedUserId}`, {
+            headers: { 'Authorization': `Bearer ${publicAnonKey}` },
+          }),
+          fetch(`https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/edits/liked/${fetchedUserId}`, {
+            headers: { 'Authorization': `Bearer ${publicAnonKey}` },
+          }),
+        ]);
+
+        if (isCancelled) return;
+
+        let profileData = {
+          user_id: fetchedUserId,
+          display_name: '',
+          bio: '',
+          avatar_url: '',
+          website_url: '',
+          created_edits: [],
+          liked_edits: [],
+          followers_count: 0,
+          following_count: 0,
+        };
+
+        let editsData: any[] = [];
+        let likedProductsData: any[] = [];
+        let likedEditsData: any[] = [];
+        let likedIdsSet = new Set<string>();
+
+        // Process profile
+        if (profileRes.status === 'fulfilled' && profileRes.value.ok) {
+          const data = await profileRes.value.json();
+          profileData = data.profile || profileData;
+          console.log('✅ Profile loaded:', profileData.display_name || '(empty)');
+        } else {
+          console.log('⚠️ No profile found, using empty profile');
+        }
+
+        // Process edits
+        if (editsRes.status === 'fulfilled' && editsRes.value.ok) {
+          const data = await editsRes.value.json();
+          editsData = data.edits || [];
+          console.log('✅ Edits loaded:', editsData.length);
+        }
+
+        // Process liked products
+        if (likedProductsRes.status === 'fulfilled' && likedProductsRes.value.ok) {
+          const data = await likedProductsRes.value.json();
+          likedProductsData = data.likes || [];
+          console.log('✅ Liked products loaded:', likedProductsData.length);
+        }
+
+        // Process liked edits
+        if (likedEditsRes.status === 'fulfilled' && likedEditsRes.value.ok) {
+          const data = await likedEditsRes.value.json();
+          likedEditsData = data.edits || [];
+          likedIdsSet = new Set(likedEditsData.map((edit: any) => edit.id));
+          console.log('✅ Liked edits loaded:', likedEditsData.length);
+        }
+
+        if (isCancelled) return;
+
+        // Cache the data
+        profileCache.data = {
+          profile: profileData,
+          edits: editsData,
+          likedProducts: likedProductsData,
+          likedEdits: likedEditsData,
+          likedEditIds: likedIdsSet,
+          userId: fetchedUserId,
+        };
+        profileCache.timestamp = Date.now();
+
+        // Set all state at once
+        setProfile(profileData);
+        setEdits(editsData);
+        setLikedProducts(likedProductsData);
+        setLikedEdits(likedEditsData);
+        setLikedEditIds(likedIdsSet);
+        setUserId(fetchedUserId);
+
+        console.log('✅ All profile data loaded successfully');
+
       } catch (error) {
         console.error('❌ Error loading profile data:', error);
         if (!isCancelled) {

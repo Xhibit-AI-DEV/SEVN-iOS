@@ -8,7 +8,13 @@ const app = new Hono();
 const getSupabaseClient = () => {
   return createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    }
   );
 };
 
@@ -34,13 +40,14 @@ app.post('/create', async (c) => {
       return c.json({ error: 'No access token provided. Please sign in.' }, 401);
     }
 
-    // Verify user
+    // Verify user with SERVICE_ROLE_KEY client (needed for getUser with JWT)
     const supabase = getSupabaseClient();
+    
     const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
 
     if (authError || !user) {
       console.error('❌ Auth error:', authError);
-      return c.json({ error: 'Invalid or expired token. Please sign in again.' }, 401);
+      return c.json({ code: 401, message: 'Invalid JWT' }, 401);
     }
 
     console.log('✅ User verified:', user.id);

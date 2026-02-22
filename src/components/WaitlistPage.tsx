@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Loader2, X } from 'lucide-react';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
-import { toast } from 'sonner@2.0.3';
+// import { toast } from 'sonner@2.0.3';
 import svgPaths from "../imports/svg-ib8s7izy1q";
-import img021 from "figma:asset/e72a0bbadee5488647fef8721e8949abb9815c1d.png"; // Lissy's correct featured edit image from landing page
+import img021 from "figma:asset/e848b14a74d352089a614d152282f09191ed8fc0.png"; // Lissy's edit outfit from landing page
 import img22 from "figma:asset/9f1f3c2c66a18611ca3dc256be40c92f256300b5.png";
 import img23 from "figma:asset/dee233baf3a56cb7abc1b3ff6012d7e6797aeecf.png";
 
@@ -26,12 +26,22 @@ export function WaitlistPage() {
 
     const loadIntakeData = async () => {
       console.log('🔄 WaitlistPage: Loading intake data...');
+      console.log('🔍 Current localStorage keys:', Object.keys(localStorage));
+      console.log('🔍 All localStorage data:', JSON.stringify({
+        pendingIntakeData: localStorage.getItem('pendingIntakeData'),
+        access_token: localStorage.getItem('access_token') ? 'present' : 'missing'
+      }, null, 2));
       
       // Try localStorage
       const stored = localStorage.getItem('pendingIntakeData');
+      console.log('🔍 pendingIntakeData from localStorage:', stored);
+      
       if (stored) {
         const intakeData = JSON.parse(stored);
         console.log('📦 Loaded from localStorage:', intakeData);
+        console.log('📦 orderId:', intakeData.orderId);
+        console.log('📦 uploadedImageUrl:', intakeData.uploadedImageUrl);
+        console.log('📦 stylistId:', intakeData.stylistId);
         
         // Mark as processed
         hasProcessedState[1](true);
@@ -100,6 +110,7 @@ export function WaitlistPage() {
               setStylistId(intakeData.stylistId || 'lissy_roddy');
               
               console.log('✅ Waitlist page initialized with order:', intakeData.orderId);
+              return;
             }
           } else {
             const errorText = await response.text();
@@ -110,17 +121,11 @@ export function WaitlistPage() {
         }
       }
       
-      // If we still don't have data, redirect back
-      if (!userImageUrl || !orderId) {
-        console.log('⚠️ No intake data found, redirecting to /lissy');
-        toast.error('Please complete the intake form first');
-        
-        // Redirect after a brief delay so user sees the toast
-        setTimeout(() => {
-          navigate('/lissy', { replace: true });
-        }, 1500);
-        return;
-      }
+      // Mark as processed even if no data found
+      hasProcessedState[1](true);
+      
+      console.log('⚠️ No intake data found - but allowing page to load anyway');
+      // Don't redirect - let the page load and show placeholder
     };
     
     loadIntakeData();
@@ -129,24 +134,26 @@ export function WaitlistPage() {
   }, [navigate]); // Add location.state to dependencies
 
   const handleJoinWaitlist = async () => {
+    console.log('🎯 ========== JOIN WAITLIST CLICKED ==========');
+    console.log('🎯 orderId:', orderId);
+    console.log('🎯 userImageUrl:', userImageUrl);
+    
     setIsSaving(true);
 
     try {
-      const accessToken = localStorage.getItem('access_token');
+      // Assume user is logged in - use access token or fallback to public key
+      const accessToken = localStorage.getItem('access_token') || publicAnonKey;
       
-      if (!accessToken) {
-        toast.error('Please sign in to continue');
-        navigate('/signin');
-        return;
-      }
-
       if (!orderId) {
-        toast.error('No order found. Please start over.');
+        console.error('❌ No order ID found!');
+        // toast.error('No order found. Please start over.');
         navigate('/lissy');
         return;
       }
 
-      console.log('📝 Updating order status to waitlisted...');
+      console.log('📝 Updating order status to waitlist...');
+      console.log('📝 Endpoint:', `https://${projectId}.supabase.co/functions/v1/make-server-b14d984c/orders/${orderId}/status`);
+      console.log('📝 Access token:', accessToken ? 'Present' : 'Missing');
 
       // Update order status to "waitlist" (NOT "waitlisted")
       const response = await fetch(
@@ -163,21 +170,36 @@ export function WaitlistPage() {
         }
       );
 
+      console.log('📥 Response status:', response.status);
+      console.log('📥 Response ok:', response.ok);
+
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorText = await response.text();
+        console.error('❌ Response error:', errorText);
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText };
+        }
         throw new Error(errorData.error || 'Failed to join waitlist');
       }
 
-      console.log('✅ Successfully joined waitlist');
-      toast.success('You\'re on the waitlist!');
+      const result = await response.json();
+      console.log('✅ Successfully joined waitlist:', result);
+      // toast.success('You\'re on the waitlist!');
       
       // Show success modal
+      console.log('🎉 Setting showModal to true');
       setShowModal(true);
     } catch (error: any) {
       console.error('❌ Error joining waitlist:', error);
-      toast.error(error.message || 'Failed to join waitlist. Please try again.');
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error stack:', error.stack);
+      // toast.error(error.message || 'Failed to join waitlist. Please try again.');
     } finally {
       setIsSaving(false);
+      console.log('🎯 ========== JOIN WAITLIST COMPLETE ==========');
     }
   };
 
@@ -286,7 +308,7 @@ export function WaitlistPage() {
           {/* Main Content */}
           <div className="flex-1 flex flex-col items-center px-4 pb-8">
             {/* User's uploaded image with stacked card effect - ALWAYS show */}
-            <div className="relative w-full max-w-[361px] h-[360px] mb-8">
+            <div className="relative w-full max-w-[270px] h-[360px] mb-8">
               {/* Back card - bottom right offset */}
               <div className="absolute top-[8px] left-[8px] right-0 bottom-0 border border-[#1e1709] rounded-[12px] bg-white" />
               

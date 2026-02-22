@@ -313,7 +313,7 @@ export function DorianWaitlistPage({ uploadedImageUrl }: DorianWaitlistPageProps
           <div className="flex-1 flex flex-col items-center px-4 pb-8">
             {/* User's uploaded image with stacked card effect */}
             {userImageUrl && (
-              <div className="relative w-full max-w-[361px] h-[360px] mb-8">
+              <div className="relative w-full max-w-[270px] h-[360px] mb-8">
                 {/* Back card - bottom right offset */}
                 <div className="absolute top-[8px] left-[8px] right-0 bottom-0 border border-[#1e1709] rounded-[12px] bg-white" />
                 

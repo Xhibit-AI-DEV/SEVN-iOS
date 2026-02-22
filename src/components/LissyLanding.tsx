@@ -1,8 +1,8 @@
+import { useState } from 'react';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { useNavigate } from 'react-router';
 import svgPaths from "../imports/svg-ixy1f48tju";
-import imgScreenshot20231117At12524 from "figma:asset/557e4ca658e2ff37cf2dda18e4534c106ec861c0.png";
-import imgScreenshot20231117At12525 from "figma:asset/e4b87ad125820c87df00cd6e705bde4e8af3e67e.png";
+import imgLissyRoddy from "figma:asset/21ead93bac0da68ed5f33efdfb07c0bf632228cc.png";
 import imgScreenshot20231117At12528 from "figma:asset/4b4531903296dd337e2503bb17f59748fdc6c9ee.png";
 import imgScreenshot20231117At12529 from "figma:asset/7ba87817f8223271b091058d7d6c574cf1ba0452.png";
 import img021 from "figma:asset/e848b14a74d352089a614d152282f09191ed8fc0.png";
@@ -318,9 +318,7 @@ function CardImage() {
     <div className="h-[347px] relative w-[347px]" data-name="Card/Image">
       {/* Circular image with smaller padding - 10px larger circle */}
       <div className="absolute inset-[12px] pointer-events-none rounded-full">
-        <img alt="" className="absolute inset-0 max-w-none object-cover rounded-full size-full" src={imgScreenshot20231117At12524} />
-        <img alt="" className="absolute inset-0 max-w-none object-cover rounded-full size-full" src={imgScreenshot20231117At12524} />
-        <img alt="" className="absolute inset-0 max-w-none object-cover rounded-full size-full" src={imgScreenshot20231117At12525} />
+        <img alt="" className="absolute inset-0 max-w-none object-cover rounded-full size-full" src={imgLissyRoddy} />
         <div className="absolute inset-0 rounded-full" style={{ border: '1px solid #EAEAEA' }} />
       </div>
       
@@ -446,7 +444,6 @@ function Component3({ onButtonClick }: { onButtonClick: () => void }) {
           <Frame22 />
         </div>
       </div>
-      <Frame23 />
       <ButtonDark onClick={onButtonClick} />
     </div>
   );

@@ -312,15 +312,15 @@ export function ChrisWaitlistPage({ uploadedImageUrl }: ChrisWaitlistPageProps) 
           <div className="flex-1 flex flex-col items-center px-4 pb-8">
             {/* User's uploaded image with stacked card effect */}
             {userImageUrl && (
-              <div className="relative w-full max-w-[361px] h-[360px] mb-8">
-                {/* Back card - most faded */}
-                <div className="absolute inset-[2.22%] border border-[#1e1709] rounded-[8px] opacity-80 bg-white" />
+              <div className="relative w-full max-w-[270px] h-[360px] mb-8">
+                {/* Back card - bottom right offset */}
+                <div className="absolute top-[8px] left-[8px] right-0 bottom-0 border border-[#1e1709] rounded-[12px] bg-white" />
                 
                 {/* Middle card */}
-                <div className="absolute inset-[4.43%_0_0_4.43%] border border-[#1e1709] rounded-[8px] bg-white" />
+                <div className="absolute top-[4px] left-[4px] right-[4px] bottom-[4px] border border-[#1e1709] rounded-[12px] bg-white" />
                 
                 {/* Front card with actual image */}
-                <div className="absolute inset-[0_4.43%_4.43%_0] rounded-[8px] border border-[#1e1709] overflow-hidden">
+                <div className="absolute top-0 left-0 right-[8px] bottom-[8px] rounded-[12px] border border-[#1e1709] overflow-hidden">
                   <img
                     src={userImageUrl}
                     alt="Your style"

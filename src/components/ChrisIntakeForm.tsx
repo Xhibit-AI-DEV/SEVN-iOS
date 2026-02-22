@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner@2.0.3';
+// import { toast } from 'sonner@2.0.3';
 import { Loader2 } from 'lucide-react';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { supabase } from '../utils/supabase/client';
@@ -157,14 +157,14 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
         
         if (!accessToken) {
           console.error('❌ No access token available');
-          toast.error('Please sign in to continue');
+          // toast.error('Please sign in to continue');
           navigate('/signin');
           return;
         }
         
         // Validate main image exists
         if (!mainImage) {
-          toast.error('Please upload a photo to continue');
+          // toast.error('Please upload a photo to continue');
           setIsSubmitting(false);
           return;
         }
@@ -323,7 +323,10 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
                                        stylistId === 'lissy' ? '/lissy/waitlist' :
                                        stylistId === 'dorian' ? '/dorian/waitlist' : '/chris/waitlist';
                   
-                  toast.success(`Request submitted! ${stylistName} will review your style request.`);
+                  // For Lissy, don't show "request submitted" - she has a waitlist flow
+                  if (stylistId !== 'lissy') {
+                    // toast.success(`Request submitted! ${stylistName} will review your style request.`);
+                  }
                   navigate(waitlistRoute, { state: navigationState });
                   return;
                 } else {
@@ -338,7 +341,7 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
             }
             
             // If we get here, refresh failed - redirect to sign in
-            toast.error('Your session has expired. Please sign in again.');
+            // toast.error('Your session has expired. Please sign in again.');
             navigate('/signin');
             return;
           }
@@ -373,14 +376,18 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
                              stylistId === 'dorian' ? '/dorian/waitlist' : '/chris/waitlist';
         
         console.log('🚀 Navigating to:', waitlistRoute);
-        toast.success(`Request submitted! ${stylistName} will review your style request.`);
+        
+        // For Lissy, don't show "request submitted" - she has a waitlist flow
+        if (stylistId !== 'lissy') {
+          // toast.success(`Request submitted! ${stylistName} will review your style request.`);
+        }
         
         navigate(waitlistRoute, { 
           state: navigationState
         });
       } catch (error: any) {
         console.error('❌ Error saving intake:', error);
-        toast.error(error.message || 'Failed to save. Please try again.');
+        // toast.error(error.message || 'Failed to save. Please try again.');
       } finally {
         setIsSubmitting(false);
       }
@@ -444,14 +451,14 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
         
         if (!accessToken) {
           console.error('❌ No access token available');
-          toast.error('Please sign in to continue');
+          // toast.error('Please sign in to continue');
           navigate('/signin');
           return;
         }
 
         // Validate main image exists
         if (!mainImage) {
-          toast.error('Please upload a photo to continue');
+          // toast.error('Please upload a photo to continue');
           setIsSubmitting(false);
           return;
         }
@@ -595,7 +602,12 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
                              stylistId === 'dorian' ? '/dorian/waitlist' : '/chris/waitlist';
         
         console.log('🚀 Navigating to:', waitlistRoute);
-        toast.success(`Request submitted! ${stylistName} will review your style request.`);
+        
+        // For Lissy, don't show "request submitted" - she has a waitlist flow
+        // (This is in the handleSubmit function - a duplicate path)
+        if (stylistId !== 'lissy') {
+          // toast.success(`Request submitted! ${stylistName} will review your style request.`);
+        }
         
         navigate(waitlistRoute, { 
           state: navigationState
@@ -607,7 +619,7 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
         console.error('❌ Error message:', error.message);
         console.error('❌ Error stack:', error.stack);
         console.error('❌ ==========================================');
-        toast.error(error.message || 'Failed to save. Please try again.');
+        // toast.error(error.message || 'Failed to save. Please try again.');
       } finally {
         setIsSubmitting(false);
       }
@@ -679,7 +691,7 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
             value={currentAnswer}
             onChange={(e) => handleAnswerChange(e.target.value)}
             placeholder={intakeQuestions[currentQuestion].placeholder}
-            className="w-full min-h-[98px] p-4 border border-gray-200 rounded-[12px] font-['Helvetica_Neue:Regular',sans-serif] text-[14px] text-[#1E1709] placeholder:text-gray-400 placeholder:opacity-50 focus:outline-none focus:border-gray-300 resize-none bg-white/60 backdrop-blur-sm transition-colors"
+            className="w-full min-h-[98px] p-4 border border-gray-200 rounded-[12px] font-['Helvetica_Neue:Regular',sans-serif] text-[16px] text-[#1E1709] placeholder:text-gray-400 placeholder:opacity-50 focus:outline-none focus:border-gray-300 resize-none bg-white/60 backdrop-blur-sm transition-colors"
           />
         </div>
 

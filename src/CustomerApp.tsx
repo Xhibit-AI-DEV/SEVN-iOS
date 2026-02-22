@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router';
 import { Toaster, toast } from 'sonner@2.0.3';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SafeArea } from 'capacitor-plugin-safe-area';

@@ -2922,6 +2922,10 @@
     text-align: left;
   }
 
+  .align-middle {
+    vertical-align: middle;
+  }
+
   .font-\[\'Arial\:Regular\'\,sans-serif\] {
     font-family: Arial\:Regular, sans-serif;
   }

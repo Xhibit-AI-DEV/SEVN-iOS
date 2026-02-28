@@ -231,7 +231,7 @@ export function DorianLanding({ onImageUpload }: DorianLandingProps) {
 
   return (
     <div 
-      className="relative w-full min-h-screen overflow-x-hidden bg-white"
+      className="relative w-full h-dvh overflow-x-hidden bg-white"
       style={{
         paddingTop: 'env(safe-area-inset-top)',
         paddingBottom: 'env(safe-area-inset-bottom)',
@@ -257,7 +257,7 @@ export function DorianLanding({ onImageUpload }: DorianLandingProps) {
           
           {/* Share button on right */}
           <button className="hover:opacity-70 transition-opacity" onClick={handleShare}>
-            <img alt="Share" className="w-[32px] h-[32px]" src={imgShareIcon} />
+            <div className="bg-[rgba(255,254,253,0.8)] border border-[#1e1709] rounded-[20px] size-[32px] flex items-center justify-center"><svg className="w-[12px] h-[12px]" fill="none" viewBox="0 0 13 12.55"><path d="M12.5 8.55V12.05H0.5V8.55" stroke="black" /><path d="M6.5 0.5V8.5M6.5 0.5L3.5 3.5M6.5 0.5L9.5 3.5" stroke="#1E1709" strokeLinecap="square" strokeLinejoin="round" strokeWidth="1.1" /></svg></div>
           </button>
         </div>
       </div>

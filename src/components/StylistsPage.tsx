@@ -21,7 +21,7 @@ export function StylistsPage() {
 
   return (
     <div 
-      className="relative w-full min-h-screen overflow-x-hidden bg-[#fffefd]"
+      className="relative w-full h-dvh overflow-x-hidden bg-[#fffefd]"
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       {/* Header */}

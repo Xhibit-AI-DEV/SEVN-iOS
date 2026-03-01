@@ -149,7 +149,7 @@ export default function HomePage() {
         className="flex-1 overflow-y-auto overflow-x-hidden relative max-w-[393px] mx-auto w-full"
         style={{
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: 'calc(44px + var(--safe-bottom))',
+          paddingBottom: 'calc(44px + env(safe-area-inset-bottom))',
           zIndex: 1,
         }}
       >

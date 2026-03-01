@@ -999,13 +999,13 @@ export function ProfilePage() {
 
   return (
     <div 
-      className="relative w-full h-dvh overflow-x-hidden bg-[#fffefd]"
+      className="relative w-full h-dvh overflow-hidden bg-[#fffefd] flex flex-col"
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       {/* Header - Different for own profile vs other user */}
       {paramUserId ? (
         // Viewing another user's profile - show back button and more menu
-        <div className="sticky top-0 bg-[#fffefd] h-[48px] w-full z-40 border-b border-[#1e1709]">
+        <div className="shrink-0 bg-[#fffefd] h-[48px] w-full z-40 border-b border-[#1e1709]">
           <div className="flex items-center justify-between h-full px-4 max-w-[393px] mx-auto">
             <button 
               onClick={() => navigate(-1)}
@@ -1049,8 +1049,8 @@ export function ProfilePage() {
       )}
       
       {/* Content with bottom safe area padding */}
-      <div 
-        className="w-full max-w-[393px] mx-auto pt-6 px-4"
+      <div
+        className="flex-1 overflow-y-auto w-full max-w-[393px] mx-auto pt-6 px-4"
         style={{
           paddingBottom: 'calc(80px + env(safe-area-inset-bottom))',
         }}

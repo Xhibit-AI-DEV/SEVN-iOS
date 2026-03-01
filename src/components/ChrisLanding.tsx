@@ -122,10 +122,9 @@ export function ChrisLanding({ onImageUpload }: ChrisLandingProps) {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setSelectedImage(file);
-      onImageUpload(file);
-    }
+    if (!file) return;
+    setSelectedImage(file);
+    navigate('/chris/intake', { state: { imageUrl: URL.createObjectURL(file) } });
   };
 
   const handlePickImage = async () => {
@@ -141,11 +140,7 @@ export function ChrisLanding({ onImageUpload }: ChrisLandingProps) {
         source: CameraSource.Photos,
       });
       if (image.webPath) {
-        const response = await fetch(image.webPath);
-        const blob = await response.blob();
-        const file = new File([blob], `chris-${Date.now()}.${image.format}`, { type: `image/${image.format}` });
-        setSelectedImage(file);
-        onImageUpload(file);
+        navigate('/chris/intake', { state: { imageUrl: image.webPath } });
       }
     } catch (error) {
       console.error('Error picking image:', error);

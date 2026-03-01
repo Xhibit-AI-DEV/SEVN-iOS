@@ -1,8 +1,8 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import svgPaths from "../imports/svg-ixy1f48tju";
-import imgDorianCarPhoto from "figma:asset/9593603f59b50c4fa125ac1b72a028ee00773a1c.png";
-import imgDorianOutfitPhoto from "figma:asset/d297a940dc3057916ac80222e2e19ffe9672c113.png";
+import imgDorianCarPhoto from "../assets/IMG_3274.jpg";
+import imgDorianOutfitPhoto from "../assets/IMG_3299.jpg";
 import imgShareIcon from "figma:asset/acdcb062503544d45e9ec42f141e5eaf2bc04359.png";
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
@@ -152,10 +152,9 @@ export function DorianLanding({ onImageUpload }: DorianLandingProps) {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setSelectedImage(file);
-      onImageUpload(file);
-    }
+    if (!file) return;
+    setSelectedImage(file);
+    navigate('/dorian/intake', { state: { imageUrl: URL.createObjectURL(file) } });
   };
 
   const handlePickImage = async () => {
@@ -171,11 +170,7 @@ export function DorianLanding({ onImageUpload }: DorianLandingProps) {
         source: CameraSource.Photos,
       });
       if (image.webPath) {
-        const response = await fetch(image.webPath);
-        const blob = await response.blob();
-        const file = new File([blob], `dorian-${Date.now()}.${image.format}`, { type: `image/${image.format}` });
-        setSelectedImage(file);
-        onImageUpload(file);
+        navigate('/dorian/intake', { state: { imageUrl: image.webPath } });
       }
     } catch (error) {
       console.error('Error picking image:', error);

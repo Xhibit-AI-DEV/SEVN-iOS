@@ -459,18 +459,7 @@ export function LissyLanding({ onImageUpload }: LissyLandingProps) {
     const file = e.target.files?.[0];
     if (!file) return;
     setSelectedImage(file);
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const dataUrl = reader.result as string;
-      sessionStorage.setItem('lissy_uploaded_image', dataUrl);
-      sessionStorage.setItem('lissy_uploaded_image_name', file.name);
-      sessionStorage.setItem('lissy_uploaded_image_type', file.type);
-      onImageUpload(file);
-      console.log('🚦 NAVIGATING TO INTAKE NOW (file input)', { href: window.location.href });
-      alert('NAV TO /lissy/intake');
-      navigate('/lissy/intake', { state: { base64: dataUrl, name: file.name, type: file.type } });
-    };
-    reader.readAsDataURL(file);
+    navigate('/lissy/intake', { state: { imageUrl: URL.createObjectURL(file) } });
   };
 
   const handlePickImage = async () => {
@@ -482,31 +471,13 @@ export function LissyLanding({ onImageUpload }: LissyLandingProps) {
       const image = await CapacitorCamera.getPhoto({
         quality: 85,
         allowEditing: false,
-        resultType: CameraResultType.Base64,
+        resultType: CameraResultType.Uri,
         source: CameraSource.Photos,
       });
-      if (image.base64String) {
-        const mimeType = `image/${image.format || 'jpeg'}`;
-        const fileName = `lissy-${Date.now()}.${image.format || 'jpeg'}`;
-        const dataUrl = `data:${mimeType};base64,${image.base64String}`;
-        // Also keep sessionStorage as backup
-        sessionStorage.setItem('lissy_uploaded_image', dataUrl);
-        sessionStorage.setItem('lissy_uploaded_image_name', fileName);
-        sessionStorage.setItem('lissy_uploaded_image_type', mimeType);
-        // Build File synchronously via atob
-        const byteString = atob(image.base64String);
-        const bytes = new Uint8Array(byteString.length);
-        for (let i = 0; i < byteString.length; i++) bytes[i] = byteString.charCodeAt(i);
-        const blob = new Blob([bytes], { type: mimeType });
-        const file = new File([blob], fileName, { type: mimeType });
-        setSelectedImage(file);
-        onImageUpload(file);
-        // Pass image data through router state — synchronous, no timing issues
-        console.log('🚦 NAVIGATING TO INTAKE NOW (camera)', { href: window.location.href });
-        alert('NAV TO /lissy/intake');
-        navigate('/lissy/intake', { state: { base64: dataUrl, name: fileName, type: mimeType } });
+      if (image.webPath) {
+        navigate('/lissy/intake', { state: { imageUrl: image.webPath } });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error picking image:', error);
     }
   };
@@ -624,6 +595,7 @@ export function LissyLanding({ onImageUpload }: LissyLandingProps) {
           </div>
         </div>
       </div>
+
     </div>
   );
 }

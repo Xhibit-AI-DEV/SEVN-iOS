@@ -141,16 +141,6 @@ function AppContent() {
       const hasAuth = !!(authToken || sbToken);
       const role = localStorage.getItem('user_role');
 
-      console.log('🔐 Auth check:', {
-        auth_token: !!localStorage.getItem('auth_token'),
-        access_token: !!localStorage.getItem('access_token'),
-        sb_keys: sbKeys,
-        has_sb_token: !!sbToken,
-        hasAuth,
-        role,
-        hash: window.location.hash,
-      });
-
       setIsAuthenticated(hasAuth);
       setUserRole(role || 'customer');
     };
@@ -158,23 +148,13 @@ function AppContent() {
     // Check auth on mount
     checkAuth();
 
-    // Listen for auth changes (triggered from SignIn component)
-    const handleAuthChange = () => {
-      console.log('🔄 Auth changed - re-checking authentication');
-      checkAuth();
-    };
+    const handleAuthChange = () => checkAuth();
 
     window.addEventListener('authChanged', handleAuthChange);
 
     return () => {
       window.removeEventListener('authChanged', handleAuthChange);
     };
-  }, []);
-
-  // Debug: Log current path
-  useEffect(() => {
-    console.log('📍 Current path:', window.location.pathname, window.location.hash);
-    console.log('📍 Current href:', window.location.href);
   }, []);
 
   // Show loading while checking auth
@@ -184,21 +164,8 @@ function AppContent() {
 
   // Protected route wrapper - requires authentication only
   const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
-    console.log('🛡️ ProtectedRoute render:', {
-      isAuthenticated,
-      hash: window.location.hash,
-      pathname: window.location.pathname,
-      auth_token: !!localStorage.getItem('auth_token'),
-      access_token: !!localStorage.getItem('access_token'),
-      sb_keys: Object.keys(localStorage).filter(k => k.startsWith('sb-') && k.endsWith('-auth-token')),
-    });
-    if (isAuthenticated === null) {
-      return <LoadingScreen />;
-    }
-    if (!isAuthenticated) {
-      console.log('🚫 ProtectedRoute BLOCKING — not authenticated, showing SignIn. hash:', window.location.hash);
-      return <SignIn />;
-    }
+    if (isAuthenticated === null) return <LoadingScreen />;
+    if (!isAuthenticated) return <SignIn />;
     return children;
   };
 
@@ -232,74 +199,14 @@ function AppContent() {
 
   const handleChrisImageUpload = (file: File) => {
     setChrisUploadedImage(file);
-    console.log('📸 Chris image uploaded:', file.name, file.type, file.size);
-    
-    // Save to sessionStorage for persistence
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = reader.result as string;
-      sessionStorage.setItem('chris_uploaded_image', base64);
-      sessionStorage.setItem('chris_uploaded_image_name', file.name);
-      sessionStorage.setItem('chris_uploaded_image_type', file.type);
-      console.log('✅ Chris image saved to sessionStorage:', file.name);
-      
-      // Navigate AFTER sessionStorage is written
-      navigate('/chris/intake');
-    };
-    reader.onerror = (error) => {
-      console.error('❌ Failed to save Chris image to sessionStorage:', error);
-      // Still navigate even if sessionStorage fails
-      navigate('/chris/intake');
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleLewisImageUpload = (file: File) => {
     setLewisUploadedImage(file);
-    console.log('📸 Lewis image uploaded:', file.name, file.type, file.size);
-    
-    // Save to sessionStorage for persistence
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = reader.result as string;
-      sessionStorage.setItem('lewis_uploaded_image', base64);
-      sessionStorage.setItem('lewis_uploaded_image_name', file.name);
-      sessionStorage.setItem('lewis_uploaded_image_type', file.type);
-      console.log('✅ Lewis image saved to sessionStorage:', file.name);
-      
-      // Navigate AFTER sessionStorage is written
-      navigate('/lewis/intake');
-    };
-    reader.onerror = (error) => {
-      console.error('❌ Failed to save Lewis image to sessionStorage:', error);
-      // Still navigate even if sessionStorage fails
-      navigate('/lewis/intake');
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleDorianImageUpload = (file: File) => {
     setDorianUploadedImage(file);
-    console.log('📸 Dorian image uploaded:', file.name, file.type, file.size);
-    
-    // Save to sessionStorage for persistence
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = reader.result as string;
-      sessionStorage.setItem('dorian_uploaded_image', base64);
-      sessionStorage.setItem('dorian_uploaded_image_name', file.name);
-      sessionStorage.setItem('dorian_uploaded_image_type', file.type);
-      console.log('✅ Dorian image saved to sessionStorage:', file.name);
-      
-      // Navigate AFTER sessionStorage is written
-      navigate('/dorian/intake');
-    };
-    reader.onerror = (error) => {
-      console.error('❌ Failed to save Dorian image to sessionStorage:', error);
-      // Still navigate even if sessionStorage fails
-      navigate('/dorian/intake');
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleIntakeComplete = () => {

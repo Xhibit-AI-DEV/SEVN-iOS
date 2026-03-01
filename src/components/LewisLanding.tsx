@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import svgPaths from "../imports/svg-ixy1f48tju";
-import imgLewisCarPhoto from "figma:asset/9cffcde461e169a56491d6b656c1a87f1cc6898f.png";
-import imgLewisOutfitPhoto from "figma:asset/9769fa222dfe175f60b28e6da725e764d0e83fa6.png";
+import imgLewisCarPhoto from "../assets/IMG_3268.jpg";
+import imgLewisOutfitPhoto from "../assets/download.jpg";
 import imgShareIcon from "figma:asset/acdcb062503544d45e9ec42f141e5eaf2bc04359.png";
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
@@ -154,10 +154,9 @@ export function LewisLanding({ onImageUpload }: LewisLandingProps) {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setSelectedImage(file);
-      onImageUpload(file);
-    }
+    if (!file) return;
+    setSelectedImage(file);
+    navigate('/lewis/intake', { state: { imageUrl: URL.createObjectURL(file) } });
   };
 
   const handlePickImage = async () => {
@@ -173,11 +172,7 @@ export function LewisLanding({ onImageUpload }: LewisLandingProps) {
         source: CameraSource.Photos,
       });
       if (image.webPath) {
-        const response = await fetch(image.webPath);
-        const blob = await response.blob();
-        const file = new File([blob], `lewis-${Date.now()}.${image.format}`, { type: `image/${image.format}` });
-        setSelectedImage(file);
-        onImageUpload(file);
+        navigate('/lewis/intake', { state: { imageUrl: image.webPath } });
       }
     } catch (error) {
       console.error('Error picking image:', error);

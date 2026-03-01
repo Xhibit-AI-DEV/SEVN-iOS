@@ -63,57 +63,31 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
   // Get questions with dynamic stylist name
   const intakeQuestions = getIntakeQuestions(stylistName);
 
-  // Restore image from router state, prop, or sessionStorage
+  // Restore image from router state or prop
   useEffect(() => {
     if (mainImage) return;
 
-    // 1. Check router navigation state first (most reliable — passed directly)
-    const navState = location.state as { base64?: string; name?: string; type?: string } | null;
-    if (navState?.base64 && navState?.name && navState?.type) {
-      console.log(`📦 Restoring ${stylistName}'s image from router state:`, navState.name);
-      try {
-        const rawBase64 = navState.base64.includes(',') ? navState.base64.split(',')[1] : navState.base64;
-        const byteString = atob(rawBase64);
-        const bytes = new Uint8Array(byteString.length);
-        for (let i = 0; i < byteString.length; i++) bytes[i] = byteString.charCodeAt(i);
-        const blob = new Blob([bytes], { type: navState.type });
-        const file = new File([blob], navState.name, { type: navState.type });
-        setMainImage(file);
-        console.log('✅ Image restored from router state:', file.name, file.size, 'bytes');
-        return;
-      } catch (err) {
-        console.error('Failed to restore image from router state:', err);
-      }
+    const navState = location.state as { imageUrl?: string; base64?: string; name?: string; type?: string } | null;
+
+    // 1. imageUrl path (webPath from camera or objectURL from file input — no base64, no quota)
+    if (navState?.imageUrl) {
+      console.log(`📦 Restoring ${stylistName}'s image from imageUrl:`, navState.imageUrl.slice(0, 60));
+      fetch(navState.imageUrl)
+        .then(r => r.blob())
+        .then(blob => {
+          const ext = blob.type.includes('/') ? blob.type.split('/')[1] : 'jpg';
+          const file = new File([blob], `${stylistId}-intake.${ext}`, { type: blob.type || 'image/jpeg' });
+          setMainImage(file);
+          console.log('✅ Image restored from imageUrl:', file.name, file.size, 'bytes');
+        })
+        .catch(err => console.error('❌ Failed to fetch imageUrl:', err));
+      return;
     }
 
     // 2. Fall back to uploadedImage prop
     if (uploadedImage) {
       setMainImage(uploadedImage);
       return;
-    }
-
-    // 3. Fall back to sessionStorage
-    const storagePrefix = stylistId === 'lewis' ? 'lewis' :
-                         stylistId === 'lissy' ? 'lissy' :
-                         stylistId === 'dorian' ? 'dorian' : 'chris';
-    const base64 = sessionStorage.getItem(`${storagePrefix}_uploaded_image`);
-    const name = sessionStorage.getItem(`${storagePrefix}_uploaded_image_name`);
-    const type = sessionStorage.getItem(`${storagePrefix}_uploaded_image_type`);
-
-    if (base64 && name && type) {
-      console.log(`📦 Retrieving ${stylistName}'s image from sessionStorage:`, name);
-      try {
-        const rawBase64 = base64.includes(',') ? base64.split(',')[1] : base64;
-        const byteString = atob(rawBase64);
-        const bytes = new Uint8Array(byteString.length);
-        for (let i = 0; i < byteString.length; i++) bytes[i] = byteString.charCodeAt(i);
-        const blob = new Blob([bytes], { type });
-        const file = new File([blob], name, { type });
-        setMainImage(file);
-        console.log('✅ Image restored from sessionStorage:', file.name, file.size, 'bytes');
-      } catch (err) {
-        console.error('Failed to restore image from sessionStorage:', err);
-      }
     }
   }, [uploadedImage, mainImage, stylistId, stylistName, location.state]);
 
@@ -181,11 +155,10 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
         
         if (!accessToken) {
           console.error('❌ No access token available');
-          // toast.error('Please sign in to continue');
-          navigate('/signin');
+          setIsSubmitting(false);
           return;
         }
-        
+
         // Validate main image exists
         if (!mainImage) {
           // toast.error('Please upload a photo to continue');

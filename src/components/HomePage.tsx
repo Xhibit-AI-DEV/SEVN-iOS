@@ -17,11 +17,11 @@ import imgValDrozg1 from "figma:asset/4b4531903296dd337e2503bb17f59748fdc6c9ee.p
 import imgValDrozg2 from "figma:asset/20128333cc3dc0dc5a9ed76f88c9c981a3185bd7.png";
 import imgValDrozg3 from "figma:asset/e0a9d1b58aed482da9011bb5f685dc39e3501d17.png";
 import imgChrisWhyle from "figma:asset/083df4dc1c94d586d53c3644182d81e287c70454.png";
-import imgLewisBloyce from "figma:asset/9cffcde461e169a56491d6b656c1a87f1cc6898f.png";
-import imgDorianWho from "figma:asset/9593603f59b50c4fa125ac1b72a028ee00773a1c.png";
+import imgLewisBloyce from "../assets/IMG_3268.jpg";
+import imgDorianWho from "../assets/IMG_3274.jpg";
 import imgV22Logo from "figma:asset/4ec03ff54a95119f5d32d5425296f54905e0e776.png";
 import imgChrisEdit from "figma:asset/d6d0374d1209d254e69a363bf2bd48de2a8fd831.png";
-import imgLissyEdit from "figma:asset/5301c6e1e005f08fe75d30911849e67eca98064e.png";
+import imgLissyEdit from "../assets/lissyfeatured.png";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -117,7 +117,10 @@ export default function HomePage() {
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#fffefd] relative">
+    <div
+      className="h-dvh flex flex-col bg-[#fffefd] overflow-hidden"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
       {/* Fixed Header - 48px - Mobile Constrained */}
       <div className="w-full h-[48px] flex items-center justify-between px-4 bg-white border-b border-[#1e1709] shrink-0 max-w-[393px] mx-auto">
         <div className="flex items-center gap-2">
@@ -146,7 +149,7 @@ export default function HomePage() {
         className="flex-1 overflow-y-auto overflow-x-hidden relative max-w-[393px] mx-auto w-full"
         style={{
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: 'calc(50px + var(--safe-bottom))',
+          paddingBottom: 'calc(44px + var(--safe-bottom))',
           zIndex: 1,
         }}
       >

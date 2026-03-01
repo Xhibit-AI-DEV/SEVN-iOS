@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import svgPaths from "../imports/svg-ixy1f48tju";
 import imgDorianCarPhoto from "figma:asset/9593603f59b50c4fa125ac1b72a028ee00773a1c.png";
@@ -148,26 +148,38 @@ function ButtonDark({ onClick }: { onClick: () => void }) {
 export function DorianLanding({ onImageUpload }: DorianLandingProps) {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('📸 [DorianLanding] handleFileChange called');
     const file = e.target.files?.[0];
-    console.log('📸 [DorianLanding] Selected file:', file);
     if (file) {
-      console.log('📸 [DorianLanding] File details:', file.name, file.type, file.size);
       setSelectedImage(file);
-      console.log('📸 [DorianLanding] Calling onImageUpload...');
       onImageUpload(file);
-    } else {
-      console.warn('⚠️ [DorianLanding] No file selected');
     }
   };
 
-  const triggerFileInput = () => {
-    console.log('🖱️ [DorianLanding] Button clicked! Triggering file input...');
-    const input = document.getElementById('image-upload-dorian');
-    console.log('🖱️ [DorianLanding] Input element:', input);
-    input?.click();
+  const handlePickImage = async () => {
+    if (!Capacitor.isNativePlatform()) {
+      fileInputRef.current?.click();
+      return;
+    }
+    try {
+      const image = await CapacitorCamera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Photos,
+      });
+      if (image.webPath) {
+        const response = await fetch(image.webPath);
+        const blob = await response.blob();
+        const file = new File([blob], `dorian-${Date.now()}.${image.format}`, { type: `image/${image.format}` });
+        setSelectedImage(file);
+        onImageUpload(file);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+    }
   };
 
   const handleHomeClick = () => {
@@ -212,22 +224,6 @@ export function DorianLanding({ onImageUpload }: DorianLandingProps) {
     }
   };
 
-  const takePhoto = async () => {
-    if (Capacitor.isNativePlatform()) {
-      const image = await Camera.getPhoto({
-        quality: 90,
-        allowEditing: false,
-        resultType: CameraResultType.Uri,
-        source: CameraSource.Camera,
-      });
-      const response = await fetch(image.webPath!);
-      const blob = await response.blob();
-      const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
-      handleFileChange({ target: { files: [file] } } as React.ChangeEvent<HTMLInputElement>);
-    } else {
-      triggerFileInput();
-    }
-  };
 
   return (
     <div 
@@ -266,7 +262,7 @@ export function DorianLanding({ onImageUpload }: DorianLandingProps) {
       <div className="w-full max-w-[393px] mx-auto overflow-y-auto pb-24 pt-4">
         <div className="relative w-[390px] mx-auto">
           <input
-            id="image-upload-dorian"
+            ref={fileInputRef}
             type="file"
             accept="image/*"
             onChange={handleFileChange}
@@ -294,7 +290,7 @@ export function DorianLanding({ onImageUpload }: DorianLandingProps) {
               <p className="css-4hzbpn leading-[normal] not-italic relative shrink-0 text-[#1e1709] text-[14px] text-center tracking-[0.1em] w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 400 }}>Upload a reference look to get started.</p>
             </div>
             <div className="mt-6">
-              <ButtonDark onClick={takePhoto} />
+              <ButtonDark onClick={handlePickImage} />
             </div>
           </div>
         </div>

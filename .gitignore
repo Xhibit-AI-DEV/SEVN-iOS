@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build output
+build/
+www/
+dist/
+
+# Capacitor build cache
+ios/App/CapApp-SPM/.build/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Editor
+.vscode/
+*.swp
+
+# Misc
+com.sevn.app

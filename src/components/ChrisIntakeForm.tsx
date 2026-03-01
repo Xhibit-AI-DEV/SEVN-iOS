@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 // import { toast } from 'sonner@2.0.3';
 import { Loader2 } from 'lucide-react';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
@@ -43,6 +43,7 @@ const getIntakeQuestions = (stylistName: string) => [
 
 export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris' }: ChrisIntakeFormProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [referenceImages, setReferenceImages] = useState<File[]>([]);
@@ -62,36 +63,59 @@ export function ChrisIntakeForm({ uploadedImage, onComplete, stylistId = 'chris'
   // Get questions with dynamic stylist name
   const intakeQuestions = getIntakeQuestions(stylistName);
 
-  // Restore image from sessionStorage if not provided
+  // Restore image from router state, prop, or sessionStorage
   useEffect(() => {
-    if (!mainImage && !uploadedImage) {
-      // Check for stylist-specific sessionStorage keys
-      const storagePrefix = stylistId === 'lewis' ? 'lewis' : 
-                           stylistId === 'lissy' ? 'lissy' :
-                           stylistId === 'dorian' ? 'dorian' : 'chris';
-      
-      const base64 = sessionStorage.getItem(`${storagePrefix}_uploaded_image`);
-      const name = sessionStorage.getItem(`${storagePrefix}_uploaded_image_name`);
-      const type = sessionStorage.getItem(`${storagePrefix}_uploaded_image_type`);
-      
-      if (base64 && name && type) {
-        console.log(`📦 Retrieving ${stylistName}'s image from sessionStorage:`, name);
-        // Convert base64 back to File
-        fetch(base64)
-          .then(res => res.blob())
-          .then(blob => {
-            const file = new File([blob], name, { type });
-            setMainImage(file);
-            console.log('✅ Image restored from sessionStorage:', file.name, file.size, 'bytes');
-          })
-          .catch(err => {
-            console.error('Failed to restore image from sessionStorage:', err);
-          });
+    if (mainImage) return;
+
+    // 1. Check router navigation state first (most reliable — passed directly)
+    const navState = location.state as { base64?: string; name?: string; type?: string } | null;
+    if (navState?.base64 && navState?.name && navState?.type) {
+      console.log(`📦 Restoring ${stylistName}'s image from router state:`, navState.name);
+      try {
+        const rawBase64 = navState.base64.includes(',') ? navState.base64.split(',')[1] : navState.base64;
+        const byteString = atob(rawBase64);
+        const bytes = new Uint8Array(byteString.length);
+        for (let i = 0; i < byteString.length; i++) bytes[i] = byteString.charCodeAt(i);
+        const blob = new Blob([bytes], { type: navState.type });
+        const file = new File([blob], navState.name, { type: navState.type });
+        setMainImage(file);
+        console.log('✅ Image restored from router state:', file.name, file.size, 'bytes');
+        return;
+      } catch (err) {
+        console.error('Failed to restore image from router state:', err);
       }
-    } else if (uploadedImage) {
-      setMainImage(uploadedImage);
     }
-  }, [uploadedImage, mainImage, stylistId, stylistName]);
+
+    // 2. Fall back to uploadedImage prop
+    if (uploadedImage) {
+      setMainImage(uploadedImage);
+      return;
+    }
+
+    // 3. Fall back to sessionStorage
+    const storagePrefix = stylistId === 'lewis' ? 'lewis' :
+                         stylistId === 'lissy' ? 'lissy' :
+                         stylistId === 'dorian' ? 'dorian' : 'chris';
+    const base64 = sessionStorage.getItem(`${storagePrefix}_uploaded_image`);
+    const name = sessionStorage.getItem(`${storagePrefix}_uploaded_image_name`);
+    const type = sessionStorage.getItem(`${storagePrefix}_uploaded_image_type`);
+
+    if (base64 && name && type) {
+      console.log(`📦 Retrieving ${stylistName}'s image from sessionStorage:`, name);
+      try {
+        const rawBase64 = base64.includes(',') ? base64.split(',')[1] : base64;
+        const byteString = atob(rawBase64);
+        const bytes = new Uint8Array(byteString.length);
+        for (let i = 0; i < byteString.length; i++) bytes[i] = byteString.charCodeAt(i);
+        const blob = new Blob([bytes], { type });
+        const file = new File([blob], name, { type });
+        setMainImage(file);
+        console.log('✅ Image restored from sessionStorage:', file.name, file.size, 'bytes');
+      } catch (err) {
+        console.error('Failed to restore image from sessionStorage:', err);
+      }
+    }
+  }, [uploadedImage, mainImage, stylistId, stylistName, location.state]);
 
   // Safety check: ensure currentQuestion is within bounds
   useEffect(() => {

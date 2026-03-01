@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { useState, useRef } from 'react';
+import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
 import { useNavigate } from 'react-router';
 import svgPaths from "../imports/svg-ixy1f48tju";
 import imgLissyRoddy from "figma:asset/21ead93bac0da68ed5f33efdfb07c0bf632228cc.png";
@@ -452,26 +453,62 @@ function Component3({ onButtonClick }: { onButtonClick: () => void }) {
 export function LissyLanding({ onImageUpload }: LissyLandingProps) {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('📸 [LissyLanding] handleFileChange called');
     const file = e.target.files?.[0];
-    console.log('📸 [LissyLanding] Selected file:', file);
-    if (file) {
-      console.log('📸 [LissyLanding] File details:', file.name, file.type, file.size);
-      setSelectedImage(file);
-      console.log('📸 [LissyLanding] Calling onImageUpload...');
+    if (!file) return;
+    setSelectedImage(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const dataUrl = reader.result as string;
+      sessionStorage.setItem('lissy_uploaded_image', dataUrl);
+      sessionStorage.setItem('lissy_uploaded_image_name', file.name);
+      sessionStorage.setItem('lissy_uploaded_image_type', file.type);
       onImageUpload(file);
-    } else {
-      console.warn('⚠️ [LissyLanding] No file selected');
-    }
+      console.log('🚦 NAVIGATING TO INTAKE NOW (file input)', { href: window.location.href });
+      alert('NAV TO /lissy/intake');
+      navigate('/lissy/intake', { state: { base64: dataUrl, name: file.name, type: file.type } });
+    };
+    reader.readAsDataURL(file);
   };
 
-  const triggerFileInput = () => {
-    console.log('🖱️ [LissyLanding] Button clicked! Triggering file input...');
-    const input = document.getElementById('image-upload');
-    console.log('🖱️ [LissyLanding] Input element:', input);
-    input?.click();
+  const handlePickImage = async () => {
+    if (!Capacitor.isNativePlatform()) {
+      fileInputRef.current?.click();
+      return;
+    }
+    try {
+      const image = await CapacitorCamera.getPhoto({
+        quality: 85,
+        allowEditing: false,
+        resultType: CameraResultType.Base64,
+        source: CameraSource.Photos,
+      });
+      if (image.base64String) {
+        const mimeType = `image/${image.format || 'jpeg'}`;
+        const fileName = `lissy-${Date.now()}.${image.format || 'jpeg'}`;
+        const dataUrl = `data:${mimeType};base64,${image.base64String}`;
+        // Also keep sessionStorage as backup
+        sessionStorage.setItem('lissy_uploaded_image', dataUrl);
+        sessionStorage.setItem('lissy_uploaded_image_name', fileName);
+        sessionStorage.setItem('lissy_uploaded_image_type', mimeType);
+        // Build File synchronously via atob
+        const byteString = atob(image.base64String);
+        const bytes = new Uint8Array(byteString.length);
+        for (let i = 0; i < byteString.length; i++) bytes[i] = byteString.charCodeAt(i);
+        const blob = new Blob([bytes], { type: mimeType });
+        const file = new File([blob], fileName, { type: mimeType });
+        setSelectedImage(file);
+        onImageUpload(file);
+        // Pass image data through router state — synchronous, no timing issues
+        console.log('🚦 NAVIGATING TO INTAKE NOW (camera)', { href: window.location.href });
+        alert('NAV TO /lissy/intake');
+        navigate('/lissy/intake', { state: { base64: dataUrl, name: fileName, type: mimeType } });
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+    }
   };
 
   const handleHomeClick = () => {
@@ -516,22 +553,6 @@ export function LissyLanding({ onImageUpload }: LissyLandingProps) {
     }
   };
 
-  const takePhoto = async () => {
-    if (Capacitor.isNativePlatform()) {
-      const image = await Camera.getPhoto({
-        quality: 90,
-        allowEditing: false,
-        resultType: CameraResultType.Uri,
-        source: CameraSource.Camera,
-      });
-      const response = await fetch(image.webPath!);
-      const blob = await response.blob();
-      const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
-      handleFileChange({ target: { files: [file] } } as React.ChangeEvent<HTMLInputElement>);
-    } else {
-      triggerFileInput();
-    }
-  };
 
   return (
     <div 
@@ -570,7 +591,7 @@ export function LissyLanding({ onImageUpload }: LissyLandingProps) {
       <div className="w-full max-w-[393px] mx-auto overflow-y-auto pb-24 pt-4">
         <div className="relative w-[390px] mx-auto">
           <input
-            id="image-upload"
+            ref={fileInputRef}
             type="file"
             accept="image/*"
             onChange={handleFileChange}
@@ -598,7 +619,7 @@ export function LissyLanding({ onImageUpload }: LissyLandingProps) {
               <p className="css-4hzbpn leading-[normal] not-italic relative shrink-0 text-[#1e1709] text-[14px] text-center tracking-[0.1em] w-[361px]" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontWeight: 400 }}>Upload a reference look to get started.</p>
             </div>
             <div className="mt-6">
-              <ButtonDark onClick={takePhoto} />
+              <ButtonDark onClick={handlePickImage} />
             </div>
           </div>
         </div>

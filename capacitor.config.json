@@ -1,0 +1,12 @@
+{
+  "appId": "com.xhibits",
+  "appName": "SEVN",
+  "webDir": "build",
+  "server": {
+    "androidScheme": "https"
+  },
+  "ios": {
+    "contentInset": "always",
+    "backgroundColor": "#ffffff"
+  }
+}

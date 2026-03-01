@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
 import svgPaths from "../imports/svg-ixy1f48tju";
 import imgChrisProfile from "figma:asset/083df4dc1c94d586d53c3644182d81e287c70454.png";
 import imgChrisEdit from "figma:asset/d6d0374d1209d254e69a363bf2bd48de2a8fd831.png";
@@ -116,33 +118,38 @@ function ButtonDark({ onClick }: { onClick: () => void }) {
 export function ChrisLanding({ onImageUpload }: ChrisLandingProps) {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedImage(file);
-      
-      // Convert file to base64 and store in sessionStorage
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = reader.result as string;
-        sessionStorage.setItem('chris_uploaded_image', base64);
-        sessionStorage.setItem('chris_uploaded_image_name', file.name);
-        sessionStorage.setItem('chris_uploaded_image_type', file.type);
-        console.log('✅ Image stored in sessionStorage:', file.name, file.size, 'bytes');
-        
-        // Pass the file to parent component
-        onImageUpload(file);
-      };
-      reader.readAsDataURL(file);
+      onImageUpload(file);
     }
   };
 
-  const triggerFileInput = () => {
-    console.log('Button clicked! Triggering file input...');
-    const input = document.getElementById('chris-image-upload');
-    console.log('Input element:', input);
-    input?.click();
+  const handlePickImage = async () => {
+    if (!Capacitor.isNativePlatform()) {
+      fileInputRef.current?.click();
+      return;
+    }
+    try {
+      const image = await CapacitorCamera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Photos,
+      });
+      if (image.webPath) {
+        const response = await fetch(image.webPath);
+        const blob = await response.blob();
+        const file = new File([blob], `chris-${Date.now()}.${image.format}`, { type: `image/${image.format}` });
+        setSelectedImage(file);
+        onImageUpload(file);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+    }
   };
 
   const handleHomeClick = () => {
@@ -224,7 +231,7 @@ export function ChrisLanding({ onImageUpload }: ChrisLandingProps) {
       <div className="w-full max-w-[393px] mx-auto overflow-y-auto pb-24 pt-4">
         <div className="relative w-[390px] mx-auto">
           <input
-            id="chris-image-upload"
+            ref={fileInputRef}
             type="file"
             accept="image/*"
             onChange={handleFileChange}
@@ -256,7 +263,7 @@ export function ChrisLanding({ onImageUpload }: ChrisLandingProps) {
               </p>
             </div>
             <div className="mt-6">
-              <ButtonDark onClick={triggerFileInput} />
+              <ButtonDark onClick={handlePickImage} />
             </div>
           </div>
         </div>

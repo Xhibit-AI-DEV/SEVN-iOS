@@ -102,35 +102,33 @@ export function IntakeForm({ uploadedImage, onComplete }: IntakeFormProps) {
       
       if (base64 && name && type) {
         console.log('📦 Storing base64 data in refs for later reconstruction');
-        
+
         // Store the raw data in refs for reliable reconstruction later
         mainImageBase64Ref.current = base64;
         mainImageNameRef.current = name;
         mainImageTypeRef.current = type;
-        
-        // Also create a File for display purposes
-        fetch(base64)
-          .then(res => res.blob())
-          .then(blob => {
-            const file = new File([blob], name, { 
-              type: type,
-              lastModified: Date.now()
-            });
-            
-            console.log('✅ File created for display:', file.name, file.size, 'bytes');
-            
-            setMainImage(file);
-            mainImageRef.current = file;
-            setImageCheckComplete(true);
-            hasInitializedImage.current = true;
-          })
-          .catch(err => {
-            console.error('❌ Failed to restore image:', err);
-            setImageCheckComplete(true);
-            hasInitializedImage.current = true;
-            toast.error('Please upload a photo to continue');
-            navigate('/lissy');
-          });
+
+        // Create File synchronously via atob — fetch(data:URL) fails on Capacitor/iOS
+        try {
+          const rawBase64 = base64.includes(',') ? base64.split(',')[1] : base64;
+          const byteString = atob(rawBase64);
+          const bytes = new Uint8Array(byteString.length);
+          for (let i = 0; i < byteString.length; i++) bytes[i] = byteString.charCodeAt(i);
+          const blob = new Blob([bytes], { type });
+          const file = new File([blob], name, { type, lastModified: Date.now() });
+
+          console.log('✅ File created from sessionStorage:', file.name, file.size, 'bytes');
+          setMainImage(file);
+          mainImageRef.current = file;
+          setImageCheckComplete(true);
+          hasInitializedImage.current = true;
+        } catch (err) {
+          console.error('❌ Failed to restore image:', err);
+          setImageCheckComplete(true);
+          hasInitializedImage.current = true;
+          toast.error('Please upload a photo to continue');
+          navigate('/lissy');
+        }
       } else {
         console.warn('⚠️ No image found in sessionStorage or props');
         setImageCheckComplete(true);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router';
+import { HashRouter, Routes, Route, useNavigate } from 'react-router';
 import { Toaster, toast } from 'sonner@2.0.3';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SafeArea } from 'capacitor-plugin-safe-area';
@@ -133,19 +133,25 @@ function AppContent() {
   useEffect(() => {
     const checkAuth = () => {
       const authToken = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
+
+      // Also detect Supabase session keys: sb-<projectId>-auth-token
+      const sbKeys = Object.keys(localStorage).filter(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+      const sbToken = sbKeys.length > 0 ? localStorage.getItem(sbKeys[0]) : null;
+
+      const hasAuth = !!(authToken || sbToken);
       const role = localStorage.getItem('user_role');
-      
-      console.log('🔐 Auth check:', { hasToken: !!authToken, role });
-      console.log('🔐 Full localStorage:', {
+
+      console.log('🔐 Auth check:', {
         auth_token: !!localStorage.getItem('auth_token'),
         access_token: !!localStorage.getItem('access_token'),
-        user_role: localStorage.getItem('user_role'),
-        user_email: localStorage.getItem('user_email'),
-        user_id: localStorage.getItem('user_id'),
+        sb_keys: sbKeys,
+        has_sb_token: !!sbToken,
+        hasAuth,
+        role,
+        hash: window.location.hash,
       });
-      
-      // Set auth state immediately - don't wait
-      setIsAuthenticated(!!authToken);
+
+      setIsAuthenticated(hasAuth);
       setUserRole(role || 'customer');
     };
 
@@ -178,7 +184,19 @@ function AppContent() {
 
   // Protected route wrapper - requires authentication only
   const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
+    console.log('🛡️ ProtectedRoute render:', {
+      isAuthenticated,
+      hash: window.location.hash,
+      pathname: window.location.pathname,
+      auth_token: !!localStorage.getItem('auth_token'),
+      access_token: !!localStorage.getItem('access_token'),
+      sb_keys: Object.keys(localStorage).filter(k => k.startsWith('sb-') && k.endsWith('-auth-token')),
+    });
+    if (isAuthenticated === null) {
+      return <LoadingScreen />;
+    }
     if (!isAuthenticated) {
+      console.log('🚫 ProtectedRoute BLOCKING — not authenticated, showing SignIn. hash:', window.location.hash);
       return <SignIn />;
     }
     return children;
@@ -207,39 +225,9 @@ function AppContent() {
     return children;
   };
 
-  const handleImageUpload = async (file: File) => {
+  const handleImageUpload = (file: File) => {
+    // Navigation and sessionStorage are handled directly by LissyLanding
     setLissyUploadedImage(file);
-    console.log('📸 [App] Lissy image uploaded:', file.name, file.type, file.size);
-    
-    // Save to sessionStorage for persistence
-    console.log('📸 [App] Creating FileReader...');
-    const reader = new FileReader();
-    
-    reader.onloadend = () => {
-      console.log('📸 [App] FileReader completed');
-      const base64 = reader.result as string;
-      console.log('📸 [App] Base64 length:', base64.length);
-      
-      sessionStorage.setItem('lissy_uploaded_image', base64);
-      sessionStorage.setItem('lissy_uploaded_image_name', file.name);
-      sessionStorage.setItem('lissy_uploaded_image_type', file.type);
-      
-      console.log('✅ [App] Lissy image saved to sessionStorage:', file.name);
-      
-      // Navigate AFTER sessionStorage is written
-      navigate('/lissy/intake');
-    };
-    
-    reader.onerror = (error) => {
-      console.error('❌ [App] FileReader error:', error);
-      console.error('❌ [App] Reader state:', reader.readyState);
-      toast.error('Failed to process image');
-      // Still navigate even if sessionStorage fails
-      navigate('/lissy/intake');
-    };
-    
-    console.log('📸 [App] Starting FileReader.readAsDataURL...');
-    reader.readAsDataURL(file);
   };
 
   const handleChrisImageUpload = (file: File) => {
@@ -378,25 +366,10 @@ function AppContent() {
         <Route path="/order/:orderId" element={<ProtectedRoute><CustomerOrderView /></ProtectedRoute>} />
         
         {/* INTAKE FLOWS - Public access to landing pages, protected for forms */}
-        <Route path="/lissy" element={<ProtectedRoute><LissyLanding onImageUpload={handleImageUpload} /></ProtectedRoute>} />
+        <Route path="/lissy" element={<LissyLanding onImageUpload={handleImageUpload} />} />
+        {/* TEMP: /lissy/intake is public for auth diagnosis — re-add ProtectedRoute after confirming nav works */}
         <Route path="/lissy/intake" element={
-          <ProtectedRoute>
-            {lissyUploadedImage ? (
-              <ChrisIntakeForm uploadedImage={lissyUploadedImage} onComplete={handleIntakeComplete} stylistId="lissy" />
-            ) : (
-              <div className="w-full min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                  <p className="text-gray-600 mb-4">No image uploaded</p>
-                  <button 
-                    onClick={() => navigate('/lissy')}
-                    className="px-4 py-2 bg-black text-white rounded"
-                  >
-                    Go Back
-                  </button>
-                </div>
-              </div>
-            )}
-          </ProtectedRoute>
+          <ChrisIntakeForm uploadedImage={lissyUploadedImage} onComplete={handleIntakeComplete} stylistId="lissy" />
         } />
         <Route path="/lissy/waitlist" element={<ProtectedRoute><WaitlistPage /></ProtectedRoute>} />
         <Route path="/lissy/intake/edit/:orderId" element={<ProtectedRoute><EditIntakeForm /></ProtectedRoute>} />
@@ -404,21 +377,7 @@ function AppContent() {
         <Route path="/chris" element={<ChrisLanding onImageUpload={handleChrisImageUpload} />} />
         <Route path="/chris/intake" element={
           <ProtectedRoute>
-            {chrisUploadedImage ? (
-              <ChrisIntakeForm uploadedImage={chrisUploadedImage} onComplete={handleChrisIntakeComplete} />
-            ) : (
-              <div className="w-full min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                  <p className="text-gray-600 mb-4">No image uploaded</p>
-                  <button 
-                    onClick={() => navigate('/chris')}
-                    className="px-4 py-2 bg-black text-white rounded"
-                  >
-                    Go Back
-                  </button>
-                </div>
-              </div>
-            )}
+            <ChrisIntakeForm uploadedImage={chrisUploadedImage} onComplete={handleChrisIntakeComplete} />
           </ProtectedRoute>
         } />
         <Route path="/chris/waitlist" element={<ProtectedRoute><ChrisWaitlistPage /></ProtectedRoute>} />
@@ -427,21 +386,7 @@ function AppContent() {
         <Route path="/lewis" element={<LewisLanding onImageUpload={handleLewisImageUpload} />} />
         <Route path="/lewis/intake" element={
           <ProtectedRoute>
-            {lewisUploadedImage ? (
-              <ChrisIntakeForm uploadedImage={lewisUploadedImage} onComplete={handleLewisIntakeComplete} stylistId="lewis" />
-            ) : (
-              <div className="w-full min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                  <p className="text-gray-600 mb-4">No image uploaded</p>
-                  <button 
-                    onClick={() => navigate('/lewis')}
-                    className="px-4 py-2 bg-black text-white rounded"
-                  >
-                    Go Back
-                  </button>
-                </div>
-              </div>
-            )}
+            <ChrisIntakeForm uploadedImage={lewisUploadedImage} onComplete={handleLewisIntakeComplete} stylistId="lewis" />
           </ProtectedRoute>
         } />
         <Route path="/lewis/waitlist" element={<ProtectedRoute><LewisWaitlistPage /></ProtectedRoute>} />
@@ -450,21 +395,7 @@ function AppContent() {
         <Route path="/dorian" element={<DorianLanding onImageUpload={handleDorianImageUpload} />} />
         <Route path="/dorian/intake" element={
           <ProtectedRoute>
-            {dorianUploadedImage ? (
-              <ChrisIntakeForm uploadedImage={dorianUploadedImage} onComplete={handleDorianIntakeComplete} stylistId="dorian" />
-            ) : (
-              <div className="w-full min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                  <p className="text-gray-600 mb-4">No image uploaded</p>
-                  <button 
-                    onClick={() => navigate('/dorian')}
-                    className="px-4 py-2 bg-black text-white rounded"
-                  >
-                    Go Back
-                  </button>
-                </div>
-              </div>
-            )}
+            <ChrisIntakeForm uploadedImage={dorianUploadedImage} onComplete={handleDorianIntakeComplete} stylistId="dorian" />
           </ProtectedRoute>
         } />
         <Route path="/dorian/waitlist" element={<ProtectedRoute><DorianWaitlistPage /></ProtectedRoute>} />
@@ -562,10 +493,10 @@ export default function CustomerApp() {
   }, []);
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <ErrorBoundary>
         <AppContent />
       </ErrorBoundary>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
